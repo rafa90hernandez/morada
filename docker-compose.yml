@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: morada-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: morada
+    ports:
+      - "5433:5432"
+    volumes:
+      - morada_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  morada_postgres_data:
