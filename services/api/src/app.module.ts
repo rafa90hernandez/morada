@@ -1,13 +1,15 @@
 import { Module } from '@nestjs/common';
-import * as Joi from 'joi';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+import { seconds, ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import * as Joi from 'joi';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './users/users.module';
+import { DatabaseModule } from './database/database.module';
 import { ListingsModule } from './listings/listings.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -23,12 +25,35 @@ import { ListingsModule } from './listings/listings.module';
         JWT_REFRESH_SECRET: Joi.string().min(32).required(),
       }),
     }),
+    ThrottlerModule.forRoot([
+      {
+        name: 'short',
+        ttl: seconds(1),
+        limit: 5,
+      },
+      {
+        name: 'medium',
+        ttl: seconds(10),
+        limit: 30,
+      },
+      {
+        name: 'long',
+        ttl: seconds(60),
+        limit: 120,
+      },
+    ]),
     DatabaseModule,
     AuthModule,
     UsersModule,
     ListingsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}

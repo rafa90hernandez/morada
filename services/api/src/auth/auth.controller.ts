@@ -12,12 +12,18 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Throttle({
+    short: { limit: 2, ttl: 1000 },
+    medium: { limit: 5, ttl: 60000 },
+    long: { limit: 10, ttl: 3600000 },
+  })
   @Post('register')
   @ApiOperation({
     summary: 'Create a new user account',
@@ -32,6 +38,11 @@ export class AuthController {
     return this.authService.register(dto);
   }
 
+  @Throttle({
+    short: { limit: 2, ttl: 1000 },
+    medium: { limit: 10, ttl: 60000 },
+    long: { limit: 30, ttl: 3600000 },
+  })
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -47,6 +58,11 @@ export class AuthController {
     return this.authService.login(dto);
   }
 
+  @Throttle({
+    short: { limit: 3, ttl: 1000 },
+    medium: { limit: 20, ttl: 60000 },
+    long: { limit: 100, ttl: 3600000 },
+  })
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
