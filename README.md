@@ -26,3 +26,24 @@ pnpm prisma generate
 pnpm prisma db push
 pnpm start:dev
 ```
+## Backend Features
+
+### Security
+- JWT Authentication
+- Refresh Token Rotation
+- Helmet
+- Rate Limiting
+- Payload Size Limit
+- DTO Validation
+
+### Observability
+- Health Check
+- Readiness Check
+- Request ID
+- Response Time
+- HTTP Logging
+
+### API
+- Swagger
+- Global Exception Filter
+- Standard Response Format

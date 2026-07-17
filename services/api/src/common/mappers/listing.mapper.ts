@@ -85,8 +85,19 @@ export class ListingMapper {
       advertiser: UserMapper.toPublicResponse(listing.user),
 
       publishedAt: listing.publishedAt,
+      closedAt: listing.closedAt,
       createdAt: listing.createdAt,
       updatedAt: listing.updatedAt,
+    };
+  }
+
+  static toOwnerResponse(listing: ListingWithRelations) {
+    return {
+      ...this.toResponse(listing),
+      moderation: {
+        rejectionReason: listing.rejectionReason,
+        pausedReason: listing.pausedReason,
+      },
     };
   }
 }

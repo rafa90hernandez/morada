@@ -1665,6 +1665,7 @@ export const ListingScalarFieldEnum = {
   pausedReason: 'pausedReason',
   publishedAt: 'publishedAt',
   closedAt: 'closedAt',
+  deletedAt: 'deletedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
 } as const;

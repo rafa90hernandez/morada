@@ -198,55 +198,56 @@ model TrustScore {
 }
 
 model Listing {
-  id                      String             @id @default(cuid())
-  userId                  String
-  type                    ListingType
-  status                  ListingStatus      @default(PENDING_REVIEW)
+  id                       String        @id @default(cuid())
+  userId                   String
+  type                     ListingType
+  status                   ListingStatus @default(PENDING_REVIEW)
 
-  title                   String
-  description             String
+  title                    String
+  description              String
 
-  city                    String?
-  area                    String?
-  propertyType            PropertyType?
+  city                     String?
+  area                     String?
+  propertyType             PropertyType?
 
-  monthlyPriceCents       Int?
-  depositAmountCents      Int?
-  billsIncludedType       BillsIncludedType?
-  extraCostsNote          String?
+  monthlyPriceCents        Int?
+  depositAmountCents       Int?
+  billsIncludedType        BillsIncludedType?
+  extraCostsNote           String?
 
-  furnished               Boolean?
-  couplesAllowed          Boolean?
-  petsAllowed             Boolean?
-  smokingAllowed          Boolean?
-  genderPreference        GenderPreference?
-  landlordLivesHere       Boolean?
+  furnished                Boolean?
+  couplesAllowed           Boolean?
+  petsAllowed              Boolean?
+  smokingAllowed           Boolean?
+  genderPreference         GenderPreference?
+  landlordLivesHere        Boolean?
 
-  formalContract          Boolean?
+  formalContract           Boolean?
   landlordApprovalRequired Boolean?
 
-  availableFrom           DateTime?
-  availableUntil          DateTime?
+  availableFrom            DateTime?
+  availableUntil           DateTime?
 
-  houseRules              String?
-  transportInfo           String?
+  houseRules               String?
+  transportInfo            String?
 
-  trustScore              Int                @default(0)
-  rejectionReason         String?
-  pausedReason            String?
+  trustScore               Int @default(0)
+  rejectionReason          String?
+  pausedReason             String?
 
-  publishedAt             DateTime?
-  closedAt                DateTime?
+  publishedAt              DateTime?
+  closedAt                 DateTime?
+  deletedAt                DateTime?
 
-  user                    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  photos                  ListingPhoto[]
-  exchangePreference      ExchangePreference?
-  favorites               Favorite[]
-  conversations           Conversation[]
-  reports                 Report[]
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  photos             ListingPhoto[]
+  exchangePreference ExchangePreference?
+  favorites          Favorite[]
+  conversations      Conversation[]
+  reports            Report[]
 
-  createdAt               DateTime           @default(now())
-  updatedAt               DateTime           @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([status])
@@ -256,6 +257,7 @@ model Listing {
   @@index([monthlyPriceCents])
   @@index([availableFrom])
   @@index([createdAt])
+  @@index([deletedAt])
 }
 
 model ListingPhoto {

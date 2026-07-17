@@ -69,6 +69,7 @@ export type ListingMinAggregateOutputType = {
   pausedReason: string | null;
   publishedAt: Date | null;
   closedAt: Date | null;
+  deletedAt: Date | null;
   createdAt: Date | null;
   updatedAt: Date | null;
 };
@@ -104,6 +105,7 @@ export type ListingMaxAggregateOutputType = {
   pausedReason: string | null;
   publishedAt: Date | null;
   closedAt: Date | null;
+  deletedAt: Date | null;
   createdAt: Date | null;
   updatedAt: Date | null;
 };
@@ -139,6 +141,7 @@ export type ListingCountAggregateOutputType = {
   pausedReason: number;
   publishedAt: number;
   closedAt: number;
+  deletedAt: number;
   createdAt: number;
   updatedAt: number;
   _all: number;
@@ -187,6 +190,7 @@ export type ListingMinAggregateInputType = {
   pausedReason?: true;
   publishedAt?: true;
   closedAt?: true;
+  deletedAt?: true;
   createdAt?: true;
   updatedAt?: true;
 };
@@ -222,6 +226,7 @@ export type ListingMaxAggregateInputType = {
   pausedReason?: true;
   publishedAt?: true;
   closedAt?: true;
+  deletedAt?: true;
   createdAt?: true;
   updatedAt?: true;
 };
@@ -257,6 +262,7 @@ export type ListingCountAggregateInputType = {
   pausedReason?: true;
   publishedAt?: true;
   closedAt?: true;
+  deletedAt?: true;
   createdAt?: true;
   updatedAt?: true;
   _all?: true;
@@ -386,6 +392,7 @@ export type ListingGroupByOutputType = {
   pausedReason: string | null;
   publishedAt: Date | null;
   closedAt: Date | null;
+  deletedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
   _count: ListingCountAggregateOutputType | null;
@@ -454,6 +461,7 @@ export type ListingWhereInput = {
   pausedReason?: Prisma.StringNullableFilter<'Listing'> | string | null;
   publishedAt?: Prisma.DateTimeNullableFilter<'Listing'> | Date | string | null;
   closedAt?: Prisma.DateTimeNullableFilter<'Listing'> | Date | string | null;
+  deletedAt?: Prisma.DateTimeNullableFilter<'Listing'> | Date | string | null;
   createdAt?: Prisma.DateTimeFilter<'Listing'> | Date | string;
   updatedAt?: Prisma.DateTimeFilter<'Listing'> | Date | string;
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>;
@@ -498,6 +506,7 @@ export type ListingOrderByWithRelationInput = {
   pausedReason?: Prisma.SortOrderInput | Prisma.SortOrder;
   publishedAt?: Prisma.SortOrderInput | Prisma.SortOrder;
   closedAt?: Prisma.SortOrderInput | Prisma.SortOrder;
+  deletedAt?: Prisma.SortOrderInput | Prisma.SortOrder;
   createdAt?: Prisma.SortOrder;
   updatedAt?: Prisma.SortOrder;
   user?: Prisma.UserOrderByWithRelationInput;
@@ -556,6 +565,7 @@ export type ListingWhereUniqueInput = Prisma.AtLeast<
     publishedAt?:
       Prisma.DateTimeNullableFilter<'Listing'> | Date | string | null;
     closedAt?: Prisma.DateTimeNullableFilter<'Listing'> | Date | string | null;
+    deletedAt?: Prisma.DateTimeNullableFilter<'Listing'> | Date | string | null;
     createdAt?: Prisma.DateTimeFilter<'Listing'> | Date | string;
     updatedAt?: Prisma.DateTimeFilter<'Listing'> | Date | string;
     user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>;
@@ -602,6 +612,7 @@ export type ListingOrderByWithAggregationInput = {
   pausedReason?: Prisma.SortOrderInput | Prisma.SortOrder;
   publishedAt?: Prisma.SortOrderInput | Prisma.SortOrder;
   closedAt?: Prisma.SortOrderInput | Prisma.SortOrder;
+  deletedAt?: Prisma.SortOrderInput | Prisma.SortOrder;
   createdAt?: Prisma.SortOrder;
   updatedAt?: Prisma.SortOrder;
   _count?: Prisma.ListingCountOrderByAggregateInput;
@@ -691,6 +702,11 @@ export type ListingScalarWhereWithAggregatesInput = {
     | Date
     | string
     | null;
+  deletedAt?:
+    | Prisma.DateTimeNullableWithAggregatesFilter<'Listing'>
+    | Date
+    | string
+    | null;
   createdAt?: Prisma.DateTimeWithAggregatesFilter<'Listing'> | Date | string;
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<'Listing'> | Date | string;
 };
@@ -725,6 +741,7 @@ export type ListingCreateInput = {
   pausedReason?: string | null;
   publishedAt?: Date | string | null;
   closedAt?: Date | string | null;
+  deletedAt?: Date | string | null;
   createdAt?: Date | string;
   updatedAt?: Date | string;
   user: Prisma.UserCreateNestedOneWithoutListingsInput;
@@ -766,6 +783,7 @@ export type ListingUncheckedCreateInput = {
   pausedReason?: string | null;
   publishedAt?: Date | string | null;
   closedAt?: Date | string | null;
+  deletedAt?: Date | string | null;
   createdAt?: Date | string;
   updatedAt?: Date | string;
   photos?: Prisma.ListingPhotoUncheckedCreateNestedManyWithoutListingInput;
@@ -829,6 +847,8 @@ export type ListingUpdateInput = {
   publishedAt?:
     Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
   closedAt?:
+    Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+  deletedAt?:
     Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
@@ -896,6 +916,8 @@ export type ListingUncheckedUpdateInput = {
     Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
   closedAt?:
     Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+  deletedAt?:
+    Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   photos?: Prisma.ListingPhotoUncheckedUpdateManyWithoutListingNestedInput;
@@ -936,6 +958,7 @@ export type ListingCreateManyInput = {
   pausedReason?: string | null;
   publishedAt?: Date | string | null;
   closedAt?: Date | string | null;
+  deletedAt?: Date | string | null;
   createdAt?: Date | string;
   updatedAt?: Date | string;
 };
@@ -994,6 +1017,8 @@ export type ListingUpdateManyMutationInput = {
   publishedAt?:
     Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
   closedAt?:
+    Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+  deletedAt?:
     Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
@@ -1055,6 +1080,8 @@ export type ListingUncheckedUpdateManyInput = {
     Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
   closedAt?:
     Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+  deletedAt?:
+    Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
@@ -1100,6 +1127,7 @@ export type ListingCountOrderByAggregateInput = {
   pausedReason?: Prisma.SortOrder;
   publishedAt?: Prisma.SortOrder;
   closedAt?: Prisma.SortOrder;
+  deletedAt?: Prisma.SortOrder;
   createdAt?: Prisma.SortOrder;
   updatedAt?: Prisma.SortOrder;
 };
@@ -1141,6 +1169,7 @@ export type ListingMaxOrderByAggregateInput = {
   pausedReason?: Prisma.SortOrder;
   publishedAt?: Prisma.SortOrder;
   closedAt?: Prisma.SortOrder;
+  deletedAt?: Prisma.SortOrder;
   createdAt?: Prisma.SortOrder;
   updatedAt?: Prisma.SortOrder;
 };
@@ -1176,6 +1205,7 @@ export type ListingMinOrderByAggregateInput = {
   pausedReason?: Prisma.SortOrder;
   publishedAt?: Prisma.SortOrder;
   closedAt?: Prisma.SortOrder;
+  deletedAt?: Prisma.SortOrder;
   createdAt?: Prisma.SortOrder;
   updatedAt?: Prisma.SortOrder;
 };
@@ -1480,6 +1510,7 @@ export type ListingCreateWithoutUserInput = {
   pausedReason?: string | null;
   publishedAt?: Date | string | null;
   closedAt?: Date | string | null;
+  deletedAt?: Date | string | null;
   createdAt?: Date | string;
   updatedAt?: Date | string;
   photos?: Prisma.ListingPhotoCreateNestedManyWithoutListingInput;
@@ -1519,6 +1550,7 @@ export type ListingUncheckedCreateWithoutUserInput = {
   pausedReason?: string | null;
   publishedAt?: Date | string | null;
   closedAt?: Date | string | null;
+  deletedAt?: Date | string | null;
   createdAt?: Date | string;
   updatedAt?: Date | string;
   photos?: Prisma.ListingPhotoUncheckedCreateNestedManyWithoutListingInput;
@@ -1615,6 +1647,7 @@ export type ListingScalarWhereInput = {
   pausedReason?: Prisma.StringNullableFilter<'Listing'> | string | null;
   publishedAt?: Prisma.DateTimeNullableFilter<'Listing'> | Date | string | null;
   closedAt?: Prisma.DateTimeNullableFilter<'Listing'> | Date | string | null;
+  deletedAt?: Prisma.DateTimeNullableFilter<'Listing'> | Date | string | null;
   createdAt?: Prisma.DateTimeFilter<'Listing'> | Date | string;
   updatedAt?: Prisma.DateTimeFilter<'Listing'> | Date | string;
 };
@@ -1649,6 +1682,7 @@ export type ListingCreateWithoutPhotosInput = {
   pausedReason?: string | null;
   publishedAt?: Date | string | null;
   closedAt?: Date | string | null;
+  deletedAt?: Date | string | null;
   createdAt?: Date | string;
   updatedAt?: Date | string;
   user: Prisma.UserCreateNestedOneWithoutListingsInput;
@@ -1689,6 +1723,7 @@ export type ListingUncheckedCreateWithoutPhotosInput = {
   pausedReason?: string | null;
   publishedAt?: Date | string | null;
   closedAt?: Date | string | null;
+  deletedAt?: Date | string | null;
   createdAt?: Date | string;
   updatedAt?: Date | string;
   exchangePreference?: Prisma.ExchangePreferenceUncheckedCreateNestedOneWithoutListingInput;
@@ -1780,6 +1815,8 @@ export type ListingUpdateWithoutPhotosInput = {
     Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
   closedAt?:
     Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+  deletedAt?:
+    Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   user?: Prisma.UserUpdateOneRequiredWithoutListingsNestedInput;
@@ -1845,6 +1882,8 @@ export type ListingUncheckedUpdateWithoutPhotosInput = {
     Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
   closedAt?:
     Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+  deletedAt?:
+    Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   exchangePreference?: Prisma.ExchangePreferenceUncheckedUpdateOneWithoutListingNestedInput;
@@ -1883,6 +1922,7 @@ export type ListingCreateWithoutExchangePreferenceInput = {
   pausedReason?: string | null;
   publishedAt?: Date | string | null;
   closedAt?: Date | string | null;
+  deletedAt?: Date | string | null;
   createdAt?: Date | string;
   updatedAt?: Date | string;
   user: Prisma.UserCreateNestedOneWithoutListingsInput;
@@ -1923,6 +1963,7 @@ export type ListingUncheckedCreateWithoutExchangePreferenceInput = {
   pausedReason?: string | null;
   publishedAt?: Date | string | null;
   closedAt?: Date | string | null;
+  deletedAt?: Date | string | null;
   createdAt?: Date | string;
   updatedAt?: Date | string;
   photos?: Prisma.ListingPhotoUncheckedCreateNestedManyWithoutListingInput;
@@ -2014,6 +2055,8 @@ export type ListingUpdateWithoutExchangePreferenceInput = {
     Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
   closedAt?:
     Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+  deletedAt?:
+    Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   user?: Prisma.UserUpdateOneRequiredWithoutListingsNestedInput;
@@ -2079,6 +2122,8 @@ export type ListingUncheckedUpdateWithoutExchangePreferenceInput = {
     Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
   closedAt?:
     Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+  deletedAt?:
+    Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   photos?: Prisma.ListingPhotoUncheckedUpdateManyWithoutListingNestedInput;
@@ -2117,6 +2162,7 @@ export type ListingCreateWithoutFavoritesInput = {
   pausedReason?: string | null;
   publishedAt?: Date | string | null;
   closedAt?: Date | string | null;
+  deletedAt?: Date | string | null;
   createdAt?: Date | string;
   updatedAt?: Date | string;
   user: Prisma.UserCreateNestedOneWithoutListingsInput;
@@ -2157,6 +2203,7 @@ export type ListingUncheckedCreateWithoutFavoritesInput = {
   pausedReason?: string | null;
   publishedAt?: Date | string | null;
   closedAt?: Date | string | null;
+  deletedAt?: Date | string | null;
   createdAt?: Date | string;
   updatedAt?: Date | string;
   photos?: Prisma.ListingPhotoUncheckedCreateNestedManyWithoutListingInput;
@@ -2248,6 +2295,8 @@ export type ListingUpdateWithoutFavoritesInput = {
     Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
   closedAt?:
     Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+  deletedAt?:
+    Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   user?: Prisma.UserUpdateOneRequiredWithoutListingsNestedInput;
@@ -2313,6 +2362,8 @@ export type ListingUncheckedUpdateWithoutFavoritesInput = {
     Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
   closedAt?:
     Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+  deletedAt?:
+    Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   photos?: Prisma.ListingPhotoUncheckedUpdateManyWithoutListingNestedInput;
@@ -2351,6 +2402,7 @@ export type ListingCreateWithoutConversationsInput = {
   pausedReason?: string | null;
   publishedAt?: Date | string | null;
   closedAt?: Date | string | null;
+  deletedAt?: Date | string | null;
   createdAt?: Date | string;
   updatedAt?: Date | string;
   user: Prisma.UserCreateNestedOneWithoutListingsInput;
@@ -2391,6 +2443,7 @@ export type ListingUncheckedCreateWithoutConversationsInput = {
   pausedReason?: string | null;
   publishedAt?: Date | string | null;
   closedAt?: Date | string | null;
+  deletedAt?: Date | string | null;
   createdAt?: Date | string;
   updatedAt?: Date | string;
   photos?: Prisma.ListingPhotoUncheckedCreateNestedManyWithoutListingInput;
@@ -2482,6 +2535,8 @@ export type ListingUpdateWithoutConversationsInput = {
     Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
   closedAt?:
     Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+  deletedAt?:
+    Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   user?: Prisma.UserUpdateOneRequiredWithoutListingsNestedInput;
@@ -2547,6 +2602,8 @@ export type ListingUncheckedUpdateWithoutConversationsInput = {
     Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
   closedAt?:
     Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+  deletedAt?:
+    Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   photos?: Prisma.ListingPhotoUncheckedUpdateManyWithoutListingNestedInput;
@@ -2585,6 +2642,7 @@ export type ListingCreateWithoutReportsInput = {
   pausedReason?: string | null;
   publishedAt?: Date | string | null;
   closedAt?: Date | string | null;
+  deletedAt?: Date | string | null;
   createdAt?: Date | string;
   updatedAt?: Date | string;
   user: Prisma.UserCreateNestedOneWithoutListingsInput;
@@ -2625,6 +2683,7 @@ export type ListingUncheckedCreateWithoutReportsInput = {
   pausedReason?: string | null;
   publishedAt?: Date | string | null;
   closedAt?: Date | string | null;
+  deletedAt?: Date | string | null;
   createdAt?: Date | string;
   updatedAt?: Date | string;
   photos?: Prisma.ListingPhotoUncheckedCreateNestedManyWithoutListingInput;
@@ -2716,6 +2775,8 @@ export type ListingUpdateWithoutReportsInput = {
     Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
   closedAt?:
     Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+  deletedAt?:
+    Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   user?: Prisma.UserUpdateOneRequiredWithoutListingsNestedInput;
@@ -2781,6 +2842,8 @@ export type ListingUncheckedUpdateWithoutReportsInput = {
     Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
   closedAt?:
     Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+  deletedAt?:
+    Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   photos?: Prisma.ListingPhotoUncheckedUpdateManyWithoutListingNestedInput;
@@ -2819,6 +2882,7 @@ export type ListingCreateManyUserInput = {
   pausedReason?: string | null;
   publishedAt?: Date | string | null;
   closedAt?: Date | string | null;
+  deletedAt?: Date | string | null;
   createdAt?: Date | string;
   updatedAt?: Date | string;
 };
@@ -2877,6 +2941,8 @@ export type ListingUpdateWithoutUserInput = {
   publishedAt?:
     Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
   closedAt?:
+    Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+  deletedAt?:
     Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
@@ -2942,6 +3008,8 @@ export type ListingUncheckedUpdateWithoutUserInput = {
     Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
   closedAt?:
     Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+  deletedAt?:
+    Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   photos?: Prisma.ListingPhotoUncheckedUpdateManyWithoutListingNestedInput;
@@ -3005,6 +3073,8 @@ export type ListingUncheckedUpdateManyWithoutUserInput = {
   publishedAt?:
     Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
   closedAt?:
+    Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+  deletedAt?:
     Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
@@ -3119,6 +3189,7 @@ export type ListingSelect<
     pausedReason?: boolean;
     publishedAt?: boolean;
     closedAt?: boolean;
+    deletedAt?: boolean;
     createdAt?: boolean;
     updatedAt?: boolean;
     user?: boolean | Prisma.UserDefaultArgs<ExtArgs>;
@@ -3168,6 +3239,7 @@ export type ListingSelectCreateManyAndReturn<
     pausedReason?: boolean;
     publishedAt?: boolean;
     closedAt?: boolean;
+    deletedAt?: boolean;
     createdAt?: boolean;
     updatedAt?: boolean;
     user?: boolean | Prisma.UserDefaultArgs<ExtArgs>;
@@ -3210,6 +3282,7 @@ export type ListingSelectUpdateManyAndReturn<
     pausedReason?: boolean;
     publishedAt?: boolean;
     closedAt?: boolean;
+    deletedAt?: boolean;
     createdAt?: boolean;
     updatedAt?: boolean;
     user?: boolean | Prisma.UserDefaultArgs<ExtArgs>;
@@ -3248,6 +3321,7 @@ export type ListingSelectScalar = {
   pausedReason?: boolean;
   publishedAt?: boolean;
   closedAt?: boolean;
+  deletedAt?: boolean;
   createdAt?: boolean;
   updatedAt?: boolean;
 };
@@ -3286,6 +3360,7 @@ export type ListingOmit<
   | 'pausedReason'
   | 'publishedAt'
   | 'closedAt'
+  | 'deletedAt'
   | 'createdAt'
   | 'updatedAt',
   ExtArgs['result']['listing']
@@ -3360,6 +3435,7 @@ export type $ListingPayload<
       pausedReason: string | null;
       publishedAt: Date | null;
       closedAt: Date | null;
+      deletedAt: Date | null;
       createdAt: Date;
       updatedAt: Date;
     },
@@ -4051,6 +4127,7 @@ export interface ListingFieldRefs {
   readonly pausedReason: Prisma.FieldRef<'Listing', 'String'>;
   readonly publishedAt: Prisma.FieldRef<'Listing', 'DateTime'>;
   readonly closedAt: Prisma.FieldRef<'Listing', 'DateTime'>;
+  readonly deletedAt: Prisma.FieldRef<'Listing', 'DateTime'>;
   readonly createdAt: Prisma.FieldRef<'Listing', 'DateTime'>;
   readonly updatedAt: Prisma.FieldRef<'Listing', 'DateTime'>;
 }
