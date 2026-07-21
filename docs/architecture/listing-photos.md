@@ -418,3 +418,116 @@ Integration tests:
 6. Public listing visibility remains restricted to ACTIVE listings.
 7. Editing photos on public or rejected listings returns the listing to
    PENDING_REVIEW.
+
+## Transport independence
+
+`ListingPhotosService` must not depend on Express, Multer or HTTP-specific
+types.
+
+The controller translates an HTTP multipart file into an
+`UploadListingPhotoCommand`.
+
+The application service receives only:
+
+- listing identifier;
+- authenticated user identifier;
+- original filename;
+- declared MIME type;
+- original size;
+- file buffer.
+
+This allows the same image workflow to be reused by HTTP controllers,
+background jobs or other application entry points.
+
+## Image processing
+
+Listing images are processed with Sharp.
+
+Processing rules:
+
+- accepted input formats: JPEG, PNG and WebP;
+- maximum input size: 10 MB;
+- maximum output dimensions: 1920 × 1920;
+- resize mode: preserve aspect ratio and fit inside the maximum dimensions;
+- images smaller than the limit are not enlarged;
+- EXIF orientation is normalized;
+- output format: WebP;
+- output quality: 82;
+- source metadata is not preserved;
+- decoded image format is validated independently from the declared MIME type.
+
+## Storage orchestration
+
+Storage-specific operations are isolated in
+`ListingPhotoStorageService`.
+
+This service is responsible for:
+
+- generating the listing photo object key;
+- uploading processed image data through `STORAGE_SERVICE`;
+- deleting stored objects.
+
+The object key format is:
+
+`listings/{listingId}/{photoId}.webp`
+
+`ListingPhotoStorageService` must not access Prisma or enforce listing
+business rules.
+
+## Failure compensation
+
+Object storage and PostgreSQL do not share a database transaction.
+
+If object upload succeeds but metadata persistence fails, the application
+attempts to delete the uploaded object.
+
+A rollback deletion failure is logged, while the original persistence error
+continues to be propagated.
+
+Orphan object monitoring and scheduled cleanup may be added in a future
+iteration.
+
+## Upload endpoint
+
+The listing photo upload endpoint is:
+
+`POST /api/v1/listings/{listingId}/photos`
+
+The request content type is:
+
+`multipart/form-data`
+
+The file field name is:
+
+`file`
+
+The endpoint accepts one file per request.
+
+The HTTP adapter:
+
+- requires authentication;
+- extracts the listing identifier from the route;
+- extracts the authenticated user identifier from the JWT;
+- limits the request to one file;
+- limits the file to 10 MB;
+- translates `Express.Multer.File` into an
+  `UploadListingPhotoCommand`;
+- maps the application result to `ListingPhotoResponseDto`.
+
+Express and Multer types must not leave the controller layer.
+
+## Upload response
+
+The public response contains:
+
+- `id`;
+- `url`;
+- `position`;
+- `width`;
+- `height`;
+- `sizeBytes`;
+- `mimeType`;
+- `createdAt`.
+
+Internal fields such as `objectKey`, `listingId` and `updatedAt` are not
+exposed by this endpoint.

@@ -1,20 +1,30 @@
+import { resolve } from 'node:path';
+
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
+import { ServeStaticModule } from '@nestjs/serve-static';
 import { seconds, ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import * as Joi from 'joi';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
+import { LoggerMiddleware } from './common/middlewares/logger.middleware';
 import { RequestIdMiddleware } from './common/middlewares/request-id.middleware';
+import { StorageModule } from './common/storage/storage.module';
 import { DatabaseModule } from './database/database.module';
 import { ListingsModule } from './listings/listings.module';
 import { UsersModule } from './users/users.module';
-import { LoggerMiddleware } from './common/middlewares/logger.middleware';
+
+import { ListingPhotosModule } from './listing-photos/listing-photos.module';
 
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: resolve(process.cwd(), 'storage', 'uploads'),
+      serveRoot: '/uploads',
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object({
@@ -44,10 +54,12 @@ import { LoggerMiddleware } from './common/middlewares/logger.middleware';
         limit: 120,
       },
     ]),
+    StorageModule,
     DatabaseModule,
     AuthModule,
     UsersModule,
     ListingsModule,
+    ListingPhotosModule,
   ],
   controllers: [AppController],
   providers: [

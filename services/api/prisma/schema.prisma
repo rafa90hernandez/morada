@@ -121,7 +121,7 @@ model User {
 
   profile      UserProfile?
   verification Verification?
-  trustScore    TrustScore?
+  trustScore   TrustScore?
 
   listings  Listing[]
   favorites Favorite[]
@@ -168,15 +168,15 @@ model UserProfile {
 }
 
 model Verification {
-  id                        String   @id @default(cuid())
-  userId                    String   @unique
+  id                        String    @id @default(cuid())
+  userId                    String    @unique
   emailVerifiedAt           DateTime?
   phoneVerifiedAt           DateTime?
   phoneVerificationProvider String?
 
-  documentStatus            String?
-  documentSubmittedAt       DateTime?
-  documentReviewedAt        DateTime?
+  documentStatus      String?
+  documentSubmittedAt DateTime?
+  documentReviewedAt  DateTime?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -198,46 +198,46 @@ model TrustScore {
 }
 
 model Listing {
-  id                       String        @id @default(cuid())
-  userId                   String
-  type                     ListingType
-  status                   ListingStatus @default(PENDING_REVIEW)
+  id     String        @id @default(cuid())
+  userId String
+  type   ListingType
+  status ListingStatus @default(PENDING_REVIEW)
 
-  title                    String
-  description              String
+  title       String
+  description String
 
-  city                     String?
-  area                     String?
-  propertyType             PropertyType?
+  city         String?
+  area         String?
+  propertyType PropertyType?
 
-  monthlyPriceCents        Int?
-  depositAmountCents       Int?
-  billsIncludedType        BillsIncludedType?
-  extraCostsNote           String?
+  monthlyPriceCents  Int?
+  depositAmountCents Int?
+  billsIncludedType  BillsIncludedType?
+  extraCostsNote     String?
 
-  furnished                Boolean?
-  couplesAllowed           Boolean?
-  petsAllowed              Boolean?
-  smokingAllowed           Boolean?
-  genderPreference         GenderPreference?
-  landlordLivesHere        Boolean?
+  furnished         Boolean?
+  couplesAllowed    Boolean?
+  petsAllowed       Boolean?
+  smokingAllowed    Boolean?
+  genderPreference  GenderPreference?
+  landlordLivesHere Boolean?
 
   formalContract           Boolean?
   landlordApprovalRequired Boolean?
 
-  availableFrom            DateTime?
-  availableUntil           DateTime?
+  availableFrom  DateTime?
+  availableUntil DateTime?
 
-  houseRules               String?
-  transportInfo            String?
+  houseRules    String?
+  transportInfo String?
 
-  trustScore               Int @default(0)
-  rejectionReason          String?
-  pausedReason             String?
+  trustScore      Int     @default(0)
+  rejectionReason String?
+  pausedReason    String?
 
-  publishedAt              DateTime?
-  closedAt                 DateTime?
-  deletedAt                DateTime?
+  publishedAt DateTime?
+  closedAt    DateTime?
+  deletedAt   DateTime?
 
   user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   photos             ListingPhoto[]
@@ -260,31 +260,17 @@ model Listing {
   @@index([deletedAt])
 }
 
-model ListingPhoto {
-  id        String   @id @default(cuid())
-  listingId String
-  url       String
-  publicId  String
-  position  Int      @default(0)
-
-  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-
-  @@index([listingId])
-}
-
 model ExchangePreference {
-  id                       String         @id @default(cuid())
-  listingId                String         @unique
+  id        String @id @default(cuid())
+  listingId String @unique
 
-  desiredCity              String?
-  desiredAreas             String[]
-  desiredMinPriceCents     Int?
-  desiredMaxPriceCents     Int?
-  desiredPropertyTypes     PropertyType[]
-  desiredMoveDate          DateTime?
-  notes                    String?
+  desiredCity          String?
+  desiredAreas         String[]
+  desiredMinPriceCents Int?
+  desiredMaxPriceCents Int?
+  desiredPropertyTypes PropertyType[]
+  desiredMoveDate      DateTime?
+  notes                String?
 
   listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
@@ -293,12 +279,12 @@ model ExchangePreference {
 }
 
 model Favorite {
-  id        String   @id @default(cuid())
+  id        String @id @default(cuid())
   userId    String
   listingId String
 
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 
@@ -315,15 +301,15 @@ model Conversation {
   status         ConversationStatus @default(ACTIVE)
   lastMessageAt  DateTime?
 
-  listing        Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  participantA   User    @relation("ParticipantA", fields: [participantAId], references: [id], onDelete: Cascade)
-  participantB   User    @relation("ParticipantB", fields: [participantBId], references: [id], onDelete: Cascade)
+  listing      Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  participantA User    @relation("ParticipantA", fields: [participantAId], references: [id], onDelete: Cascade)
+  participantB User    @relation("ParticipantB", fields: [participantBId], references: [id], onDelete: Cascade)
 
-  messages       Message[]
-  reports        Report[]
+  messages Message[]
+  reports  Report[]
 
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([listingId, participantAId, participantBId])
   @@index([listingId])
@@ -333,19 +319,19 @@ model Conversation {
 }
 
 model Message {
-  id              String      @id @default(cuid())
-  conversationId  String
-  senderId        String
-  type            MessageType @default(TEXT)
-  body            String?
-  imageUrl        String?
-  imagePublicId   String?
-  readAt          DateTime?
+  id             String      @id @default(cuid())
+  conversationId String
+  senderId       String
+  type           MessageType @default(TEXT)
+  body           String?
+  imageUrl       String?
+  imagePublicId  String?
+  readAt         DateTime?
 
-  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender          User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
 
-  createdAt       DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([conversationId])
   @@index([senderId])
@@ -353,24 +339,24 @@ model Message {
 }
 
 model Report {
-  id              String       @id @default(cuid())
-  reporterId      String
-  reportedUserId  String?
-  listingId       String?
-  conversationId  String?
-  reason          ReportReason
-  description     String?
-  status          ReportStatus @default(OPEN)
-  adminNotes      String?
-  resolvedAt      DateTime?
+  id             String       @id @default(cuid())
+  reporterId     String
+  reportedUserId String?
+  listingId      String?
+  conversationId String?
+  reason         ReportReason
+  description    String?
+  status         ReportStatus @default(OPEN)
+  adminNotes     String?
+  resolvedAt     DateTime?
 
-  reporter        User          @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
-  reportedUser    User?         @relation("ReportedUser", fields: [reportedUserId], references: [id], onDelete: SetNull)
-  listing         Listing?      @relation(fields: [listingId], references: [id], onDelete: SetNull)
-  conversation    Conversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  reporter     User          @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reportedUser User?         @relation("ReportedUser", fields: [reportedUserId], references: [id], onDelete: SetNull)
+  listing      Listing?      @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  conversation Conversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([reporterId])
   @@index([reportedUserId])
@@ -385,8 +371,8 @@ model Block {
   blockerId String
   blockedId String
 
-  blocker   User @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
-  blocked   User @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+  blocker User @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 
@@ -407,9 +393,9 @@ model Notification {
   metadata   Json?
   readAt     DateTime?
 
-  user       User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt  DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([userId])
   @@index([isRead])
@@ -417,7 +403,7 @@ model Notification {
 }
 
 model AdminActionLog {
-  id         String @id @default(cuid())
+  id         String  @id @default(cuid())
   adminId    String
   action     String
   targetType String
@@ -425,12 +411,33 @@ model AdminActionLog {
   reason     String?
   metadata   Json?
 
-  admin      User @relation("AdminActions", fields: [adminId], references: [id], onDelete: Cascade)
+  admin User @relation("AdminActions", fields: [adminId], references: [id], onDelete: Cascade)
 
-  createdAt  DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([adminId])
   @@index([action])
   @@index([targetType, targetId])
   @@index([createdAt])
+}
+
+model ListingPhoto {
+  id        String  @id @default(cuid())
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  objectKey String @unique
+  url       String
+  position  Int
+
+  width     Int
+  height    Int
+  sizeBytes Int
+  mimeType  String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([listingId, position])
+  @@index([listingId, position])
 }

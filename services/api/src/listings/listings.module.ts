@@ -1,9 +1,14 @@
 import { Module } from '@nestjs/common';
-import { ListingsService } from './listings.service';
+
+import { DatabaseModule } from '../database/database.module';
 import { ListingsController } from './listings.controller';
+import { ListingsRepository } from './listings.repository';
+import { ListingsService } from './listings.service';
 
 @Module({
-  providers: [ListingsService],
+  imports: [DatabaseModule],
   controllers: [ListingsController],
+  providers: [ListingsService, ListingsRepository],
+  exports: [ListingsRepository],
 })
 export class ListingsModule {}

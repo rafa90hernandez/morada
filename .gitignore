@@ -9,3 +9,6 @@ build
 .turbo
 coverage
 .DS_Store
+
+services/api/storage/uploads/*
+!services/api/storage/uploads/.gitkeep
