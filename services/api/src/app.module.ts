@@ -72,6 +72,6 @@ import { ListingPhotosModule } from './listing-photos/listing-photos.module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(RequestIdMiddleware, LoggerMiddleware).forRoutes('*');
+    consumer.apply(RequestIdMiddleware, LoggerMiddleware).forRoutes('{*path}');
   }
 }

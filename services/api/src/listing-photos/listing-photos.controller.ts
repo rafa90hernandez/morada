@@ -5,7 +5,6 @@ import {
   Param,
   ParseFilePipe,
   Post,
-  Req,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -25,7 +24,7 @@ import { ListingPhotoResponseDto } from './dto/listing-photo-response.dto';
 import { UploadListingPhotoDto } from './dto/upload-listing-photo.dto';
 import { ListingPhotoMapper } from './listing-photo.mapper';
 import { ListingPhotosService } from './listing-photos.service';
-import type { AuthenticatedRequest } from './types/authenticated-request.types';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { UploadListingPhotoCommand } from './types/listing-photo.types';
 
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
@@ -63,7 +62,7 @@ export class ListingPhotosController {
   })
   async upload(
     @Param('listingId') listingId: string,
-    @Req() request: AuthenticatedRequest,
+    @CurrentUser('id') authenticatedUserId: string,
     @UploadedFile(
       new ParseFilePipe({
         fileIsRequired: true,
@@ -73,7 +72,7 @@ export class ListingPhotosController {
   ): Promise<ListingPhotoResponseDto> {
     const command: UploadListingPhotoCommand = {
       listingId,
-      authenticatedUserId: request.user.sub,
+      authenticatedUserId,
       originalName: file.originalname,
       mimeType: file.mimetype,
       sizeBytes: file.size,
