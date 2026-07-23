@@ -43,10 +43,7 @@ export class ListingsController {
   @ApiUnauthorizedResponse({
     description: 'Authentication required.',
   })
-  create(
-    @CurrentUser('id') userId: string,
-    @Body() dto: CreateListingDto,
-  ) {
+  create(@CurrentUser('id') userId: string, @Body() dto: CreateListingDto) {
     return this.listingsService.create(userId, dto);
   }
 
@@ -74,10 +71,7 @@ export class ListingsController {
   @ApiOperation({
     summary: 'Get one listing owned by the authenticated user',
   })
-  findMineById(
-    @CurrentUser('id') userId: string,
-    @Param('id') id: string,
-  ) {
+  findMineById(@CurrentUser('id') userId: string, @Param('id') id: string) {
     return this.listingsService.findMineById(userId, id);
   }
 
