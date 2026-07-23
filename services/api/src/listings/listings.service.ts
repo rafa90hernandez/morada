@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -155,14 +154,6 @@ export class ListingsService {
 
     this.validateListing(mergedListing);
 
-    const mustReturnToReview = [
-      ListingStatus.DRAFT,
-      ListingStatus.ACTIVE,
-      ListingStatus.PAUSED,
-      ListingStatus.REJECTED,
-      ListingStatus.PENDING_REVIEW,
-    ].includes(currentListing.status);
-
     const listing = await this.database.listing.update({
       where: {
         id,
@@ -195,11 +186,10 @@ export class ListingsService {
         houseRules: dto.houseRules,
         transportInfo: dto.transportInfo,
 
-        status: mustReturnToReview ? ListingStatus.PENDING_REVIEW : undefined,
-
+        status: ListingStatus.PENDING_REVIEW,
         rejectionReason: null,
         pausedReason: null,
-        publishedAt: mustReturnToReview ? null : undefined,
+        publishedAt: null,
 
         exchangePreference:
           mergedListing.type === ListingType.EXCHANGE
@@ -322,10 +312,6 @@ export class ListingsService {
 
   async softDelete(userId: string, id: string) {
     const currentListing = await this.getOwnedListing(userId, id);
-
-    if (currentListing.userId !== userId) {
-      throw new ForbiddenException('You cannot delete this listing.');
-    }
 
     await this.database.listing.update({
       where: { id },

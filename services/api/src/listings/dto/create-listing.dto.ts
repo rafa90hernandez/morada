@@ -1,11 +1,14 @@
 import {
+  ArrayMaxSize,
   IsArray,
   IsBoolean,
   IsDateString,
   IsEnum,
   IsInt,
+  IsNotEmpty,
   IsOptional,
   IsString,
+  MaxLength,
   Min,
   ValidateIf,
 } from 'class-validator';
@@ -22,17 +25,25 @@ export class CreateListingDto {
   type!: ListingType;
 
   @IsString()
+  @IsNotEmpty()
+  @MaxLength(120)
   title!: string;
 
   @IsString()
+  @IsNotEmpty()
+  @MaxLength(5000)
   description!: string;
 
   @IsOptional()
   @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
   city?: string;
 
   @IsOptional()
   @IsString()
+  @IsNotEmpty()
+  @MaxLength(120)
   area?: string;
 
   @IsOptional()
@@ -55,6 +66,7 @@ export class CreateListingDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(500)
   extraCostsNote?: string;
 
   @IsOptional()
@@ -99,10 +111,12 @@ export class CreateListingDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(2000)
   houseRules?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(1000)
   transportInfo?: string;
 
   // Exchange fields
@@ -110,12 +124,17 @@ export class CreateListingDto {
   @ValidateIf((dto: CreateListingDto) => dto.type === ListingType.EXCHANGE)
   @IsOptional()
   @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
   desiredCity?: string;
 
   @ValidateIf((dto: CreateListingDto) => dto.type === ListingType.EXCHANGE)
   @IsOptional()
   @IsArray()
+  @ArrayMaxSize(20)
   @IsString({ each: true })
+  @IsNotEmpty({ each: true })
+  @MaxLength(120, { each: true })
   desiredAreas?: string[];
 
   @ValidateIf((dto: CreateListingDto) => dto.type === ListingType.EXCHANGE)
@@ -133,6 +152,7 @@ export class CreateListingDto {
   @ValidateIf((dto: CreateListingDto) => dto.type === ListingType.EXCHANGE)
   @IsOptional()
   @IsArray()
+  @ArrayMaxSize(10)
   @IsEnum(PropertyType, { each: true })
   desiredPropertyTypes?: PropertyType[];
 
@@ -144,5 +164,6 @@ export class CreateListingDto {
   @ValidateIf((dto: CreateListingDto) => dto.type === ListingType.EXCHANGE)
   @IsOptional()
   @IsString()
+  @MaxLength(2000)
   exchangeNotes?: string;
 }
