@@ -26,10 +26,6 @@ import { MyListingsQueryDto } from './dto/my-listings-query.dto';
 import { UpdateListingDto } from './dto/update-listing.dto';
 import { ListingsService } from './listings.service';
 
-type CurrentUserPayload = {
-  id: string;
-};
-
 @ApiTags('Listings')
 @Controller('listings')
 export class ListingsController {
@@ -48,10 +44,10 @@ export class ListingsController {
     description: 'Authentication required.',
   })
   create(
-    @CurrentUser() user: CurrentUserPayload,
+    @CurrentUser('id') userId: string,
     @Body() dto: CreateListingDto,
   ) {
-    return this.listingsService.create(user.id, dto);
+    return this.listingsService.create(userId, dto);
   }
 
   /*
@@ -66,10 +62,10 @@ export class ListingsController {
     summary: 'List the authenticated user listings',
   })
   findMine(
-    @CurrentUser() user: CurrentUserPayload,
+    @CurrentUser('id') userId: string,
     @Query() query: MyListingsQueryDto,
   ) {
-    return this.listingsService.findMine(user.id, query);
+    return this.listingsService.findMine(userId, query);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -79,10 +75,10 @@ export class ListingsController {
     summary: 'Get one listing owned by the authenticated user',
   })
   findMineById(
-    @CurrentUser() user: CurrentUserPayload,
+    @CurrentUser('id') userId: string,
     @Param('id') id: string,
   ) {
-    return this.listingsService.findMineById(user.id, id);
+    return this.listingsService.findMineById(userId, id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -92,11 +88,11 @@ export class ListingsController {
     summary: 'Update a listing owned by the authenticated user',
   })
   update(
-    @CurrentUser() user: CurrentUserPayload,
+    @CurrentUser('id') userId: string,
     @Param('id') id: string,
     @Body() dto: UpdateListingDto,
   ) {
-    return this.listingsService.update(user.id, id, dto);
+    return this.listingsService.update(userId, id, dto);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -105,8 +101,8 @@ export class ListingsController {
   @ApiOperation({
     summary: 'Pause an active listing',
   })
-  pause(@CurrentUser() user: CurrentUserPayload, @Param('id') id: string) {
-    return this.listingsService.pause(user.id, id);
+  pause(@CurrentUser('id') userId: string, @Param('id') id: string) {
+    return this.listingsService.pause(userId, id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -115,8 +111,8 @@ export class ListingsController {
   @ApiOperation({
     summary: 'Reactivate a paused listing',
   })
-  reactivate(@CurrentUser() user: CurrentUserPayload, @Param('id') id: string) {
-    return this.listingsService.reactivate(user.id, id);
+  reactivate(@CurrentUser('id') userId: string, @Param('id') id: string) {
+    return this.listingsService.reactivate(userId, id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -125,8 +121,8 @@ export class ListingsController {
   @ApiOperation({
     summary: 'Resubmit a rejected listing for moderation',
   })
-  resubmit(@CurrentUser() user: CurrentUserPayload, @Param('id') id: string) {
-    return this.listingsService.resubmit(user.id, id);
+  resubmit(@CurrentUser('id') userId: string, @Param('id') id: string) {
+    return this.listingsService.resubmit(userId, id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -135,8 +131,8 @@ export class ListingsController {
   @ApiOperation({
     summary: 'Close a listing',
   })
-  close(@CurrentUser() user: CurrentUserPayload, @Param('id') id: string) {
-    return this.listingsService.close(user.id, id);
+  close(@CurrentUser('id') userId: string, @Param('id') id: string) {
+    return this.listingsService.close(userId, id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -145,8 +141,8 @@ export class ListingsController {
   @ApiOperation({
     summary: 'Soft delete a listing',
   })
-  softDelete(@CurrentUser() user: CurrentUserPayload, @Param('id') id: string) {
-    return this.listingsService.softDelete(user.id, id);
+  softDelete(@CurrentUser('id') userId: string, @Param('id') id: string) {
+    return this.listingsService.softDelete(userId, id);
   }
 
   @Get(':id')
