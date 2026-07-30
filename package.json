@@ -1,9 +1,11 @@
 {
   "name": "morada",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Morada monorepo",
+  "private": true,
   "scripts": {
+    "dev:mobile": "pnpm --filter @morada/mobile start",
+    "typecheck:mobile": "pnpm --filter @morada/mobile typecheck",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
