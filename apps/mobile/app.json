@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "Morada",
+    "slug": "morada",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "scheme": "morada",
+    "newArchEnabled": true,
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "ie.morada.mobile"
+    },
+    "android": {
+      "package": "ie.morada.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#F7F8F5"
+      }
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}
