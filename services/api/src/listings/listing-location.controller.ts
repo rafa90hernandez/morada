@@ -1,11 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Put,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Put, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOkResponse,
@@ -21,7 +14,9 @@ import { ListingLocationService } from './listing-location.service';
 @ApiTags('Listing location')
 @Controller('listings')
 export class ListingLocationController {
-  constructor(private readonly listingLocationService: ListingLocationService) {}
+  constructor(
+    private readonly listingLocationService: ListingLocationService,
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
