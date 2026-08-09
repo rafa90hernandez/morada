@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 
 import { DatabaseService } from '../database/database.service';
+import type { Prisma } from '../generated/prisma/client';
 
 const MAX_PROVIDER_LENGTH = 100;
 
@@ -31,6 +32,31 @@ export class ContactVerificationService {
       return {
         channel: 'EMAIL' as const,
         verifiedAt,
+      };
+    });
+  }
+
+  async clearEmailVerification(userId: string) {
+    return this.database.$transaction(async (transaction) => {
+      await this.ensureUserVerificationExists(transaction, userId);
+
+      await transaction.verification.update({
+        where: { userId },
+        data: {
+          emailVerifiedAt: null,
+        },
+      });
+
+      await transaction.user.update({
+        where: { id: userId },
+        data: {
+          emailVerified: false,
+        },
+      });
+
+      return {
+        channel: 'EMAIL' as const,
+        verifiedAt: null,
       };
     });
   }
@@ -96,7 +122,7 @@ export class ContactVerificationService {
   }
 
   private async ensureUserVerificationExists(
-    transaction: Parameters<Parameters<DatabaseService['$transaction']>[0]>[0],
+    transaction: Prisma.TransactionClient,
     userId: string,
   ) {
     const verification = await transaction.verification.findUnique({
