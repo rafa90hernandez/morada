@@ -29,7 +29,10 @@ type ListingEditSnapshot = {
   exchangePreference?: ExchangePreferenceSnapshot | null;
 };
 
-function datesDiffer(nextValue: string | undefined, currentValue: Date | null | undefined) {
+function datesDiffer(
+  nextValue: string | undefined,
+  currentValue: Date | null | undefined,
+) {
   if (nextValue === undefined) {
     return false;
   }
@@ -37,7 +40,10 @@ function datesDiffer(nextValue: string | undefined, currentValue: Date | null | 
   return new Date(nextValue).getTime() !== currentValue?.getTime();
 }
 
-function arraysDiffer<T>(nextValue: T[] | undefined, currentValue: T[] | undefined) {
+function arraysDiffer<T extends string>(
+  nextValue: T[] | undefined,
+  currentValue: T[] | undefined,
+) {
   if (nextValue === undefined) {
     return false;
   }
@@ -46,7 +52,10 @@ function arraysDiffer<T>(nextValue: T[] | undefined, currentValue: T[] | undefin
     return true;
   }
 
-  return nextValue.some((value, index) => value !== currentValue[index]);
+  const nextSorted = [...nextValue].sort();
+  const currentSorted = [...currentValue].sort();
+
+  return nextSorted.some((value, index) => value !== currentSorted[index]);
 }
 
 export function hasCriticalListingChanges(
