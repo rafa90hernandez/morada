@@ -126,9 +126,9 @@ describe('ListingsService lifecycle', () => {
       status: ListingStatus.PENDING_REVIEW,
     });
 
-    await expect(service.pause('owner-id', 'listing-id')).rejects.toBeInstanceOf(
-      BadRequestException,
-    );
+    await expect(
+      service.pause('owner-id', 'listing-id'),
+    ).rejects.toBeInstanceOf(BadRequestException);
     expect(update).not.toHaveBeenCalled();
   });
 
@@ -220,9 +220,9 @@ describe('ListingsService lifecycle', () => {
       closedAt: new Date('2026-08-02T00:00:00.000Z'),
     });
 
-    await expect(service.close('owner-id', 'listing-id')).rejects.toBeInstanceOf(
-      BadRequestException,
-    );
+    await expect(
+      service.close('owner-id', 'listing-id'),
+    ).rejects.toBeInstanceOf(BadRequestException);
     expect(update).not.toHaveBeenCalled();
   });
 
@@ -230,7 +230,9 @@ describe('ListingsService lifecycle', () => {
     findFirst.mockResolvedValue(baseListing);
     update.mockResolvedValue(baseListing);
 
-    await expect(service.softDelete('owner-id', 'listing-id')).resolves.toEqual({
+    await expect(
+      service.softDelete('owner-id', 'listing-id'),
+    ).resolves.toEqual({
       deleted: true,
     });
 
