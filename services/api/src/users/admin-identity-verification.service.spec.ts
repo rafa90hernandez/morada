@@ -237,9 +237,9 @@ describe('AdminIdentityVerificationService', () => {
   });
 
   it('rejects blank rejection reasons before starting a transaction', () => {
-    expect(() =>
-      service.reject('admin-id', 'submission-id', '   '),
-    ).toThrow(BadRequestException);
+    expect(() => service.reject('admin-id', 'submission-id', '   ')).toThrow(
+      BadRequestException,
+    );
 
     expect($transaction).not.toHaveBeenCalled();
   });
