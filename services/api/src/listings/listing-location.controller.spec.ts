@@ -10,6 +10,10 @@ jest.mock('../auth/guards/jwt-auth.guard', () => ({
   JwtAuthGuard: class JwtAuthGuard {},
 }));
 
+jest.mock('./listing-location.service', () => ({
+  ListingLocationService: class ListingLocationService {},
+}));
+
 import { AdminGuard } from '../auth/guards/admin.guard';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AdminListingLocationController } from './admin-listing-location.controller';
