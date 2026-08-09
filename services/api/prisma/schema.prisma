@@ -150,6 +150,10 @@ model UserProfile {
   id                    String         @id @default(cuid())
   userId                String         @unique
   displayName           String
+  fullName              String?
+  dateOfBirth           DateTime?
+  nationality           String?
+  hometown              String?
   phone                 String?
   profilePhotoUrl       String?
   profilePhotoPublicId  String?
