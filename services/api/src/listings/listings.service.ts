@@ -6,7 +6,12 @@ import {
 
 import { ListingMapper } from '../common/mappers/listing.mapper';
 import { DatabaseService } from '../database/database.service';
-import { ListingStatus, ListingType } from '../generated/prisma/enums';
+import {
+  BathroomType,
+  BillsIncludedType,
+  ListingStatus,
+  ListingType,
+} from '../generated/prisma/enums';
 import { CreateListingDto } from './dto/create-listing.dto';
 import { MyListingsQueryDto } from './dto/my-listings-query.dto';
 import { UpdateListingDto } from './dto/update-listing.dto';
@@ -25,6 +30,11 @@ const listingRelations = {
     },
   },
   exchangePreference: true,
+  transportOptions: {
+    orderBy: {
+      createdAt: 'asc' as const,
+    },
+  },
 };
 
 @Injectable()
@@ -44,27 +54,80 @@ export class ListingsService {
         city: dto.city,
         area: dto.area,
         propertyType: dto.propertyType,
+        propertyOccupancyType: dto.propertyOccupancyType,
+        advertisedSpaceType: dto.advertisedSpaceType,
+        bedroomCount: dto.bedroomCount,
+        bathroomCount: dto.bathroomCount,
+        roomType: dto.roomType,
+        bedType: dto.bedType,
+        maxOccupants: dto.maxOccupants,
+        peopleSharingSpace: dto.peopleSharingSpace,
+        bathroomType: dto.bathroomType,
+        peopleSharingBathroom: dto.peopleSharingBathroom,
+        currentResidentCount: dto.currentResidentCount,
+        householdGenderComposition: dto.householdGenderComposition,
         monthlyPriceCents: dto.monthlyPriceCents,
         depositAmountCents: dto.depositAmountCents,
         billsIncludedType: dto.billsIncludedType,
+        estimatedMonthlyBillsCents: dto.estimatedMonthlyBillsCents,
+        firstRentAdvanceCents: dto.firstRentAdvanceCents,
         extraCostsNote: dto.extraCostsNote,
         furnished: dto.furnished,
         couplesAllowed: dto.couplesAllowed,
         petsAllowed: dto.petsAllowed,
         smokingAllowed: dto.smokingAllowed,
-        genderPreference: dto.genderPreference,
         landlordLivesHere: dto.landlordLivesHere,
+        childrenFamiliesAllowed: dto.childrenFamiliesAllowed,
+        studentsAllowed: dto.studentsAllowed,
         formalContract: dto.formalContract,
         landlordApprovalRequired: dto.landlordApprovalRequired,
+        proofOfIncomeRequired: dto.proofOfIncomeRequired,
+        proofOfEmploymentRequired: dto.proofOfEmploymentRequired,
+        priorReferenceRequired: dto.priorReferenceRequired,
+        otherRequirementsNote: dto.otherRequirementsNote,
         availableFrom: dto.availableFrom
           ? new Date(dto.availableFrom)
           : undefined,
         availableUntil: dto.availableUntil
           ? new Date(dto.availableUntil)
           : undefined,
+        minimumStayDays: dto.minimumStayDays,
+        floorNumber: dto.floorNumber,
+        isGroundFloor: dto.isGroundFloor,
+        hasLift: dto.hasLift,
+        stepFreeAccess: dto.stepFreeAccess,
+        accessibleEntrance: dto.accessibleEntrance,
+        adaptedBathroom: dto.adaptedBathroom,
+        wheelchairSpace: dto.wheelchairSpace,
+        accessibleParking: dto.accessibleParking,
+        accessibilityOtherNote: dto.accessibilityOtherNote,
+        heatingType: dto.heatingType,
+        internetAvailable: dto.internetAvailable,
+        wifiAvailable: dto.wifiAvailable,
+        internetIncludedInBills: dto.internetIncludedInBills,
+        internetSpeedMbps: dto.internetSpeedMbps,
+        internetProvider: dto.internetProvider,
+        washingMachine: dto.washingMachine,
+        dryer: dto.dryer,
+        laundrySharedBuilding: dto.laundrySharedBuilding,
+        laundryExtraCost: dto.laundryExtraCost,
+        kitchenAmenities: dto.kitchenAmenities ?? [],
+        outdoorAmenities: dto.outdoorAmenities ?? [],
+        carParkingAvailable: dto.carParkingAvailable,
+        motorbikeParkingAvailable: dto.motorbikeParkingAvailable,
+        bicycleParkingAvailable: dto.bicycleParkingAvailable,
+        parkingPaid: dto.parkingPaid,
+        parkingSecure: dto.parkingSecure,
+        partiesAllowed: dto.partiesAllowed,
+        visitorsAllowed: dto.visitorsAllowed,
+        quietHoursNote: dto.quietHoursNote,
         houseRules: dto.houseRules,
         transportInfo: dto.transportInfo,
-
+        transportOptions: dto.transportOptions?.length
+          ? {
+              create: dto.transportOptions,
+            }
+          : undefined,
         exchangePreference:
           dto.type === ListingType.EXCHANGE
             ? {
@@ -143,6 +206,21 @@ export class ListingsService {
         dto.propertyType ?? currentListing.propertyType ?? undefined,
       monthlyPriceCents:
         dto.monthlyPriceCents ?? currentListing.monthlyPriceCents ?? undefined,
+      billsIncludedType:
+        dto.billsIncludedType ?? currentListing.billsIncludedType ?? undefined,
+      estimatedMonthlyBillsCents:
+        dto.estimatedMonthlyBillsCents ??
+        currentListing.estimatedMonthlyBillsCents ??
+        undefined,
+      bathroomType:
+        dto.bathroomType ?? currentListing.bathroomType ?? undefined,
+      peopleSharingBathroom:
+        dto.peopleSharingBathroom ??
+        currentListing.peopleSharingBathroom ??
+        undefined,
+      isGroundFloor:
+        dto.isGroundFloor ?? currentListing.isGroundFloor ?? undefined,
+      floorNumber: dto.floorNumber ?? currentListing.floorNumber ?? undefined,
       desiredCity:
         dto.desiredCity ??
         currentListing.exchangePreference?.desiredCity ??
@@ -168,27 +246,82 @@ export class ListingsService {
         city: dto.city,
         area: dto.area,
         propertyType: dto.propertyType,
+        propertyOccupancyType: dto.propertyOccupancyType,
+        advertisedSpaceType: dto.advertisedSpaceType,
+        bedroomCount: dto.bedroomCount,
+        bathroomCount: dto.bathroomCount,
+        roomType: dto.roomType,
+        bedType: dto.bedType,
+        maxOccupants: dto.maxOccupants,
+        peopleSharingSpace: dto.peopleSharingSpace,
+        bathroomType: dto.bathroomType,
+        peopleSharingBathroom: dto.peopleSharingBathroom,
+        currentResidentCount: dto.currentResidentCount,
+        householdGenderComposition: dto.householdGenderComposition,
         monthlyPriceCents: dto.monthlyPriceCents,
         depositAmountCents: dto.depositAmountCents,
         billsIncludedType: dto.billsIncludedType,
+        estimatedMonthlyBillsCents: dto.estimatedMonthlyBillsCents,
+        firstRentAdvanceCents: dto.firstRentAdvanceCents,
         extraCostsNote: dto.extraCostsNote,
         furnished: dto.furnished,
         couplesAllowed: dto.couplesAllowed,
         petsAllowed: dto.petsAllowed,
         smokingAllowed: dto.smokingAllowed,
-        genderPreference: dto.genderPreference,
         landlordLivesHere: dto.landlordLivesHere,
+        childrenFamiliesAllowed: dto.childrenFamiliesAllowed,
+        studentsAllowed: dto.studentsAllowed,
         formalContract: dto.formalContract,
         landlordApprovalRequired: dto.landlordApprovalRequired,
+        proofOfIncomeRequired: dto.proofOfIncomeRequired,
+        proofOfEmploymentRequired: dto.proofOfEmploymentRequired,
+        priorReferenceRequired: dto.priorReferenceRequired,
+        otherRequirementsNote: dto.otherRequirementsNote,
         availableFrom: dto.availableFrom
           ? new Date(dto.availableFrom)
           : undefined,
         availableUntil: dto.availableUntil
           ? new Date(dto.availableUntil)
           : undefined,
+        minimumStayDays: dto.minimumStayDays,
+        floorNumber: dto.floorNumber,
+        isGroundFloor: dto.isGroundFloor,
+        hasLift: dto.hasLift,
+        stepFreeAccess: dto.stepFreeAccess,
+        accessibleEntrance: dto.accessibleEntrance,
+        adaptedBathroom: dto.adaptedBathroom,
+        wheelchairSpace: dto.wheelchairSpace,
+        accessibleParking: dto.accessibleParking,
+        accessibilityOtherNote: dto.accessibilityOtherNote,
+        heatingType: dto.heatingType,
+        internetAvailable: dto.internetAvailable,
+        wifiAvailable: dto.wifiAvailable,
+        internetIncludedInBills: dto.internetIncludedInBills,
+        internetSpeedMbps: dto.internetSpeedMbps,
+        internetProvider: dto.internetProvider,
+        washingMachine: dto.washingMachine,
+        dryer: dto.dryer,
+        laundrySharedBuilding: dto.laundrySharedBuilding,
+        laundryExtraCost: dto.laundryExtraCost,
+        kitchenAmenities: dto.kitchenAmenities,
+        outdoorAmenities: dto.outdoorAmenities,
+        carParkingAvailable: dto.carParkingAvailable,
+        motorbikeParkingAvailable: dto.motorbikeParkingAvailable,
+        bicycleParkingAvailable: dto.bicycleParkingAvailable,
+        parkingPaid: dto.parkingPaid,
+        parkingSecure: dto.parkingSecure,
+        partiesAllowed: dto.partiesAllowed,
+        visitorsAllowed: dto.visitorsAllowed,
+        quietHoursNote: dto.quietHoursNote,
         houseRules: dto.houseRules,
         transportInfo: dto.transportInfo,
-
+        transportOptions:
+          dto.transportOptions !== undefined
+            ? {
+                deleteMany: {},
+                create: dto.transportOptions,
+              }
+            : undefined,
         ...(requiresReview
           ? {
               status: ListingStatus.PENDING_REVIEW,
@@ -197,7 +330,6 @@ export class ListingsService {
               publishedAt: null,
             }
           : {}),
-
         exchangePreference:
           mergedListing.type === ListingType.EXCHANGE
             ? {
@@ -359,6 +491,12 @@ export class ListingsService {
       | 'area'
       | 'propertyType'
       | 'monthlyPriceCents'
+      | 'billsIncludedType'
+      | 'estimatedMonthlyBillsCents'
+      | 'bathroomType'
+      | 'peopleSharingBathroom'
+      | 'isGroundFloor'
+      | 'floorNumber'
       | 'desiredCity'
       | 'desiredAreas'
     >,
@@ -388,6 +526,33 @@ export class ListingsService {
       ) {
         throw new BadRequestException(
           'Desired city and budget are required for wanted listings.',
+        );
+      }
+    }
+
+    if (
+      dto.billsIncludedType === BillsIncludedType.NO &&
+      dto.estimatedMonthlyBillsCents === undefined
+    ) {
+      throw new BadRequestException(
+        'Estimated monthly bills are required when bills are not included.',
+      );
+    }
+
+    if (
+      dto.bathroomType === BathroomType.PRIVATE &&
+      dto.peopleSharingBathroom !== undefined &&
+      dto.peopleSharingBathroom > 0
+    ) {
+      throw new BadRequestException(
+        'A private bathroom cannot have people sharing the bathroom.',
+      );
+    }
+
+    if (dto.isGroundFloor === true && dto.floorNumber !== undefined) {
+      if (dto.floorNumber !== 0) {
+        throw new BadRequestException(
+          'Ground-floor listings must use floor number 0 when a floor number is supplied.',
         );
       }
     }
