@@ -50,9 +50,12 @@ describe('AdminIdentityVerificationService', () => {
 
   const read = jest.fn(() => Promise.resolve(Buffer.from('private-image')));
 
-  const service = new AdminIdentityVerificationService(database as never, {
-    read,
-  } as never);
+  const service = new AdminIdentityVerificationService(
+    database as never,
+    {
+      read,
+    } as never,
+  );
 
   beforeEach(() => {
     jest.clearAllMocks();
