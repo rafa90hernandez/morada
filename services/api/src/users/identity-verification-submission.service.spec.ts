@@ -53,14 +53,18 @@ describe('IdentityVerificationSubmissionService', () => {
     $transaction,
   };
 
-  const process = jest.fn(async (input: ReturnType<typeof file>) => ({
-    buffer: input.buffer,
-    mimeType: 'image/jpeg' as const,
-    sizeBytes: input.sizeBytes,
-  }));
+  const process = jest.fn((input: ReturnType<typeof file>) =>
+    Promise.resolve({
+      buffer: input.buffer,
+      mimeType: 'image/jpeg' as const,
+      sizeBytes: input.sizeBytes,
+    }),
+  );
 
-  const upload = jest.fn(async ({ key }: { key: string }) => ({ key }));
-  const deleteObject = jest.fn(async () => undefined);
+  const upload = jest.fn(({ key }: { key: string }) =>
+    Promise.resolve({ key }),
+  );
+  const deleteObject = jest.fn(() => Promise.resolve());
 
   const service = new IdentityVerificationSubmissionService(
     database as never,
@@ -203,9 +207,7 @@ describe('IdentityVerificationSubmissionService', () => {
           dateOfBirth: new Date('1990-01-01T00:00:00.000Z'),
         },
       },
-      identitySubmissions: [
-        { status: IdentityVerificationStatus.REJECTED },
-      ],
+      identitySubmissions: [{ status: IdentityVerificationStatus.REJECTED }],
     });
 
     await expect(
