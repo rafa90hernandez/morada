@@ -19,14 +19,16 @@ export type PublicUserWithRelations = Prisma.UserGetPayload<{
 export class UserMapper {
   static toPrivateResponse(user: PrivateUserWithRelations) {
     const eligibility = getAdultEligibility(user.profile?.dateOfBirth);
+    const emailVerified = Boolean(user.verification?.emailVerifiedAt);
+    const phoneVerified = Boolean(user.verification?.phoneVerifiedAt);
 
     return {
       id: user.id,
       email: user.email,
       role: user.role,
       status: user.status,
-      emailVerified: user.emailVerified,
-      phoneVerified: user.phoneVerified,
+      emailVerified,
+      phoneVerified,
       eligibility,
       lastLoginAt: user.lastLoginAt,
       createdAt: user.createdAt,
@@ -59,6 +61,8 @@ export class UserMapper {
         ? {
             emailVerifiedAt: user.verification.emailVerifiedAt,
             phoneVerifiedAt: user.verification.phoneVerifiedAt,
+            phoneVerificationProvider:
+              user.verification.phoneVerificationProvider,
             documentStatus: user.verification.documentStatus,
             documentSubmittedAt: user.verification.documentSubmittedAt,
             documentReviewedAt: user.verification.documentReviewedAt,
