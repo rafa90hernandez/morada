@@ -54,6 +54,22 @@ describe('ContactVerificationService', () => {
     });
   });
 
+  it('clears email verification timestamp and legacy boolean together', async () => {
+    await expect(service.clearEmailVerification('user-id')).resolves.toEqual({
+      channel: 'EMAIL',
+      verifiedAt: null,
+    });
+
+    expect(updateVerification).toHaveBeenCalledWith({
+      where: { userId: 'user-id' },
+      data: { emailVerifiedAt: null },
+    });
+    expect(updateUser).toHaveBeenCalledWith({
+      where: { id: 'user-id' },
+      data: { emailVerified: false },
+    });
+  });
+
   it('marks phone verified with a normalized provider and mirrors the legacy boolean', async () => {
     const verifiedAt = new Date('2026-08-01T10:00:00.000Z');
 
