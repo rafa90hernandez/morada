@@ -6,6 +6,7 @@ import {
 
 import { DatabaseService } from '../database/database.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { getAdultEligibility } from './policies/adult-eligibility.policy';
 
 @Injectable()
 export class UsersService {
@@ -41,9 +42,16 @@ export class UsersService {
     }
 
     const dateOfBirth = dto.dateOfBirth ? new Date(dto.dateOfBirth) : undefined;
+    const now = new Date();
 
-    if (dateOfBirth && dateOfBirth.getTime() > Date.now()) {
+    if (dateOfBirth && dateOfBirth.getTime() > now.getTime()) {
       throw new BadRequestException('Date of birth cannot be in the future.');
+    }
+
+    if (dateOfBirth && !getAdultEligibility(dateOfBirth, now).isEligible) {
+      throw new BadRequestException(
+        'Morada Beta requires users to be at least 18 years old.',
+      );
     }
 
     await this.database.userProfile.update({
