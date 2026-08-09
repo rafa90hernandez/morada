@@ -44,7 +44,10 @@ export class IdentityEvidenceImageProcessor {
 
       const metadata = await image.metadata();
 
-      if (!metadata.format || !['jpeg', 'png', 'webp'].includes(metadata.format)) {
+      if (
+        !metadata.format ||
+        !['jpeg', 'png', 'webp'].includes(metadata.format)
+      ) {
         throw new BadRequestException(
           'Identity evidence must contain a valid JPEG, PNG or WebP image.',
         );
@@ -88,9 +91,7 @@ export class IdentityEvidenceImageProcessor {
       throw new BadRequestException('Identity evidence cannot be empty.');
     }
 
-    if (
-      input.sizeBytes > IdentityEvidenceImageProcessor.MAX_INPUT_SIZE_BYTES
-    ) {
+    if (input.sizeBytes > IdentityEvidenceImageProcessor.MAX_INPUT_SIZE_BYTES) {
       throw new PayloadTooLargeException(
         'Each identity evidence image must not exceed 10 MB.',
       );
@@ -102,7 +103,9 @@ export class IdentityEvidenceImageProcessor {
       );
     }
 
-    if (!IdentityEvidenceImageProcessor.ALLOWED_MIME_TYPES.has(input.mimeType)) {
+    if (
+      !IdentityEvidenceImageProcessor.ALLOWED_MIME_TYPES.has(input.mimeType)
+    ) {
       throw new BadRequestException(
         'Identity evidence must be JPEG, PNG or WebP.',
       );
