@@ -1,4 +1,5 @@
 import type { Prisma } from '../../generated/prisma/client';
+import { getAdultEligibility } from '../../users/policies/adult-eligibility.policy';
 
 export type PrivateUserWithRelations = Prisma.UserGetPayload<{
   include: {
@@ -17,6 +18,8 @@ export type PublicUserWithRelations = Prisma.UserGetPayload<{
 
 export class UserMapper {
   static toPrivateResponse(user: PrivateUserWithRelations) {
+    const eligibility = getAdultEligibility(user.profile?.dateOfBirth);
+
     return {
       id: user.id,
       email: user.email,
@@ -24,6 +27,7 @@ export class UserMapper {
       status: user.status,
       emailVerified: user.emailVerified,
       phoneVerified: user.phoneVerified,
+      eligibility,
       lastLoginAt: user.lastLoginAt,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
@@ -34,6 +38,7 @@ export class UserMapper {
             displayName: user.profile.displayName,
             fullName: user.profile.fullName,
             dateOfBirth: user.profile.dateOfBirth,
+            age: eligibility.age,
             nationality: user.profile.nationality,
             hometown: user.profile.hometown,
             phone: user.profile.phone,
@@ -71,6 +76,8 @@ export class UserMapper {
   }
 
   static toPublicResponse(user: PublicUserWithRelations) {
+    const eligibility = getAdultEligibility(user.profile?.dateOfBirth);
+
     return {
       id: user.id,
       status: user.status,
@@ -79,6 +86,7 @@ export class UserMapper {
       profile: user.profile
         ? {
             displayName: user.profile.displayName,
+            age: eligibility.isEligible ? eligibility.age : null,
             profilePhotoUrl: user.profile.profilePhotoUrl,
             bio: user.profile.bio,
             primaryLanguage: user.profile.primaryLanguage,
