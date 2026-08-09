@@ -1,4 +1,9 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOkResponse,
@@ -10,11 +15,13 @@ import {
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UserMapper } from '../common/mappers/user.mapper';
-import type { PrivateUserWithRelations } from '../common/mappers/user.mapper';
+import { UsersService } from './users.service';
 
 @ApiTags('Users')
 @Controller('users')
 export class UsersController {
+  constructor(private readonly usersService: UsersService) {}
+
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
   @Get('me')
@@ -27,7 +34,13 @@ export class UsersController {
   @ApiUnauthorizedResponse({
     description: 'Missing, expired or invalid access token.',
   })
-  getMe(@CurrentUser() user: PrivateUserWithRelations) {
+  async getMe(@CurrentUser('id') userId: string) {
+    const user = await this.usersService.findById(userId);
+
+    if (!user) {
+      throw new UnauthorizedException('Authenticated user no longer exists.');
+    }
+
     return UserMapper.toPrivateResponse(user);
   }
 }
