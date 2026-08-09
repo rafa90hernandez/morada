@@ -103,9 +103,7 @@ export class IdentityVerificationController {
       documentType: dto.documentType,
       documentFront: this.toSubmissionFile(files?.documentFront?.[0]),
       documentBack: this.toSubmissionFile(files?.documentBack?.[0]),
-      selfieWithDocument: this.toSubmissionFile(
-        files?.selfieWithDocument?.[0],
-      ),
+      selfieWithDocument: this.toSubmissionFile(files?.selfieWithDocument?.[0]),
     });
   }
 
