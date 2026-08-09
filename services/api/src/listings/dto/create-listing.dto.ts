@@ -8,6 +8,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  Matches,
   MaxLength,
   Min,
   ValidateIf,
@@ -20,29 +21,38 @@ import {
   PropertyType,
 } from '../../generated/prisma/enums';
 
+const CONTAINS_NON_WHITESPACE = /\S/;
+const NON_BLANK_MESSAGE = 'must contain at least one non-whitespace character';
+
 export class CreateListingDto {
   @IsEnum(ListingType)
   type!: ListingType;
 
   @IsString()
   @IsNotEmpty()
+  @Matches(CONTAINS_NON_WHITESPACE, { message: `title ${NON_BLANK_MESSAGE}` })
   @MaxLength(120)
   title!: string;
 
   @IsString()
   @IsNotEmpty()
+  @Matches(CONTAINS_NON_WHITESPACE, {
+    message: `description ${NON_BLANK_MESSAGE}`,
+  })
   @MaxLength(5000)
   description!: string;
 
   @IsOptional()
   @IsString()
   @IsNotEmpty()
+  @Matches(CONTAINS_NON_WHITESPACE, { message: `city ${NON_BLANK_MESSAGE}` })
   @MaxLength(100)
   city?: string;
 
   @IsOptional()
   @IsString()
   @IsNotEmpty()
+  @Matches(CONTAINS_NON_WHITESPACE, { message: `area ${NON_BLANK_MESSAGE}` })
   @MaxLength(120)
   area?: string;
 
@@ -66,6 +76,10 @@ export class CreateListingDto {
 
   @IsOptional()
   @IsString()
+  @IsNotEmpty()
+  @Matches(CONTAINS_NON_WHITESPACE, {
+    message: `extraCostsNote ${NON_BLANK_MESSAGE}`,
+  })
   @MaxLength(500)
   extraCostsNote?: string;
 
@@ -111,11 +125,19 @@ export class CreateListingDto {
 
   @IsOptional()
   @IsString()
+  @IsNotEmpty()
+  @Matches(CONTAINS_NON_WHITESPACE, {
+    message: `houseRules ${NON_BLANK_MESSAGE}`,
+  })
   @MaxLength(2000)
   houseRules?: string;
 
   @IsOptional()
   @IsString()
+  @IsNotEmpty()
+  @Matches(CONTAINS_NON_WHITESPACE, {
+    message: `transportInfo ${NON_BLANK_MESSAGE}`,
+  })
   @MaxLength(1000)
   transportInfo?: string;
 
@@ -125,6 +147,9 @@ export class CreateListingDto {
   @IsOptional()
   @IsString()
   @IsNotEmpty()
+  @Matches(CONTAINS_NON_WHITESPACE, {
+    message: `desiredCity ${NON_BLANK_MESSAGE}`,
+  })
   @MaxLength(100)
   desiredCity?: string;
 
@@ -134,6 +159,10 @@ export class CreateListingDto {
   @ArrayMaxSize(20)
   @IsString({ each: true })
   @IsNotEmpty({ each: true })
+  @Matches(CONTAINS_NON_WHITESPACE, {
+    each: true,
+    message: `each desired area ${NON_BLANK_MESSAGE}`,
+  })
   @MaxLength(120, { each: true })
   desiredAreas?: string[];
 
@@ -164,6 +193,10 @@ export class CreateListingDto {
   @ValidateIf((dto: CreateListingDto) => dto.type === ListingType.EXCHANGE)
   @IsOptional()
   @IsString()
+  @IsNotEmpty()
+  @Matches(CONTAINS_NON_WHITESPACE, {
+    message: `exchangeNotes ${NON_BLANK_MESSAGE}`,
+  })
   @MaxLength(2000)
   exchangeNotes?: string;
 }
