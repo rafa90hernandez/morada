@@ -56,7 +56,7 @@ describe('ListingLocationService', () => {
     listing: {
       findFirst,
     },
-    $transaction: jest.fn(async (callback) => callback(transaction)),
+    $transaction: jest.fn((callback) => callback(transaction)),
   };
   const service = new ListingLocationService(database as never);
 
