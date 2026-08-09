@@ -62,9 +62,7 @@ describe('UserMapper eligibility and contact verification', () => {
   });
 
   it('derives contact verification from timestamps instead of legacy booleans', () => {
-    const user = userWithDateOfBirth(
-      new Date('1991-05-10T00:00:00.000Z'),
-    );
+    const user = userWithDateOfBirth(new Date('1991-05-10T00:00:00.000Z'));
     user.emailVerified = true;
     user.phoneVerified = true;
     user.verification = {
