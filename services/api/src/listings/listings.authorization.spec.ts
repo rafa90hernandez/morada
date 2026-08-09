@@ -1,6 +1,9 @@
 import { NotFoundException } from '@nestjs/common';
 
-import { DatabaseService } from '../database/database.service';
+jest.mock('../database/database.service', () => ({
+  DatabaseService: class DatabaseService {},
+}));
+
 import { ListingsService } from './listings.service';
 
 describe('ListingsService authorization boundaries', () => {
@@ -12,9 +15,9 @@ describe('ListingsService authorization boundaries', () => {
       findFirst,
       update,
     },
-  } as unknown as DatabaseService;
+  };
 
-  const service = new ListingsService(database);
+  const service = new ListingsService(database as never);
 
   beforeEach(() => {
     jest.clearAllMocks();
