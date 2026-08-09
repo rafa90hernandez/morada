@@ -22,7 +22,11 @@ function centerOfGridCell(value: number): number {
 export function deriveApproximatePublicLocation(
   exact: ExactListingCoordinates,
 ): ApproximatePublicListingLocation {
-  if (!Number.isFinite(exact.latitude) || exact.latitude < -90 || exact.latitude > 90) {
+  if (
+    !Number.isFinite(exact.latitude) ||
+    exact.latitude < -90 ||
+    exact.latitude > 90
+  ) {
     throw new RangeError('Latitude must be between -90 and 90 degrees.');
   }
 
