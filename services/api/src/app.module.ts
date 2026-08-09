@@ -31,10 +31,17 @@ import { ListingPhotosModule } from './listing-photos/listing-photos.module';
         NODE_ENV: Joi.string()
           .valid('development', 'test', 'staging', 'production')
           .default('development'),
-        PORT: Joi.number().default(3001),
+        PORT: Joi.number().port().default(3001),
         DATABASE_URL: Joi.string().required(),
         JWT_ACCESS_SECRET: Joi.string().min(32).required(),
         JWT_REFRESH_SECRET: Joi.string().min(32).required(),
+        CORS_ORIGINS: Joi.string()
+          .trim()
+          .when('NODE_ENV', {
+            is: Joi.valid('staging', 'production'),
+            then: Joi.required(),
+            otherwise: Joi.optional().allow(''),
+          }),
       }),
     }),
     ThrottlerModule.forRoot([

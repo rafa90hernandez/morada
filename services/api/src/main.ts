@@ -7,6 +7,7 @@ import { json, urlencoded } from 'express';
 import helmet from 'helmet';
 
 import { AppModule } from './app.module';
+import { resolveCorsOrigins } from './common/config/cors.config';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { ResponseMetadataInterceptor } from './common/interceptors/response-metadata.interceptor';
@@ -19,6 +20,10 @@ async function bootstrap(): Promise<void> {
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT') ?? 3001;
   const nodeEnv = configService.get<string>('NODE_ENV') ?? 'development';
+  const corsOrigins = resolveCorsOrigins(
+    nodeEnv,
+    configService.get<string>('CORS_ORIGINS'),
+  );
 
   app.use(
     helmet({
@@ -39,7 +44,7 @@ async function bootstrap(): Promise<void> {
   app.setGlobalPrefix('api/v1');
 
   app.enableCors({
-    origin: true,
+    origin: corsOrigins,
     credentials: true,
   });
 
