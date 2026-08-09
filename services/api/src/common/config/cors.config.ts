@@ -20,7 +20,9 @@ function normalizeOrigin(value: string): string {
     parsed.hash ||
     (parsed.pathname !== '/' && parsed.pathname !== '')
   ) {
-    throw new Error(`CORS origin must not contain credentials, path or query: ${value}`);
+    throw new Error(
+      `CORS origin must not contain credentials, path or query: ${value}`,
+    );
   }
 
   return parsed.origin;
