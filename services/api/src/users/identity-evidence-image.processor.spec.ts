@@ -1,7 +1,4 @@
-import {
-  BadRequestException,
-  PayloadTooLargeException,
-} from '@nestjs/common';
+import { BadRequestException, PayloadTooLargeException } from '@nestjs/common';
 
 import { IdentityEvidenceImageProcessor } from './identity-evidence-image.processor';
 
