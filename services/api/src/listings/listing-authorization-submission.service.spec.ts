@@ -62,7 +62,7 @@ describe('ListingAuthorizationSubmissionService', () => {
   const service = new ListingAuthorizationSubmissionService(
     database as never,
     evidenceProcessor as never,
-    privateStorage as never,
+    privateStorage,
   );
 
   beforeEach(() => {
@@ -163,7 +163,7 @@ describe('ListingAuthorizationSubmissionService', () => {
       sizeBytes: file.sizeBytes,
       extension: 'pdf',
     });
-    privateStorage.upload.mockImplementation(async ({ key }) => ({ key }));
+    privateStorage.upload.mockImplementation(({ key }) => ({ key }));
     submissionCreate.mockResolvedValueOnce({
       id: 'submission-id',
       listingId: 'listing-id',
