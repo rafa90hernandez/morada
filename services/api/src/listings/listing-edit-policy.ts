@@ -68,7 +68,8 @@ export function hasCriticalListingChanges(
     dto.type !== undefined && dto.type !== currentListing.type,
     dto.city !== undefined && dto.city !== currentListing.city,
     dto.area !== undefined && dto.area !== currentListing.area,
-    dto.propertyType !== undefined && dto.propertyType !== currentListing.propertyType,
+    dto.propertyType !== undefined &&
+      dto.propertyType !== currentListing.propertyType,
     dto.monthlyPriceCents !== undefined &&
       dto.monthlyPriceCents !== currentListing.monthlyPriceCents,
     dto.depositAmountCents !== undefined &&
