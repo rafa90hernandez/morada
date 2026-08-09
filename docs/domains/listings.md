@@ -35,10 +35,29 @@ Owner reads are scoped by both `userId` and listing ID and exclude soft-deleted 
 - close
 - soft delete
 
+## Administrative moderation
+
+Moderation is exposed separately under `admin/listings` and requires both `JwtAuthGuard` and the database-backed `AdminGuard`.
+
+The admin guard does not trust an authorization role stored in the JWT. The current access token contains the authenticated user identity, and moderation authorization resolves that user from the database for every moderation request. Access requires the current database record to have:
+
+- `role = ADMIN`
+- `status = ACTIVE`
+
+Supported moderation actions:
+
+- approve a `PENDING_REVIEW` listing
+- reject a `PENDING_REVIEW` listing with a non-blank reason
+
+Approval changes the listing to `ACTIVE`, clears stale rejection/pause state and sets `publishedAt`. Rejection changes the listing to `REJECTED`, stores the normalized rejection reason and clears publication state.
+
+The listing transition and its `AdminActionLog` entry are written in the same Prisma transaction so a moderation decision is not persisted without its audit record.
+
 ## State transition rules
 
 - Create → `PENDING_REVIEW`
-- Approved by moderation → `ACTIVE`
+- `PENDING_REVIEW` → `ACTIVE` through admin approval
+- `PENDING_REVIEW` → `REJECTED` through admin rejection
 - `ACTIVE` → `PAUSED`
 - `PAUSED` → `ACTIVE`
 - `REJECTED` → `PENDING_REVIEW` only through explicit resubmission
@@ -91,18 +110,20 @@ The policy should expand as Beta 1 adds structured address, sharing-condition an
 - Only active listings can be paused.
 - Only paused listings can be reactivated.
 - Only rejected listings can be resubmitted.
+- Only listings pending review can be administratively approved or rejected.
 - Ownership must be established by the database query, not by trusting request data.
+- Administrative authorization must be resolved from current database state, not trusted from request data.
 - Public responses and owner responses must remain separate mapper contracts.
 - Submitting an unchanged critical field must not cause unnecessary re-review.
 - A rejected listing must not bypass the explicit resubmission flow merely by being edited.
 
 ## Auditability
 
-The edit policy determines moderation state but does not by itself provide a complete listing change history. Beta 1 schema work must add an auditable owner-change trail for material listing changes and moderation decisions, as identified in the Beta 1 schema audit.
+Administrative approval and rejection decisions are recorded in `AdminActionLog` atomically with the listing transition.
+
+A complete owner-change history for material listing edits is still separate Beta 1 schema work, as identified in the Beta 1 schema audit.
 
 ## Known cleanup
 
 - Remove the obsolete `DRAFT` state from schema and service logic through a migration.
-- Use `@CurrentUser('id')` in the controller.
 - Remove the redundant ownership check in `softDelete` because `getOwnedListing` already scopes by owner.
-- Add non-empty and maximum-length validation to user-provided text fields.
