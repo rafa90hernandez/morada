@@ -1,5 +1,7 @@
+import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
+  ArrayUnique,
   IsArray,
   IsBoolean,
   IsDateString,
@@ -9,17 +11,28 @@ import {
   IsOptional,
   IsString,
   Matches,
+  Max,
   MaxLength,
   Min,
   ValidateIf,
+  ValidateNested,
 } from 'class-validator';
 
 import {
+  AdvertisedSpaceType,
+  BathroomType,
+  BedType,
   BillsIncludedType,
-  GenderPreference,
+  HeatingType,
+  HouseholdGenderComposition,
+  KitchenAmenity,
   ListingType,
+  OutdoorAmenity,
+  PropertyOccupancyType,
   PropertyType,
+  RoomType,
 } from '../../generated/prisma/enums';
+import { ListingTransportOptionDto } from './listing-transport-option.dto';
 
 const CONTAINS_NON_WHITESPACE = /\S/;
 const NON_BLANK_MESSAGE = 'must contain at least one non-whitespace character';
@@ -61,6 +74,66 @@ export class CreateListingDto {
   propertyType?: PropertyType;
 
   @IsOptional()
+  @IsEnum(PropertyOccupancyType)
+  propertyOccupancyType?: PropertyOccupancyType;
+
+  @IsOptional()
+  @IsEnum(AdvertisedSpaceType)
+  advertisedSpaceType?: AdvertisedSpaceType;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(50)
+  bedroomCount?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(50)
+  bathroomCount?: number;
+
+  @IsOptional()
+  @IsEnum(RoomType)
+  roomType?: RoomType;
+
+  @IsOptional()
+  @IsEnum(BedType)
+  bedType?: BedType;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  maxOccupants?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  peopleSharingSpace?: number;
+
+  @IsOptional()
+  @IsEnum(BathroomType)
+  bathroomType?: BathroomType;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  peopleSharingBathroom?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  currentResidentCount?: number;
+
+  @IsOptional()
+  @IsEnum(HouseholdGenderComposition)
+  householdGenderComposition?: HouseholdGenderComposition;
+
+  @IsOptional()
   @IsInt()
   @Min(0)
   monthlyPriceCents?: number;
@@ -73,6 +146,16 @@ export class CreateListingDto {
   @IsOptional()
   @IsEnum(BillsIncludedType)
   billsIncludedType?: BillsIncludedType;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  estimatedMonthlyBillsCents?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  firstRentAdvanceCents?: number;
 
   @IsOptional()
   @IsString()
@@ -100,12 +183,16 @@ export class CreateListingDto {
   smokingAllowed?: boolean;
 
   @IsOptional()
-  @IsEnum(GenderPreference)
-  genderPreference?: GenderPreference;
+  @IsBoolean()
+  landlordLivesHere?: boolean;
 
   @IsOptional()
   @IsBoolean()
-  landlordLivesHere?: boolean;
+  childrenFamiliesAllowed?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  studentsAllowed?: boolean;
 
   @IsOptional()
   @IsBoolean()
@@ -116,12 +203,168 @@ export class CreateListingDto {
   landlordApprovalRequired?: boolean;
 
   @IsOptional()
+  @IsBoolean()
+  proofOfIncomeRequired?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  proofOfEmploymentRequired?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  priorReferenceRequired?: boolean;
+
+  @IsOptional()
+  @IsString()
+  @Matches(CONTAINS_NON_WHITESPACE)
+  @MaxLength(1000)
+  otherRequirementsNote?: string;
+
+  @IsOptional()
   @IsDateString()
   availableFrom?: string;
 
   @IsOptional()
   @IsDateString()
   availableUntil?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(3650)
+  minimumStayDays?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(-10)
+  @Max(200)
+  floorNumber?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  isGroundFloor?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  hasLift?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  stepFreeAccess?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  accessibleEntrance?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  adaptedBathroom?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  wheelchairSpace?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  accessibleParking?: boolean;
+
+  @IsOptional()
+  @IsString()
+  @Matches(CONTAINS_NON_WHITESPACE)
+  @MaxLength(500)
+  accessibilityOtherNote?: string;
+
+  @IsOptional()
+  @IsEnum(HeatingType)
+  heatingType?: HeatingType;
+
+  @IsOptional()
+  @IsBoolean()
+  internetAvailable?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  wifiAvailable?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  internetIncludedInBills?: boolean;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(100000)
+  internetSpeedMbps?: number;
+
+  @IsOptional()
+  @IsString()
+  @Matches(CONTAINS_NON_WHITESPACE)
+  @MaxLength(120)
+  internetProvider?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  washingMachine?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  dryer?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  laundrySharedBuilding?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  laundryExtraCost?: boolean;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(7)
+  @ArrayUnique()
+  @IsEnum(KitchenAmenity, { each: true })
+  kitchenAmenities?: KitchenAmenity[];
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(5)
+  @ArrayUnique()
+  @IsEnum(OutdoorAmenity, { each: true })
+  outdoorAmenities?: OutdoorAmenity[];
+
+  @IsOptional()
+  @IsBoolean()
+  carParkingAvailable?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  motorbikeParkingAvailable?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  bicycleParkingAvailable?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  parkingPaid?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  parkingSecure?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  partiesAllowed?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  visitorsAllowed?: boolean;
+
+  @IsOptional()
+  @IsString()
+  @Matches(CONTAINS_NON_WHITESPACE)
+  @MaxLength(500)
+  quietHoursNote?: string;
 
   @IsOptional()
   @IsString()
@@ -140,6 +383,13 @@ export class CreateListingDto {
   })
   @MaxLength(1000)
   transportInfo?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(20)
+  @ValidateNested({ each: true })
+  @Type(() => ListingTransportOptionDto)
+  transportOptions?: ListingTransportOptionDto[];
 
   // Exchange fields
 

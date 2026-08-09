@@ -21,6 +21,11 @@ const moderationListingRelations = {
     },
   },
   exchangePreference: true,
+  transportOptions: {
+    orderBy: {
+      createdAt: 'asc' as const,
+    },
+  },
 };
 
 @Injectable()

@@ -1,9 +1,13 @@
 import {
+  AdvertisedSpaceType,
+  BathroomType,
   BillsIncludedType,
-  GenderPreference,
+  KitchenAmenity,
   ListingStatus,
   ListingType,
+  PropertyOccupancyType,
   PropertyType,
+  RoomType,
 } from '../generated/prisma/enums';
 import {
   hasCriticalListingChanges,
@@ -16,27 +20,50 @@ const baseListing = {
   city: 'Dublin',
   area: 'Dublin 8',
   propertyType: PropertyType.SINGLE_ROOM,
+  propertyOccupancyType: PropertyOccupancyType.SHARED_PROPERTY,
+  advertisedSpaceType: AdvertisedSpaceType.PRIVATE,
+  bedroomCount: 3,
+  bathroomCount: 2,
+  roomType: RoomType.SINGLE,
+  bedType: null,
+  maxOccupants: 1,
+  peopleSharingSpace: 0,
+  bathroomType: BathroomType.SHARED,
+  peopleSharingBathroom: 3,
+  currentResidentCount: 2,
+  householdGenderComposition: null,
   monthlyPriceCents: 90000,
   depositAmountCents: 90000,
   billsIncludedType: BillsIncludedType.NO,
+  estimatedMonthlyBillsCents: 12000,
+  firstRentAdvanceCents: 90000,
   extraCostsNote: null,
-  genderPreference: GenderPreference.ANY,
   landlordLivesHere: false,
   formalContract: true,
   landlordApprovalRequired: false,
+  proofOfIncomeRequired: false,
+  proofOfEmploymentRequired: false,
+  priorReferenceRequired: false,
+  childrenFamiliesAllowed: true,
+  studentsAllowed: true,
+  couplesAllowed: false,
+  petsAllowed: false,
+  smokingAllowed: false,
   availableFrom: new Date('2026-09-01T00:00:00.000Z'),
   availableUntil: null,
+  minimumStayDays: 90,
   exchangePreference: null,
 };
 
 describe('listing edit policy', () => {
-  it('keeps minor copy changes out of moderation', () => {
+  it('keeps minor copy and amenity changes out of moderation', () => {
     expect(
       hasCriticalListingChanges(baseListing, {
         title: 'Updated title',
         description: 'Updated description',
         houseRules: 'Updated rules',
         transportInfo: 'LUAS nearby',
+        kitchenAmenities: [KitchenAmenity.OVEN, KitchenAmenity.KETTLE],
       }),
     ).toBe(false);
 
@@ -64,11 +91,34 @@ describe('listing edit policy', () => {
     ).toBe(true);
   });
 
+  it.each([
+    ['propertyOccupancyType', PropertyOccupancyType.ENTIRE_PROPERTY],
+    ['advertisedSpaceType', AdvertisedSpaceType.SHARED],
+    ['bedroomCount', 4],
+    ['bathroomCount', 1],
+    ['maxOccupants', 2],
+    ['peopleSharingSpace', 1],
+    ['bathroomType', BathroomType.PRIVATE],
+    ['peopleSharingBathroom', 2],
+    ['currentResidentCount', 3],
+    ['minimumStayDays', 180],
+  ] as const)(
+    'returns an approved listing to review after structural change to %s',
+    (field, value) => {
+      expect(
+        shouldReturnListingToReview(baseListing, {
+          [field]: value,
+        }),
+      ).toBe(true);
+    },
+  );
+
   it('does not trigger review when a critical field is submitted unchanged', () => {
     expect(
       shouldReturnListingToReview(baseListing, {
         monthlyPriceCents: 90000,
         availableFrom: '2026-09-01T00:00:00.000Z',
+        propertyOccupancyType: PropertyOccupancyType.SHARED_PROPERTY,
       }),
     ).toBe(false);
   });
