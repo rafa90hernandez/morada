@@ -40,7 +40,9 @@ export class ListingAuthorizationEvidenceProcessor {
       return this.processPdf(input);
     }
 
-    if (ListingAuthorizationEvidenceProcessor.IMAGE_MIME_TYPES.has(input.mimeType)) {
+    if (
+      ListingAuthorizationEvidenceProcessor.IMAGE_MIME_TYPES.has(input.mimeType)
+    ) {
       return this.processImage(input);
     }
 
@@ -49,13 +51,16 @@ export class ListingAuthorizationEvidenceProcessor {
     );
   }
 
-  private validateCommonInput(input: ListingAuthorizationEvidenceInput): void {
+  private validateCommonInput(
+    input: ListingAuthorizationEvidenceInput,
+  ): void {
     if (input.sizeBytes <= 0 || input.buffer.length === 0) {
       throw new BadRequestException('Authorization evidence cannot be empty.');
     }
 
     if (
-      input.sizeBytes > ListingAuthorizationEvidenceProcessor.MAX_INPUT_SIZE_BYTES
+      input.sizeBytes >
+      ListingAuthorizationEvidenceProcessor.MAX_INPUT_SIZE_BYTES
     ) {
       throw new PayloadTooLargeException(
         'Each authorization evidence file must not exceed 10 MB.',
