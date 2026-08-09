@@ -276,7 +276,9 @@ export class IdentityVerificationSubmissionService {
     }
 
     if (!command.selfieWithDocument) {
-      throw new BadRequestException('Selfie with identity document is required.');
+      throw new BadRequestException(
+        'Selfie with identity document is required.',
+      );
     }
   }
 
