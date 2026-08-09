@@ -127,8 +127,8 @@ export class AdminIdentityVerificationService {
     submissionId: string,
     evidenceId: string,
   ) {
-    const evidence =
-      await this.database.identityVerificationEvidence.findFirst({
+    const evidence = await this.database.identityVerificationEvidence.findFirst(
+      {
         where: {
           id: evidenceId,
           submissionId,
@@ -143,12 +143,11 @@ export class AdminIdentityVerificationService {
           objectKey: true,
           mimeType: true,
         },
-      });
+      },
+    );
 
     if (!evidence) {
-      throw new NotFoundException(
-        'Identity verification evidence not found.',
-      );
+      throw new NotFoundException('Identity verification evidence not found.');
     }
 
     const buffer = await this.privateStorage.read(evidence.objectKey);
