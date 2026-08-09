@@ -1,14 +1,19 @@
-import { Inject, Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import type { PrivateStorageService } from '../common/storage/private-storage.interface';
 import { PRIVATE_STORAGE_SERVICE } from '../common/storage/storage.tokens';
 import { DatabaseService } from '../database/database.service';
 import { IdentityVerificationStatus } from '../generated/prisma/enums';
 
-const REVIEWABLE_STATUSES = [
+const REVIEWABLE_STATUSES = new Set<IdentityVerificationStatus>([
   IdentityVerificationStatus.SUBMITTED,
   IdentityVerificationStatus.UNDER_REVIEW,
-] as const;
+]);
 
 @Injectable()
 export class AdminIdentityVerificationService {
@@ -23,7 +28,7 @@ export class AdminIdentityVerificationService {
       where: {
         deletedAt: null,
         status: {
-          in: [...REVIEWABLE_STATUSES],
+          in: Array.from(REVIEWABLE_STATUSES),
         },
       },
       orderBy: {
@@ -109,7 +114,9 @@ export class AdminIdentityVerificationService {
       });
 
     if (!submission) {
-      throw new NotFoundException('Identity verification submission not found.');
+      throw new NotFoundException(
+        'Identity verification submission not found.',
+      );
     }
 
     return submission;
@@ -120,25 +127,28 @@ export class AdminIdentityVerificationService {
     submissionId: string,
     evidenceId: string,
   ) {
-    const evidence = await this.database.identityVerificationEvidence.findFirst({
-      where: {
-        id: evidenceId,
-        submissionId,
-        deletedAt: null,
-        submission: {
+    const evidence =
+      await this.database.identityVerificationEvidence.findFirst({
+        where: {
+          id: evidenceId,
+          submissionId,
           deletedAt: null,
+          submission: {
+            deletedAt: null,
+          },
         },
-      },
-      select: {
-        id: true,
-        type: true,
-        objectKey: true,
-        mimeType: true,
-      },
-    });
+        select: {
+          id: true,
+          type: true,
+          objectKey: true,
+          mimeType: true,
+        },
+      });
 
     if (!evidence) {
-      throw new NotFoundException('Identity verification evidence not found.');
+      throw new NotFoundException(
+        'Identity verification evidence not found.',
+      );
     }
 
     const buffer = await this.privateStorage.read(evidence.objectKey);
@@ -184,7 +194,7 @@ export class AdminIdentityVerificationService {
   private async decide(
     adminId: string,
     submissionId: string,
-    decision: IdentityVerificationStatus.APPROVED | IdentityVerificationStatus.REJECTED,
+    decision: IdentityVerificationStatus,
     reason?: string,
   ) {
     return this.database.$transaction(
@@ -224,7 +234,7 @@ export class AdminIdentityVerificationService {
           );
         }
 
-        if (!REVIEWABLE_STATUSES.includes(current.status as never)) {
+        if (!REVIEWABLE_STATUSES.has(current.status)) {
           throw new BadRequestException(
             'Only submitted or in-review identity verifications can be decided.',
           );
