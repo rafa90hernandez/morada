@@ -44,7 +44,8 @@ function hasLocationChanged(
     !privateLocation ||
     privateLocation.addressLine1 !== next.addressLine1.trim() ||
     privateLocation.addressLine2 !== normalizeOptional(next.addressLine2) ||
-    privateLocation.eircode !== normalizeOptional(next.eircode)?.toUpperCase() ||
+    privateLocation.eircode !==
+      normalizeOptional(next.eircode)?.toUpperCase() ||
     privateLocation.exactLatitude !== next.exactLatitude ||
     privateLocation.exactLongitude !== next.exactLongitude
   );
