@@ -2,6 +2,14 @@ import 'reflect-metadata';
 
 import { GUARDS_METADATA } from '@nestjs/common/constants';
 
+jest.mock('../auth/guards/admin.guard', () => ({
+  AdminGuard: class AdminGuard {},
+}));
+
+jest.mock('../auth/guards/jwt-auth.guard', () => ({
+  JwtAuthGuard: class JwtAuthGuard {},
+}));
+
 import { AdminGuard } from '../auth/guards/admin.guard';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AdminListingLocationController } from './admin-listing-location.controller';
