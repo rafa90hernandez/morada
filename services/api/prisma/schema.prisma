@@ -80,6 +80,80 @@ enum PropertyType {
   OTHER
 }
 
+enum PropertyOccupancyType {
+  ENTIRE_PROPERTY
+  SHARED_PROPERTY
+}
+
+enum AdvertisedSpaceType {
+  PRIVATE
+  SHARED
+}
+
+enum RoomType {
+  SINGLE
+  DOUBLE
+  TWIN
+  ENSUITE
+  STUDIO
+  OTHER
+}
+
+enum BedType {
+  SINGLE
+  DOUBLE
+  BUNK
+  TWO_SINGLE_BEDS
+  OTHER
+}
+
+enum BathroomType {
+  PRIVATE
+  SHARED
+}
+
+enum HouseholdGenderComposition {
+  ALL_WOMEN
+  ALL_MEN
+  MIXED
+  OTHER
+  NOT_STATED
+}
+
+enum HeatingType {
+  CENTRAL
+  GAS
+  ELECTRIC
+  HEAT_PUMP
+  OTHER
+  NOT_STATED
+}
+
+enum KitchenAmenity {
+  FRIDGE
+  FREEZER
+  OVEN
+  HOB
+  MICROWAVE
+  DISHWASHER
+  KETTLE
+}
+
+enum OutdoorAmenity {
+  BALCONY
+  GARDEN
+  YARD
+  TERRACE
+  SHARED_OUTDOOR_SPACE
+}
+
+enum TransportMode {
+  BUS
+  LUAS
+  DART
+  TRAIN
+}
+
 enum BillsIncludedType {
   YES
   NO
@@ -287,10 +361,25 @@ model Listing {
   area         String?
   propertyType PropertyType?
 
-  monthlyPriceCents  Int?
-  depositAmountCents Int?
-  billsIncludedType  BillsIncludedType?
-  extraCostsNote     String?
+  propertyOccupancyType PropertyOccupancyType?
+  advertisedSpaceType   AdvertisedSpaceType?
+  bedroomCount          Int?
+  bathroomCount         Int?
+  roomType              RoomType?
+  bedType               BedType?
+  maxOccupants          Int?
+  peopleSharingSpace    Int?
+  bathroomType          BathroomType?
+  peopleSharingBathroom Int?
+  currentResidentCount  Int?
+  householdGenderComposition HouseholdGenderComposition?
+
+  monthlyPriceCents        Int?
+  depositAmountCents       Int?
+  billsIncludedType        BillsIncludedType?
+  estimatedMonthlyBillsCents Int?
+  firstRentAdvanceCents    Int?
+  extraCostsNote           String?
 
   furnished         Boolean?
   couplesAllowed    Boolean?
@@ -298,15 +387,56 @@ model Listing {
   smokingAllowed    Boolean?
   genderPreference  GenderPreference?
   landlordLivesHere Boolean?
+  childrenFamiliesAllowed Boolean?
+  studentsAllowed         Boolean?
 
   formalContract           Boolean?
   landlordApprovalRequired Boolean?
+  proofOfIncomeRequired    Boolean?
+  proofOfEmploymentRequired Boolean?
+  priorReferenceRequired   Boolean?
+  otherRequirementsNote    String?
 
-  availableFrom  DateTime?
-  availableUntil DateTime?
+  availableFrom   DateTime?
+  availableUntil  DateTime?
+  minimumStayDays Int?
 
-  houseRules    String?
-  transportInfo String?
+  floorNumber    Int?
+  isGroundFloor  Boolean?
+  hasLift        Boolean?
+  stepFreeAccess Boolean?
+  accessibleEntrance Boolean?
+  adaptedBathroom    Boolean?
+  wheelchairSpace    Boolean?
+  accessibleParking  Boolean?
+  accessibilityOtherNote String?
+
+  heatingType             HeatingType?
+  internetAvailable       Boolean?
+  wifiAvailable           Boolean?
+  internetIncludedInBills Boolean?
+  internetSpeedMbps       Int?
+  internetProvider        String?
+
+  washingMachine        Boolean?
+  dryer                 Boolean?
+  laundrySharedBuilding Boolean?
+  laundryExtraCost      Boolean?
+
+  kitchenAmenities KitchenAmenity[] @default([])
+  outdoorAmenities OutdoorAmenity[] @default([])
+
+  carParkingAvailable       Boolean?
+  motorbikeParkingAvailable Boolean?
+  bicycleParkingAvailable   Boolean?
+  parkingPaid               Boolean?
+  parkingSecure             Boolean?
+
+  partiesAllowed  Boolean?
+  visitorsAllowed Boolean?
+  quietHoursNote  String?
+  houseRules      String?
+  transportInfo   String?
 
   trustScore      Int     @default(0)
   rejectionReason String?
@@ -316,9 +446,10 @@ model Listing {
   closedAt    DateTime?
   deletedAt   DateTime?
 
-  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user               User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
   photos             ListingPhoto[]
   exchangePreference ExchangePreference?
+  transportOptions   ListingTransportOption[]
   favorites          Favorite[]
   conversations      Conversation[]
   reports            Report[]
@@ -333,8 +464,32 @@ model Listing {
   @@index([area])
   @@index([monthlyPriceCents])
   @@index([availableFrom])
+  @@index([propertyOccupancyType])
+  @@index([advertisedSpaceType])
+  @@index([bedroomCount])
+  @@index([bathroomCount])
+  @@index([minimumStayDays])
   @@index([createdAt])
   @@index([deletedAt])
+}
+
+model ListingTransportOption {
+  id             String        @id @default(cuid())
+  listingId      String
+  mode           TransportMode
+  stopName       String?
+  lineName       String?
+  walkingMinutes Int?
+  distanceMeters Int?
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([listingId])
+  @@index([mode])
+  @@index([listingId, mode])
 }
 
 model ExchangePreference {
