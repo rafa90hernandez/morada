@@ -102,18 +102,49 @@ describe('listing edit policy', () => {
       type: ListingType.EXCHANGE,
       exchangePreference: {
         desiredCity: 'Dublin',
-        desiredAreas: ['Dublin 8'],
+        desiredAreas: ['Dublin 8', 'Dublin 6'],
         desiredMinPriceCents: 80000,
         desiredMaxPriceCents: 120000,
-        desiredPropertyTypes: [PropertyType.SINGLE_ROOM],
+        desiredPropertyTypes: [
+          PropertyType.SINGLE_ROOM,
+          PropertyType.APARTMENT,
+        ],
         desiredMoveDate: new Date('2026-09-15T00:00:00.000Z'),
       },
     };
 
     expect(
       shouldReturnListingToReview(exchangeListing, {
-        desiredAreas: ['Dublin 6'],
+        desiredAreas: ['Dublin 4'],
       }),
     ).toBe(true);
+  });
+
+  it('does not treat exchange array reordering as a material change', () => {
+    const exchangeListing = {
+      ...baseListing,
+      type: ListingType.EXCHANGE,
+      exchangePreference: {
+        desiredCity: 'Dublin',
+        desiredAreas: ['Dublin 8', 'Dublin 6'],
+        desiredMinPriceCents: 80000,
+        desiredMaxPriceCents: 120000,
+        desiredPropertyTypes: [
+          PropertyType.SINGLE_ROOM,
+          PropertyType.APARTMENT,
+        ],
+        desiredMoveDate: new Date('2026-09-15T00:00:00.000Z'),
+      },
+    };
+
+    expect(
+      shouldReturnListingToReview(exchangeListing, {
+        desiredAreas: ['Dublin 6', 'Dublin 8'],
+        desiredPropertyTypes: [
+          PropertyType.APARTMENT,
+          PropertyType.SINGLE_ROOM,
+        ],
+      }),
+    ).toBe(false);
   });
 });
