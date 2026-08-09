@@ -10,7 +10,9 @@ import { ListingLocationService } from './listing-location.service';
 @UseGuards(JwtAuthGuard, AdminGuard)
 @ApiBearerAuth('access-token')
 export class AdminListingLocationController {
-  constructor(private readonly listingLocationService: ListingLocationService) {}
+  constructor(
+    private readonly listingLocationService: ListingLocationService,
+  ) {}
 
   @Get(':id/location')
   @ApiOperation({
