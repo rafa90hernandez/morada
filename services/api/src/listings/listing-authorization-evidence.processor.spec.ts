@@ -1,7 +1,4 @@
-import {
-  BadRequestException,
-  PayloadTooLargeException,
-} from '@nestjs/common';
+import { BadRequestException, PayloadTooLargeException } from '@nestjs/common';
 
 import { ListingAuthorizationEvidenceProcessor } from './listing-authorization-evidence.processor';
 
