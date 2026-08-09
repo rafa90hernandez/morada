@@ -143,7 +143,10 @@ describe('ContactVerificationService', () => {
       service.markEmailVerified('user-id', new Date('invalid')),
     ).rejects.toBeInstanceOf(BadRequestException);
     await expect(
-      service.markEmailVerified('user-id', new Date('2999-01-01T00:00:00.000Z')),
+      service.markEmailVerified(
+        'user-id',
+        new Date('2999-01-01T00:00:00.000Z'),
+      ),
     ).rejects.toBeInstanceOf(BadRequestException);
 
     expect($transaction).not.toHaveBeenCalled();
