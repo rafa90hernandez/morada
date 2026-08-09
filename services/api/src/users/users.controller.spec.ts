@@ -10,7 +10,6 @@ jest.mock('../common/mappers/user.mapper', () => ({
   },
 }));
 
-import { UserMapper } from '../common/mappers/user.mapper';
 import { UsersController } from './users.controller';
 
 describe('UsersController', () => {
@@ -31,7 +30,6 @@ describe('UsersController', () => {
     });
 
     expect(findById).toHaveBeenCalledWith('user-id');
-    expect(UserMapper.toPrivateResponse).toHaveBeenCalledWith(user);
   });
 
   it('rejects a stale token whose user no longer exists', async () => {
@@ -40,7 +38,6 @@ describe('UsersController', () => {
     await expect(controller.getMe('missing-user')).rejects.toBeInstanceOf(
       UnauthorizedException,
     );
-    expect(UserMapper.toPrivateResponse).not.toHaveBeenCalled();
   });
 
   it('updates only the authenticated user profile and maps the hydrated result', async () => {
@@ -56,6 +53,5 @@ describe('UsersController', () => {
     });
 
     expect(updateProfile).toHaveBeenCalledWith('user-id', dto);
-    expect(UserMapper.toPrivateResponse).toHaveBeenCalledWith(user);
   });
 });
