@@ -40,9 +40,7 @@ export class UsersService {
       throw new NotFoundException('User profile not found.');
     }
 
-    const dateOfBirth = dto.dateOfBirth
-      ? new Date(dto.dateOfBirth)
-      : undefined;
+    const dateOfBirth = dto.dateOfBirth ? new Date(dto.dateOfBirth) : undefined;
 
     if (dateOfBirth && dateOfBirth.getTime() > Date.now()) {
       throw new BadRequestException('Date of birth cannot be in the future.');
