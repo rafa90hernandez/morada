@@ -111,13 +111,31 @@ The private contract returns an object key only and exposes server-side read/del
 
 Before staging/production accepts real evidence, the local provider must be replaced/configured with deployed private object storage that provides authorization and auditability. The application must never fall back to the public uploads provider for identity evidence.
 
+## Admin review
+
+All admin review routes live under `/api/v1/admin/identity-verification` and require both `JwtAuthGuard` and the database-backed `AdminGuard`. A JWT role claim alone is never sufficient; the current account must still be an active `ADMIN` in the database.
+
+The review queue contains only non-deleted `SUBMITTED` or `UNDER_REVIEW` attempts, oldest first. Queue/detail responses may expose the private account/profile fields needed for the manual comparison, but evidence metadata is reduced to safe IDs, type, MIME type, byte size and creation time. Raw object keys and checksums are not returned.
+
+Evidence is viewed through an authenticated admin route. The server resolves the evidence ID to its private object key, reads it through `PrivateStorageService` and streams the bytes with `Cache-Control: private, no-store`. No permanent evidence URL is created or returned.
+
+Every successful evidence view creates an `AdminActionLog` with action `IDENTITY_EVIDENCE_VIEWED`. The audit record references the evidence ID, submission ID and evidence type, but deliberately omits the private object key.
+
+Approval and rejection are server-side transactions. A decision is allowed only when:
+
+- the submission is not deleted;
+- its state is `SUBMITTED` or `UNDER_REVIEW`; and
+- it is still the latest non-deleted identity submission for the account.
+
+The transaction stores the reviewer, review timestamp and final state, mirrors the legacy verification summary while compatibility is required, and writes an `AdminActionLog` for the decision.
+
+A rejection reason is mandatory, trimmed and limited to 1000 characters. Approval does not require a free-text reason in Beta 1.
+
 ## Privacy boundary
 
 Identity submissions and evidence are private. They must not be returned by public user/profile mappers.
 
 The user-facing submission response contains safe workflow metadata only: submission ID, document type, status, submission timestamp and evidence types. Raw object keys, checksums and internal review data remain server/admin-only.
-
-Admin evidence access must be auditable. The existing `AdminActionLog` is the preferred audit boundary for review/access actions in #28.
 
 ## Retention
 
