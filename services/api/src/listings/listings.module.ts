@@ -3,6 +3,9 @@ import { Module } from '@nestjs/common';
 import { AdminGuard } from '../auth/guards/admin.guard';
 import { DatabaseModule } from '../database/database.module';
 import { AdminListingLocationController } from './admin-listing-location.controller';
+import { ListingAuthorizationController } from './listing-authorization.controller';
+import { ListingAuthorizationEvidenceProcessor } from './listing-authorization-evidence.processor';
+import { ListingAuthorizationSubmissionService } from './listing-authorization-submission.service';
 import { ListingLocationController } from './listing-location.controller';
 import { ListingLocationService } from './listing-location.service';
 import { ListingModerationController } from './listing-moderation.controller';
@@ -16,12 +19,15 @@ import { ListingsService } from './listings.service';
   controllers: [
     ListingsController,
     ListingLocationController,
+    ListingAuthorizationController,
     ListingModerationController,
     AdminListingLocationController,
   ],
   providers: [
     ListingsService,
     ListingLocationService,
+    ListingAuthorizationEvidenceProcessor,
+    ListingAuthorizationSubmissionService,
     ListingModerationService,
     ListingsRepository,
     AdminGuard,
