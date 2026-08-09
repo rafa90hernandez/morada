@@ -2,10 +2,7 @@ import { Global, Module } from '@nestjs/common';
 
 import { LocalPrivateStorageService } from './local-private-storage.service';
 import { LocalStorageService } from './local-storage.service';
-import {
-  PRIVATE_STORAGE_SERVICE,
-  STORAGE_SERVICE,
-} from './storage.tokens';
+import { PRIVATE_STORAGE_SERVICE, STORAGE_SERVICE } from './storage.tokens';
 
 @Global()
 @Module({
