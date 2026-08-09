@@ -187,40 +187,41 @@ export class ListingAuthorizationSubmissionService {
   async getLatestForOwner(authenticatedUserId: string, listingId: string) {
     await this.findOwnedListing(authenticatedUserId, listingId);
 
-    const submission = await this.database.listingAuthorizationSubmission.findFirst({
-      where: {
-        listingId,
-        deletedAt: null,
-      },
-      orderBy: {
-        submittedAt: 'desc',
-      },
-      select: {
-        id: true,
-        listingId: true,
-        status: true,
-        submittedAt: true,
-        reviewedAt: true,
-        reviewReason: true,
-        relationshipVerified: true,
-        landlordAuthorizationVerified: true,
-        evidence: {
-          where: {
-            deletedAt: null,
-          },
-          orderBy: {
-            createdAt: 'asc',
-          },
-          select: {
-            id: true,
-            type: true,
-            mimeType: true,
-            sizeBytes: true,
-            originalFileName: true,
+    const submission =
+      await this.database.listingAuthorizationSubmission.findFirst({
+        where: {
+          listingId,
+          deletedAt: null,
+        },
+        orderBy: {
+          submittedAt: 'desc',
+        },
+        select: {
+          id: true,
+          listingId: true,
+          status: true,
+          submittedAt: true,
+          reviewedAt: true,
+          reviewReason: true,
+          relationshipVerified: true,
+          landlordAuthorizationVerified: true,
+          evidence: {
+            where: {
+              deletedAt: null,
+            },
+            orderBy: {
+              createdAt: 'asc',
+            },
+            select: {
+              id: true,
+              type: true,
+              mimeType: true,
+              sizeBytes: true,
+              originalFileName: true,
+            },
           },
         },
-      },
-    });
+      });
 
     return submission;
   }
@@ -302,7 +303,9 @@ export class ListingAuthorizationSubmissionService {
     }
   }
 
-  private requireEvidence(evidence: ListingAuthorizationEvidenceUpload[]): void {
+  private requireEvidence(
+    evidence: ListingAuthorizationEvidenceUpload[],
+  ): void {
     if (evidence.length === 0) {
       throw new BadRequestException(
         'At least one right-to-advertise evidence file is required.',
@@ -357,8 +360,12 @@ export class ListingAuthorizationSubmissionService {
       return null;
     }
 
-    const normalized = basename(value)
-      .replace(/[\u0000-\u001f\u007f]/g, '_')
+    const normalized = Array.from(basename(value))
+      .map((character) => {
+        const code = character.charCodeAt(0);
+        return code < 32 || code === 127 ? '_' : character;
+      })
+      .join('')
       .trim()
       .slice(0, 180);
 
