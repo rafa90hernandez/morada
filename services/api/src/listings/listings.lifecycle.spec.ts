@@ -230,11 +230,11 @@ describe('ListingsService lifecycle', () => {
     findFirst.mockResolvedValue(baseListing);
     update.mockResolvedValue(baseListing);
 
-    await expect(
-      service.softDelete('owner-id', 'listing-id'),
-    ).resolves.toEqual({
-      deleted: true,
-    });
+    await expect(service.softDelete('owner-id', 'listing-id')).resolves.toEqual(
+      {
+        deleted: true,
+      },
+    );
 
     expect(update).toHaveBeenCalledWith(
       expect.objectContaining({
