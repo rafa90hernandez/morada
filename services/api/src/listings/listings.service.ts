@@ -10,6 +10,7 @@ import { ListingStatus, ListingType } from '../generated/prisma/enums';
 import { CreateListingDto } from './dto/create-listing.dto';
 import { MyListingsQueryDto } from './dto/my-listings-query.dto';
 import { UpdateListingDto } from './dto/update-listing.dto';
+import { shouldReturnListingToReview } from './listing-edit-policy';
 
 const listingRelations = {
   user: {
@@ -154,6 +155,8 @@ export class ListingsService {
 
     this.validateListing(mergedListing);
 
+    const requiresReview = shouldReturnListingToReview(currentListing, dto);
+
     const listing = await this.database.listing.update({
       where: {
         id,
@@ -186,10 +189,14 @@ export class ListingsService {
         houseRules: dto.houseRules,
         transportInfo: dto.transportInfo,
 
-        status: ListingStatus.PENDING_REVIEW,
-        rejectionReason: null,
-        pausedReason: null,
-        publishedAt: null,
+        ...(requiresReview
+          ? {
+              status: ListingStatus.PENDING_REVIEW,
+              rejectionReason: null,
+              pausedReason: null,
+              publishedAt: null,
+            }
+          : {}),
 
         exchangePreference:
           mergedListing.type === ListingType.EXCHANGE
