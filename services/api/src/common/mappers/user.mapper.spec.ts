@@ -38,7 +38,7 @@ function userWithDateOfBirth(dateOfBirth: Date | null) {
   };
 }
 
-describe('UserMapper eligibility', () => {
+describe('UserMapper eligibility and contact verification', () => {
   beforeEach(() => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date('2026-08-09T12:00:00.000Z'));
@@ -59,6 +59,30 @@ describe('UserMapper eligibility', () => {
       age: null,
       isEligible: false,
     });
+  });
+
+  it('derives contact verification from timestamps instead of legacy booleans', () => {
+    const user = userWithDateOfBirth(
+      new Date('1991-05-10T00:00:00.000Z'),
+    );
+    user.emailVerified = true;
+    user.phoneVerified = true;
+    user.verification = {
+      emailVerifiedAt: null,
+      phoneVerifiedAt: new Date('2026-08-01T10:00:00.000Z'),
+      phoneVerificationProvider: 'provider-example',
+      documentStatus: null,
+      documentSubmittedAt: null,
+      documentReviewedAt: null,
+    } as never;
+
+    const response = UserMapper.toPrivateResponse(user as never);
+
+    expect(response.emailVerified).toBe(false);
+    expect(response.phoneVerified).toBe(true);
+    expect(response.verification?.phoneVerificationProvider).toBe(
+      'provider-example',
+    );
   });
 
   it('exposes derived age publicly without exposing full name or date of birth', () => {
