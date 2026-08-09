@@ -357,59 +357,61 @@ model Listing {
   title       String
   description String
 
-  city         String?
-  area         String?
-  propertyType PropertyType?
+  city           String?
+  area           String?
+  county         String?
+  postalDistrict String?
+  propertyType   PropertyType?
 
-  propertyOccupancyType PropertyOccupancyType?
-  advertisedSpaceType   AdvertisedSpaceType?
-  bedroomCount          Int?
-  bathroomCount         Int?
-  roomType              RoomType?
-  bedType               BedType?
-  maxOccupants          Int?
-  peopleSharingSpace    Int?
-  bathroomType          BathroomType?
-  peopleSharingBathroom Int?
-  currentResidentCount  Int?
-  householdGenderComposition HouseholdGenderComposition?
+  propertyOccupancyType       PropertyOccupancyType?
+  advertisedSpaceType         AdvertisedSpaceType?
+  bedroomCount                Int?
+  bathroomCount               Int?
+  roomType                    RoomType?
+  bedType                     BedType?
+  maxOccupants                Int?
+  peopleSharingSpace          Int?
+  bathroomType                BathroomType?
+  peopleSharingBathroom       Int?
+  currentResidentCount        Int?
+  householdGenderComposition  HouseholdGenderComposition?
 
-  monthlyPriceCents        Int?
-  depositAmountCents       Int?
-  billsIncludedType        BillsIncludedType?
+  monthlyPriceCents          Int?
+  depositAmountCents         Int?
+  billsIncludedType          BillsIncludedType?
   estimatedMonthlyBillsCents Int?
-  firstRentAdvanceCents    Int?
-  extraCostsNote           String?
+  firstRentAdvanceCents      Int?
+  extraCostsNote             String?
 
-  furnished         Boolean?
-  couplesAllowed    Boolean?
-  petsAllowed       Boolean?
-  smokingAllowed    Boolean?
-  genderPreference  GenderPreference?
-  landlordLivesHere Boolean?
+  furnished               Boolean?
+  couplesAllowed          Boolean?
+  petsAllowed             Boolean?
+  smokingAllowed          Boolean?
+  genderPreference        GenderPreference?
+  landlordLivesHere       Boolean?
   childrenFamiliesAllowed Boolean?
   studentsAllowed         Boolean?
 
-  formalContract           Boolean?
-  landlordApprovalRequired Boolean?
-  proofOfIncomeRequired    Boolean?
-  proofOfEmploymentRequired Boolean?
-  priorReferenceRequired   Boolean?
-  otherRequirementsNote    String?
+  formalContract              Boolean?
+  landlordApprovalRequired    Boolean?
+  proofOfIncomeRequired       Boolean?
+  proofOfEmploymentRequired   Boolean?
+  priorReferenceRequired      Boolean?
+  otherRequirementsNote       String?
 
   availableFrom   DateTime?
   availableUntil  DateTime?
   minimumStayDays Int?
 
-  floorNumber    Int?
-  isGroundFloor  Boolean?
-  hasLift        Boolean?
-  stepFreeAccess Boolean?
-  accessibleEntrance Boolean?
-  adaptedBathroom    Boolean?
-  wheelchairSpace    Boolean?
-  accessibleParking  Boolean?
-  accessibilityOtherNote String?
+  floorNumber             Int?
+  isGroundFloor           Boolean?
+  hasLift                 Boolean?
+  stepFreeAccess          Boolean?
+  accessibleEntrance      Boolean?
+  adaptedBathroom         Boolean?
+  wheelchairSpace         Boolean?
+  accessibleParking       Boolean?
+  accessibilityOtherNote  String?
 
   heatingType             HeatingType?
   internetAvailable       Boolean?
@@ -450,6 +452,8 @@ model Listing {
   photos             ListingPhoto[]
   exchangePreference ExchangePreference?
   transportOptions   ListingTransportOption[]
+  privateLocation    ListingPrivateLocation?
+  publicLocation     ListingPublicLocation?
   favorites          Favorite[]
   conversations      Conversation[]
   reports            Report[]
@@ -462,6 +466,8 @@ model Listing {
   @@index([type])
   @@index([city])
   @@index([area])
+  @@index([county])
+  @@index([postalDistrict])
   @@index([monthlyPriceCents])
   @@index([availableFrom])
   @@index([propertyOccupancyType])
@@ -471,6 +477,38 @@ model Listing {
   @@index([minimumStayDays])
   @@index([createdAt])
   @@index([deletedAt])
+}
+
+model ListingPrivateLocation {
+  id             String  @id @default(cuid())
+  listingId      String  @unique
+  addressLine1   String
+  addressLine2   String?
+  eircode        String?
+  exactLatitude  Float
+  exactLongitude Float
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ListingPublicLocation {
+  id                   String @id @default(cuid())
+  listingId            String @unique
+  latitude             Float
+  longitude            Float
+  radiusMeters         Int
+  approximationVersion String
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([latitude])
+  @@index([longitude])
 }
 
 model ListingTransportOption {
