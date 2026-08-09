@@ -13,6 +13,27 @@ const CONTAINS_NON_WHITESPACE = /\S/;
 export class ListingPrivateLocationDto {
   @IsString()
   @Matches(CONTAINS_NON_WHITESPACE)
+  @MaxLength(100)
+  city!: string;
+
+  @IsString()
+  @Matches(CONTAINS_NON_WHITESPACE)
+  @MaxLength(120)
+  area!: string;
+
+  @IsString()
+  @Matches(CONTAINS_NON_WHITESPACE)
+  @MaxLength(100)
+  county!: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(CONTAINS_NON_WHITESPACE)
+  @MaxLength(40)
+  postalDistrict?: string;
+
+  @IsString()
+  @Matches(CONTAINS_NON_WHITESPACE)
   @MaxLength(200)
   addressLine1!: string;
 
