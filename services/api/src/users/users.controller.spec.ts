@@ -1,0 +1,44 @@
+import { UnauthorizedException } from '@nestjs/common';
+
+jest.mock('../database/database.service', () => ({
+  DatabaseService: class DatabaseService {},
+}));
+
+jest.mock('../common/mappers/user.mapper', () => ({
+  UserMapper: {
+    toPrivateResponse: jest.fn((user) => ({ id: user.id })),
+  },
+}));
+
+import { UserMapper } from '../common/mappers/user.mapper';
+import { UsersController } from './users.controller';
+
+describe('UsersController', () => {
+  const findById = jest.fn();
+  const controller = new UsersController({ findById } as never);
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('hydrates the authenticated principal from the database before mapping it', async () => {
+    const user = { id: 'user-id' };
+    findById.mockResolvedValue(user);
+
+    await expect(controller.getMe('user-id')).resolves.toEqual({
+      id: 'user-id',
+    });
+
+    expect(findById).toHaveBeenCalledWith('user-id');
+    expect(UserMapper.toPrivateResponse).toHaveBeenCalledWith(user);
+  });
+
+  it('rejects a stale token whose user no longer exists', async () => {
+    findById.mockResolvedValue(null);
+
+    await expect(controller.getMe('missing-user')).rejects.toBeInstanceOf(
+      UnauthorizedException,
+    );
+    expect(UserMapper.toPrivateResponse).not.toHaveBeenCalled();
+  });
+});
