@@ -24,6 +24,10 @@ describe('UsersService profile updates', () => {
     jest.clearAllMocks();
   });
 
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   it('normalizes allowed profile fields and returns the hydrated user', async () => {
     const existingUser = {
       id: 'user-id',
@@ -79,6 +83,50 @@ describe('UsersService profile updates', () => {
         isStudent: true,
       },
     });
+  });
+
+  it('rejects an underage date of birth before writing', async () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-08-09T12:00:00.000Z'));
+    findUnique.mockResolvedValue({
+      id: 'user-id',
+      profile: { id: 'profile-id' },
+    });
+
+    await expect(
+      service.updateProfile('user-id', {
+        dateOfBirth: '2008-08-10',
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    expect(updateProfileRecord).not.toHaveBeenCalled();
+  });
+
+  it('accepts the date of birth on the exact 18th birthday', async () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-08-09T12:00:00.000Z'));
+
+    const existingUser = {
+      id: 'user-id',
+      profile: { id: 'profile-id' },
+    };
+    const updatedUser = {
+      ...existingUser,
+      profile: { id: 'profile-id', dateOfBirth: new Date('2008-08-09') },
+    };
+
+    findUnique
+      .mockResolvedValueOnce(existingUser)
+      .mockResolvedValueOnce(updatedUser);
+    updateProfileRecord.mockResolvedValue(updatedUser.profile);
+
+    await expect(
+      service.updateProfile('user-id', {
+        dateOfBirth: '2008-08-09',
+      }),
+    ).resolves.toBe(updatedUser);
+
+    expect(updateProfileRecord).toHaveBeenCalled();
   });
 
   it('rejects a date of birth in the future before writing', async () => {
