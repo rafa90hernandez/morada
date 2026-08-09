@@ -41,6 +41,27 @@ For deterministic and conservative handling of a February 29 birth date, the ann
 
 Profile updates reject a future date of birth and reject a DOB that produces an age below 18. Existing accounts with no DOB remain valid accounts but are explicitly incomplete/ineligible until they provide an eligible DOB.
 
+## Contact verification
+
+`Verification.emailVerifiedAt` and `Verification.phoneVerifiedAt` are the authoritative Beta 1 contact-verification state.
+
+A channel is verified only when its corresponding timestamp is present. Private API responses derive `emailVerified` and `phoneVerified` from these timestamps rather than trusting the legacy booleans on `User`.
+
+`User.emailVerified` and `User.phoneVerified` remain temporarily as compatibility mirrors while the schema evolves. Supported state transitions must update the authoritative timestamp and its legacy boolean mirror inside the same database transaction.
+
+`ContactVerificationService` owns these transitions:
+
+- mark email verified
+- clear email verification
+- mark phone verified
+- clear phone verification
+
+Phone verification also records a provider identifier. The identifier is vendor-agnostic and normalized by the service; Sprint 2 does not choose or integrate a paid SMS provider yet.
+
+There is intentionally no public API endpoint that simply marks a channel verified. A future email/SMS verification adapter must prove its challenge first and then call the service transition. This avoids creating a client-controlled verification bypass.
+
+When a verified contact value is changed in a future account-settings flow, that flow must revoke the corresponding verification through `ContactVerificationService` before or together with the contact change.
+
 ## Private profile fields
 
 The authenticated private response may include:
@@ -78,8 +99,10 @@ Public user responses may include presentation/community information such as:
 
 The service normalizes text, rejects a date of birth in the future and enforces the 18+ policy when DOB is supplied.
 
-Phone and verification evidence are not modified through this generic profile update route. Contact-verification state is handled by the dedicated Sprint 2 verification work.
+Phone and verification evidence are not modified through this generic profile update route. Contact-verification transitions use `ContactVerificationService`.
 
 ## Compatibility
 
 New identity fields are nullable during the transition because existing accounts were created before these fields existed. Missing identity fields mean the account is incomplete; they must not be interpreted as verified or eligible by later business rules.
+
+The legacy contact-verification booleans remain schema fields for now, but timestamps are authoritative. Removing the mirrors can happen in a later migration after all consumers rely on the verification relation.
