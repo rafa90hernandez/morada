@@ -1,4 +1,8 @@
-import { ListingStatus, ListingType, TransportMode } from '../../generated/prisma/enums';
+import {
+  ListingStatus,
+  ListingType,
+  TransportMode,
+} from '../../generated/prisma/enums';
 import { ListingMapper } from './listing.mapper';
 
 describe('ListingMapper', () => {
