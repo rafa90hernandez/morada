@@ -236,10 +236,10 @@ describe('AdminIdentityVerificationService', () => {
     );
   });
 
-  it('rejects blank rejection reasons before starting a transaction', async () => {
-    await expect(
+  it('rejects blank rejection reasons before starting a transaction', () => {
+    expect(() =>
       service.reject('admin-id', 'submission-id', '   '),
-    ).rejects.toBeInstanceOf(BadRequestException);
+    ).toThrow(BadRequestException);
 
     expect($transaction).not.toHaveBeenCalled();
   });
