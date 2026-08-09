@@ -7,6 +7,10 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AdminListingLocationController } from './admin-listing-location.controller';
 import { ListingLocationController } from './listing-location.controller';
 
+function getMethod(target: object, propertyKey: string) {
+  return Object.getOwnPropertyDescriptor(target, propertyKey)?.value;
+}
+
 describe('listing location authorization metadata', () => {
   it('requires database-backed admin authorization for admin location reads', () => {
     const guards = Reflect.getMetadata(
@@ -20,11 +24,11 @@ describe('listing location authorization metadata', () => {
   it('requires authentication for owner exact-location reads and writes', () => {
     const writeGuards = Reflect.getMetadata(
       GUARDS_METADATA,
-      ListingLocationController.prototype.setOwnerLocation,
+      getMethod(ListingLocationController.prototype, 'setOwnerLocation'),
     );
     const readGuards = Reflect.getMetadata(
       GUARDS_METADATA,
-      ListingLocationController.prototype.getOwnerLocation,
+      getMethod(ListingLocationController.prototype, 'getOwnerLocation'),
     );
 
     expect(writeGuards).toEqual([JwtAuthGuard]);
@@ -34,7 +38,7 @@ describe('listing location authorization metadata', () => {
   it('keeps the approximate public-location read unguarded', () => {
     const guards = Reflect.getMetadata(
       GUARDS_METADATA,
-      ListingLocationController.prototype.getPublicLocation,
+      getMethod(ListingLocationController.prototype, 'getPublicLocation'),
     );
 
     expect(guards).toBeUndefined();
