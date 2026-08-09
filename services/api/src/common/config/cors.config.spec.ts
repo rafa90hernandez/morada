@@ -28,9 +28,9 @@ describe('resolveCorsOrigins', () => {
     expect(() => resolveCorsOrigins('production', 'morada.ie')).toThrow(
       'Invalid CORS origin',
     );
-    expect(() => resolveCorsOrigins('production', 'file:///tmp/morada')).toThrow(
-      'CORS origin must use http or https',
-    );
+    expect(() =>
+      resolveCorsOrigins('production', 'file:///tmp/morada'),
+    ).toThrow('CORS origin must use http or https');
   });
 
   it('rejects origins containing paths, queries or credentials', () => {
