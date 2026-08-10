@@ -1,10 +1,13 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { DatabaseService } from '../database/database.service';
 import {
   IdentityVerificationStatus,
   ListingAuthorizationStatus,
-  ListingCloseReason,
   ListingStatus,
   UserStatus,
 } from '../generated/prisma/enums';
@@ -36,7 +39,10 @@ export class ListingLifecycleService {
       },
     });
 
-    if (!lifecycle?.expiresAt || lifecycle.expiresAt.getTime() <= now.getTime()) {
+    if (
+      !lifecycle?.expiresAt ||
+      lifecycle.expiresAt.getTime() <= now.getTime()
+    ) {
       throw new NotFoundException('Listing not found.');
     }
 
@@ -280,7 +286,9 @@ export class ListingLifecycleService {
     }
 
     if (listing.user.status !== UserStatus.ACTIVE) {
-      throw new BadRequestException('The advertiser account must remain active.');
+      throw new BadRequestException(
+        'The advertiser account must remain active.',
+      );
     }
 
     const identity = listing.user.verification?.identitySubmissions[0];
@@ -297,7 +305,9 @@ export class ListingLifecycleService {
     }
 
     if (listing.photos.length === 0) {
-      throw new BadRequestException('At least one photo is required for renewal.');
+      throw new BadRequestException(
+        'At least one photo is required for renewal.',
+      );
     }
 
     const authorization = listing.authorizationSubmissions[0];
