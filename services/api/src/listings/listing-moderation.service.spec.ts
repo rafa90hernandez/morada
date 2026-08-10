@@ -118,11 +118,7 @@ describe('ListingModerationService', () => {
   });
 
   it('approves an exact reviewed version when every publication gate passes', async () => {
-    await service.approve(
-      'admin-id',
-      'listing-id',
-      reviewedAt.toISOString(),
-    );
+    await service.approve('admin-id', 'listing-id', reviewedAt.toISOString());
 
     expect(update).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -153,11 +149,7 @@ describe('ListingModerationService', () => {
 
   it('rejects stale approval when the listing changed after review', async () => {
     await expect(
-      service.approve(
-        'admin-id',
-        'listing-id',
-        '2026-08-10T09:59:00.000Z',
-      ),
+      service.approve('admin-id', 'listing-id', '2026-08-10T09:59:00.000Z'),
     ).rejects.toBeInstanceOf(BadRequestException);
 
     expect(update).not.toHaveBeenCalled();
@@ -201,11 +193,7 @@ describe('ListingModerationService', () => {
     });
 
     await expect(
-      service.approve(
-        'admin-id',
-        'listing-id',
-        reviewedAt.toISOString(),
-      ),
+      service.approve('admin-id', 'listing-id', reviewedAt.toISOString()),
     ).rejects.toBeInstanceOf(BadRequestException);
 
     expect(update).not.toHaveBeenCalled();
@@ -218,11 +206,7 @@ describe('ListingModerationService', () => {
     });
 
     await expect(
-      service.approve(
-        'admin-id',
-        'listing-id',
-        reviewedAt.toISOString(),
-      ),
+      service.approve('admin-id', 'listing-id', reviewedAt.toISOString()),
     ).rejects.toBeInstanceOf(BadRequestException);
 
     expect(update).not.toHaveBeenCalled();
@@ -235,11 +219,7 @@ describe('ListingModerationService', () => {
     });
 
     await expect(
-      service.approve(
-        'admin-id',
-        'listing-id',
-        reviewedAt.toISOString(),
-      ),
+      service.approve('admin-id', 'listing-id', reviewedAt.toISOString()),
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
@@ -275,11 +255,7 @@ describe('ListingModerationService', () => {
     findFirst.mockResolvedValue(null);
 
     await expect(
-      service.approve(
-        'admin-id',
-        'missing',
-        reviewedAt.toISOString(),
-      ),
+      service.approve('admin-id', 'missing', reviewedAt.toISOString()),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
