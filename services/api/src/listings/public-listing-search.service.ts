@@ -6,6 +6,10 @@ import {
   PublicListingSearchQueryDto,
   PublicListingSort,
 } from './dto/public-listing-search-query.dto';
+import {
+  publicListingCardSelect,
+  toPublicListingCard,
+} from './public-listing-read-model';
 
 @Injectable()
 export class PublicListingSearchService {
@@ -121,58 +125,15 @@ export class PublicListingSearchService {
         orderBy: this.getOrderBy(query.sort),
         skip: (query.page - 1) * query.limit,
         take: query.limit,
-        select: {
-          id: true,
-          type: true,
-          title: true,
-          city: true,
-          area: true,
-          county: true,
-          postalDistrict: true,
-          propertyType: true,
-          propertyOccupancyType: true,
-          advertisedSpaceType: true,
-          bathroomType: true,
-          bedroomCount: true,
-          bathroomCount: true,
-          monthlyPriceCents: true,
-          billsIncludedType: true,
-          furnished: true,
-          couplesAllowed: true,
-          petsAllowed: true,
-          smokingAllowed: true,
-          availableFrom: true,
-          minimumStayDays: true,
-          trustScore: true,
-          publishedAt: true,
-          photos: {
-            orderBy: {
-              position: 'asc',
-            },
-            take: 1,
-            select: {
-              id: true,
-              url: true,
-              position: true,
-            },
-          },
-          publicLocation: {
-            select: {
-              latitude: true,
-              longitude: true,
-              radiusMeters: true,
-              approximationVersion: true,
-            },
-          },
-        },
+        select: publicListingCardSelect,
       }),
     ]);
 
     return {
-      items: listings.map((listing) => ({
-        ...listing,
-        expiresAt: expiryByListingId.get(listing.id) ?? null,
-      })),
+      items: listings.flatMap((listing) => {
+        const expiresAt = expiryByListingId.get(listing.id);
+        return expiresAt ? [toPublicListingCard(listing, expiresAt)] : [];
+      }),
       page: query.page,
       limit: query.limit,
       total,
