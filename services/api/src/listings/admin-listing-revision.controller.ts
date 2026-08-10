@@ -10,7 +10,9 @@ import { ListingRevisionService } from './listing-revision.service';
 @UseGuards(JwtAuthGuard, AdminGuard)
 @ApiBearerAuth('access-token')
 export class AdminListingRevisionController {
-  constructor(private readonly listingRevisionService: ListingRevisionService) {}
+  constructor(
+    private readonly listingRevisionService: ListingRevisionService,
+  ) {}
 
   @Get(':id/revisions')
   @ApiOperation({
