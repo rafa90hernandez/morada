@@ -4,6 +4,8 @@ import { AdminGuard } from '../auth/guards/admin.guard';
 import { DatabaseModule } from '../database/database.module';
 import { AdminListingLocationController } from './admin-listing-location.controller';
 import { AdminListingRevisionController } from './admin-listing-revision.controller';
+import { FavoritesController } from './favorites.controller';
+import { FavoritesService } from './favorites.service';
 import { ListingAuthorizationController } from './listing-authorization.controller';
 import { ListingAuthorizationEvidenceProcessor } from './listing-authorization-evidence.processor';
 import { ListingAuthorizationReviewController } from './listing-authorization-review.controller';
@@ -28,6 +30,7 @@ import { PublicListingSearchService } from './public-listing-search.service';
   imports: [DatabaseModule],
   controllers: [
     PublicListingSearchController,
+    FavoritesController,
     ListingsController,
     ListingTrustController,
     ListingLocationController,
@@ -42,6 +45,7 @@ import { PublicListingSearchService } from './public-listing-search.service';
     ListingLifecycleService,
     PublicListingSearchService,
     PublicListingDetailService,
+    FavoritesService,
     ListingTrustService,
     ListingLocationService,
     ListingAuthorizationEvidenceProcessor,
