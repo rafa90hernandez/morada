@@ -51,9 +51,7 @@ export class ListingAuthorizationEvidenceProcessor {
     );
   }
 
-  private validateCommonInput(
-    input: ListingAuthorizationEvidenceInput,
-  ): void {
+  private validateCommonInput(input: ListingAuthorizationEvidenceInput): void {
     if (input.sizeBytes <= 0 || input.buffer.length === 0) {
       throw new BadRequestException('Authorization evidence cannot be empty.');
     }
