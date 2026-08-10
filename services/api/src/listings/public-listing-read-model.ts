@@ -289,7 +289,8 @@ export function toPublicListingDetail(
     photos: listing.photos,
     advertiser: listing.user.profile,
     trust: {
-      identityVerified: listing.user.verification?.documentStatus === 'APPROVED',
+      identityVerified:
+        listing.user.verification?.documentStatus === 'APPROVED',
       relationshipVerified:
         authorizationApproved && authorization.relationshipVerified === true,
       landlordAuthorization: {
