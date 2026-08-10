@@ -165,21 +165,22 @@ export class ListingLocationService {
       if (changed) {
         const before: Record<string, string | null> = {};
         const after: Record<string, string | null> = {};
+        const publicBefore = {
+          city: current.city,
+          area: current.area,
+          county: current.county,
+          postalDistrict: current.postalDistrict,
+        };
+        const publicAfter = { city, area, county, postalDistrict };
 
         for (const field of ['city', 'area', 'county', 'postalDistrict']) {
           if (!changedFields.includes(field)) {
             continue;
           }
 
-          before[field] = current[
-            field as keyof StoredListingLocation
-          ] as string | null;
-          after[field] = {
-            city,
-            area,
-            county,
-            postalDistrict,
-          }[field as 'city' | 'area' | 'county' | 'postalDistrict'];
+          const publicField = field as keyof typeof publicBefore;
+          before[field] = publicBefore[publicField];
+          after[field] = publicAfter[publicField];
         }
 
         await transaction.listingRevision.create({
