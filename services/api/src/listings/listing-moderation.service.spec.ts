@@ -10,10 +10,57 @@ jest.mock('../common/mappers/listing.mapper', () => ({
   },
 }));
 
-import { ListingStatus } from '../generated/prisma/enums';
+import {
+  IdentityVerificationStatus,
+  ListingAuthorizationStatus,
+  ListingStatus,
+  ListingType,
+  PropertyType,
+  UserStatus,
+} from '../generated/prisma/enums';
 import { ListingModerationService } from './listing-moderation.service';
 
+const reviewedAt = new Date('2026-08-10T10:00:00.000Z');
+
+const publishableListing = {
+  id: 'listing-id',
+  status: ListingStatus.PENDING_REVIEW,
+  type: ListingType.RENTAL,
+  title: 'Room in Dublin 8',
+  description: 'Bright room near the LUAS.',
+  city: 'Dublin',
+  area: 'Dublin 8',
+  propertyType: PropertyType.SINGLE_ROOM,
+  monthlyPriceCents: 90000,
+  landlordApprovalRequired: false,
+  updatedAt: reviewedAt,
+  privateLocation: { id: 'private-location' },
+  publicLocation: { id: 'public-location' },
+  photos: [{ id: 'photo-id' }],
+  user: {
+    status: UserStatus.ACTIVE,
+    verification: {
+      identitySubmissions: [
+        {
+          id: 'identity-id',
+          status: IdentityVerificationStatus.APPROVED,
+        },
+      ],
+    },
+  },
+  authorizationSubmissions: [
+    {
+      id: 'authorization-id',
+      status: ListingAuthorizationStatus.APPROVED,
+      relationshipVerified: true,
+      landlordAuthorizationVerified: false,
+    },
+  ],
+};
+
 describe('ListingModerationService', () => {
+  const findMany = jest.fn();
+  const databaseFindFirst = jest.fn();
   const findFirst = jest.fn();
   const update = jest.fn();
   const createAdminAction = jest.fn();
@@ -34,124 +81,193 @@ describe('ListingModerationService', () => {
     ): Promise<unknown> => callback(transaction),
   );
 
-  const service = new ListingModerationService({ $transaction } as never);
-
-  const pendingListing = {
-    id: 'listing-id',
-    status: ListingStatus.PENDING_REVIEW,
-  };
+  const service = new ListingModerationService({
+    listing: {
+      findMany,
+      findFirst: databaseFindFirst,
+    },
+    listingRevision: {
+      findMany: jest.fn(),
+    },
+    $transaction,
+  } as never);
 
   beforeEach(() => {
     jest.clearAllMocks();
-  });
-
-  it('approves only a pending listing and records the admin action', async () => {
-    findFirst.mockResolvedValue(pendingListing);
+    findFirst.mockResolvedValue(publishableListing);
     update.mockResolvedValue({
-      ...pendingListing,
+      ...publishableListing,
       status: ListingStatus.ACTIVE,
       rejectionReason: null,
       pausedReason: null,
       publishedAt: new Date(),
     });
     createAdminAction.mockResolvedValue({ id: 'audit-id' });
+  });
 
-    await service.approve('admin-id', 'listing-id');
+  it('queries only pending non-deleted listings for the review queue', async () => {
+    findMany.mockResolvedValue([]);
+
+    await expect(service.listQueue()).resolves.toEqual([]);
+
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          status: ListingStatus.PENDING_REVIEW,
+          deletedAt: null,
+        },
+      }),
+    );
+  });
+
+  it('approves an exact reviewed version when every publication gate passes', async () => {
+    await service.approve('admin-id', 'listing-id', reviewedAt.toISOString());
 
     expect(update).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: 'listing-id' },
-        data: {
+        data: expect.objectContaining({
           status: ListingStatus.ACTIVE,
           rejectionReason: null,
           pausedReason: null,
           publishedAt: expect.any(Date),
-        },
+        }),
       }),
     );
-    expect(createAdminAction).toHaveBeenCalledWith({
-      data: {
-        adminId: 'admin-id',
-        action: 'LISTING_APPROVED',
-        targetType: 'LISTING',
-        targetId: 'listing-id',
-        metadata: {
-          previousStatus: ListingStatus.PENDING_REVIEW,
-        },
-      },
-    });
+    expect(createAdminAction).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          adminId: 'admin-id',
+          action: 'LISTING_APPROVED',
+          targetId: 'listing-id',
+          metadata: expect.objectContaining({
+            identitySubmissionId: 'identity-id',
+            authorizationSubmissionId: 'authorization-id',
+            relationshipVerified: true,
+          }),
+        }),
+      }),
+    );
   });
 
-  it('rejects a pending listing, normalizes the reason and records the admin action', async () => {
-    findFirst.mockResolvedValue(pendingListing);
-    update.mockResolvedValue({
-      ...pendingListing,
-      status: ListingStatus.REJECTED,
-      rejectionReason: 'Missing authorization evidence.',
-    });
-    createAdminAction.mockResolvedValue({ id: 'audit-id' });
+  it('rejects stale approval when the listing changed after review', async () => {
+    await expect(
+      service.approve('admin-id', 'listing-id', '2026-08-10T09:59:00.000Z'),
+    ).rejects.toBeInstanceOf(BadRequestException);
 
-    await service.reject(
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [
+      'approved identity',
+      {
+        user: {
+          ...publishableListing.user,
+          verification: {
+            identitySubmissions: [
+              {
+                id: 'identity-id',
+                status: IdentityVerificationStatus.REJECTED,
+              },
+            ],
+          },
+        },
+      },
+    ],
+    ['private location', { privateLocation: null }],
+    ['public location', { publicLocation: null }],
+    ['listing photo', { photos: [] }],
+    [
+      'approved property relationship',
+      {
+        authorizationSubmissions: [
+          {
+            ...publishableListing.authorizationSubmissions[0],
+            relationshipVerified: false,
+          },
+        ],
+      },
+    ],
+  ])('blocks publication without %s', async (_label, override) => {
+    findFirst.mockResolvedValue({
+      ...publishableListing,
+      ...override,
+    });
+
+    await expect(
+      service.approve('admin-id', 'listing-id', reviewedAt.toISOString()),
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it('requires verified landlord authorization only when the listing requires it', async () => {
+    findFirst.mockResolvedValue({
+      ...publishableListing,
+      landlordApprovalRequired: true,
+    });
+
+    await expect(
+      service.approve('admin-id', 'listing-id', reviewedAt.toISOString()),
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it('does not publish WANTED listings in Beta 1', async () => {
+    findFirst.mockResolvedValue({
+      ...publishableListing,
+      type: ListingType.WANTED,
+    });
+
+    await expect(
+      service.approve('admin-id', 'listing-id', reviewedAt.toISOString()),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('records a correction request separately from a final rejection', async () => {
+    update.mockResolvedValue({
+      ...publishableListing,
+      status: ListingStatus.REJECTED,
+      rejectionReason: 'Add a readable tenancy agreement.',
+    });
+
+    await service.requestCorrection(
       'admin-id',
       'listing-id',
-      '  Missing authorization evidence.  ',
+      '  Add a readable tenancy agreement.  ',
     );
 
-    expect(update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: {
-          status: ListingStatus.REJECTED,
-          rejectionReason: 'Missing authorization evidence.',
-          pausedReason: null,
-          publishedAt: null,
-        },
-      }),
-    );
     expect(createAdminAction).toHaveBeenCalledWith({
       data: {
         adminId: 'admin-id',
-        action: 'LISTING_REJECTED',
+        action: 'LISTING_CORRECTION_REQUESTED',
         targetType: 'LISTING',
         targetId: 'listing-id',
-        reason: 'Missing authorization evidence.',
+        reason: 'Add a readable tenancy agreement.',
         metadata: {
           previousStatus: ListingStatus.PENDING_REVIEW,
+          outcome: 'CORRECTION_REQUIRED',
         },
       },
     });
   });
 
-  it('rejects approval when the listing does not exist', async () => {
+  it('rejects moderation when the listing does not exist', async () => {
     findFirst.mockResolvedValue(null);
 
-    await expect(service.approve('admin-id', 'missing')).rejects.toBeInstanceOf(
-      NotFoundException,
-    );
-    expect(update).not.toHaveBeenCalled();
-    expect(createAdminAction).not.toHaveBeenCalled();
+    await expect(
+      service.approve('admin-id', 'missing', reviewedAt.toISOString()),
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 
-  it('rejects moderation when the listing is not pending review', async () => {
-    findFirst.mockResolvedValue({
-      ...pendingListing,
-      status: ListingStatus.ACTIVE,
-    });
-
+  it('rejects a blank correction/rejection reason before starting a transaction', async () => {
     await expect(
-      service.approve('admin-id', 'listing-id'),
+      service.requestCorrection('admin-id', 'listing-id', '   '),
     ).rejects.toBeInstanceOf(BadRequestException);
-    await expect(
-      service.reject('admin-id', 'listing-id', 'Reason'),
-    ).rejects.toBeInstanceOf(BadRequestException);
-
-    expect(update).not.toHaveBeenCalled();
-    expect(createAdminAction).not.toHaveBeenCalled();
-  });
-
-  it('rejects a blank rejection reason before starting a transaction', async () => {
     await expect(
       service.reject('admin-id', 'listing-id', '   '),
     ).rejects.toBeInstanceOf(BadRequestException);
-    expect($transaction).not.toHaveBeenCalled();
   });
 });
