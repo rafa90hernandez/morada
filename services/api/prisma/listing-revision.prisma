@@ -1,0 +1,25 @@
+enum ListingRevisionClassification {
+  CRITICAL
+  MINOR
+}
+
+model ListingRevision {
+  id             String                        @id @default(cuid())
+  listingId      String
+  actorUserId    String
+  classification ListingRevisionClassification
+  changedFields  String[]
+  before         Json?
+  after          Json?
+  statusBefore   ListingStatus
+  statusAfter    ListingStatus
+
+  previousPublishedAt DateTime?
+  createdAt           DateTime @default(now())
+
+  @@index([listingId, createdAt])
+  @@index([actorUserId, createdAt])
+  @@index([classification])
+  @@index([statusBefore])
+  @@index([statusAfter])
+}
