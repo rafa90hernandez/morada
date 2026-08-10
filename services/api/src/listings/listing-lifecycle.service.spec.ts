@@ -139,15 +139,18 @@ describe('ListingLifecycleService', () => {
     [{ expiresAt: null }],
     [{ expiresAt: new Date('2026-08-10T14:59:59.999Z') }],
     [{ expiresAt: new Date('2026-08-10T15:00:00.000Z') }],
-  ])('hides missing or expired lifecycle metadata from public reads', async (value) => {
-    lifecycleFindUnique.mockResolvedValue(value);
+  ])(
+    'hides missing or expired lifecycle metadata from public reads',
+    async (value) => {
+      lifecycleFindUnique.mockResolvedValue(value);
 
-    await expect(service.findPublicById('listing-id', now)).rejects.toBeInstanceOf(
-      NotFoundException,
-    );
+      await expect(
+        service.findPublicById('listing-id', now),
+      ).rejects.toBeInstanceOf(NotFoundException);
 
-    expect(findPublicById).not.toHaveBeenCalled();
-  });
+      expect(findPublicById).not.toHaveBeenCalled();
+    },
+  );
 
   it('renews an eligible listing for 45 days without mutating listing recency fields', async () => {
     const result = await service.renew('user-id', 'listing-id', now);
@@ -233,8 +236,14 @@ describe('ListingLifecycleService', () => {
 
   it('returns only active non-deleted listings from an expiry reminder window', async () => {
     lifecycleFindMany.mockResolvedValue([
-      { listingId: 'active-id', expiresAt: new Date('2026-08-17T15:00:00.000Z') },
-      { listingId: 'closed-id', expiresAt: new Date('2026-08-17T16:00:00.000Z') },
+      {
+        listingId: 'active-id',
+        expiresAt: new Date('2026-08-17T15:00:00.000Z'),
+      },
+      {
+        listingId: 'closed-id',
+        expiresAt: new Date('2026-08-17T16:00:00.000Z'),
+      },
     ]);
     listingFindMany.mockResolvedValue([{ id: 'active-id' }]);
 
@@ -244,7 +253,10 @@ describe('ListingLifecycleService', () => {
         new Date('2026-08-17T23:59:59.999Z'),
       ),
     ).resolves.toEqual([
-      { listingId: 'active-id', expiresAt: new Date('2026-08-17T15:00:00.000Z') },
+      {
+        listingId: 'active-id',
+        expiresAt: new Date('2026-08-17T15:00:00.000Z'),
+      },
     ]);
   });
 });
