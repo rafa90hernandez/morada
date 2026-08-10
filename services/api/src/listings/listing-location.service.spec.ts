@@ -4,7 +4,10 @@ jest.mock('../database/database.service', () => ({
   DatabaseService: class DatabaseService {},
 }));
 
-import { ListingStatus } from '../generated/prisma/enums';
+import {
+  ListingRevisionClassification,
+  ListingStatus,
+} from '../generated/prisma/enums';
 import { ListingLocationService } from './listing-location.service';
 
 const dto = {
@@ -27,6 +30,7 @@ const storedLocation = {
   area: 'Dublin 8',
   county: 'Dublin',
   postalDistrict: 'D08',
+  publishedAt: new Date('2026-08-01T00:00:00.000Z'),
   deletedAt: null,
   privateLocation: {
     addressLine1: '10 Example Street',
@@ -46,10 +50,14 @@ const storedLocation = {
 describe('ListingLocationService', () => {
   const findFirst = jest.fn();
   const update = jest.fn();
+  const revisionCreate = jest.fn();
   const transaction = {
     listing: {
       findFirst,
       update,
+    },
+    listingRevision: {
+      create: revisionCreate,
     },
   };
   const database = {
@@ -62,6 +70,7 @@ describe('ListingLocationService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    revisionCreate.mockResolvedValue({ id: 'revision-id' });
   });
 
   it('scopes owner writes by authenticated user and derives public coordinates server-side', async () => {
@@ -72,6 +81,7 @@ describe('ListingLocationService', () => {
     update.mockResolvedValueOnce({
       ...storedLocation,
       status: ListingStatus.PENDING_REVIEW,
+      publishedAt: null,
     });
 
     await service.setOwnerLocation('owner-id', 'listing-id', dto);
@@ -124,9 +134,56 @@ describe('ListingLocationService', () => {
         }),
       }),
     );
+
+    expect(revisionCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        listingId: 'listing-id',
+        actorUserId: 'owner-id',
+        classification: ListingRevisionClassification.CRITICAL,
+        changedFields: ['area'],
+        before: { area: 'Dublin 7' },
+        after: { area: 'Dublin 8' },
+        statusBefore: ListingStatus.ACTIVE,
+        statusAfter: ListingStatus.PENDING_REVIEW,
+        previousPublishedAt: storedLocation.publishedAt,
+      }),
+    });
   });
 
-  it('does not return an unchanged approved location to review', async () => {
+  it('marks exact-location changes without copying private values into audit snapshots', async () => {
+    findFirst.mockResolvedValueOnce(storedLocation);
+    update.mockResolvedValueOnce({
+      ...storedLocation,
+      status: ListingStatus.PENDING_REVIEW,
+      publishedAt: null,
+      privateLocation: {
+        ...storedLocation.privateLocation,
+        exactLatitude: 53.34001,
+      },
+    });
+
+    await service.setOwnerLocation('owner-id', 'listing-id', {
+      ...dto,
+      exactLatitude: 53.34001,
+    });
+
+    expect(revisionCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        classification: ListingRevisionClassification.CRITICAL,
+        changedFields: ['privateLocation'],
+        before: {},
+        after: {},
+      }),
+    });
+
+    const auditPayload = JSON.stringify(revisionCreate.mock.calls[0][0]);
+    expect(auditPayload).not.toContain('10 Example Street');
+    expect(auditPayload).not.toContain('D08 AB12');
+    expect(auditPayload).not.toContain('53.33911');
+    expect(auditPayload).not.toContain('53.34001');
+  });
+
+  it('does not return an unchanged approved location to review or create a revision', async () => {
     findFirst.mockResolvedValueOnce(storedLocation);
     update.mockResolvedValueOnce(storedLocation);
 
@@ -135,6 +192,7 @@ describe('ListingLocationService', () => {
     const call = update.mock.calls[0][0];
     expect(call.data.status).toBeUndefined();
     expect(call.data.publishedAt).toBeUndefined();
+    expect(revisionCreate).not.toHaveBeenCalled();
   });
 
   it('rejects location changes for closed listings', async () => {
@@ -147,6 +205,7 @@ describe('ListingLocationService', () => {
       service.setOwnerLocation('owner-id', 'listing-id', dto),
     ).rejects.toBeInstanceOf(BadRequestException);
     expect(update).not.toHaveBeenCalled();
+    expect(revisionCreate).not.toHaveBeenCalled();
   });
 
   it('returns not found rather than revealing another owners listing', async () => {
