@@ -59,6 +59,7 @@ export type ListingRevisionSnapshot = ListingEditSnapshot & {
 type ExchangePreferenceKey = keyof NonNullable<
   ListingRevisionSnapshot['exchangePreference']
 >;
+type MutableJsonObject = Record<string, Prisma.InputJsonValue | null>;
 
 const VALUE_OMITTED_FIELDS = new Set([
   'title',
@@ -138,7 +139,10 @@ function normalizeDate(value: unknown): string | null {
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
-function normalizeValue(field: string, value: unknown): Prisma.InputJsonValue {
+function normalizeValue(
+  field: string,
+  value: unknown,
+): Prisma.InputJsonValue | null {
   if (value === undefined || value === null) {
     return null;
   }
@@ -229,8 +233,8 @@ export function buildListingRevisionValues(
   after: Prisma.InputJsonObject;
 } {
   const next = dto as unknown as Record<string, unknown>;
-  const before: Prisma.InputJsonObject = {};
-  const after: Prisma.InputJsonObject = {};
+  const before: MutableJsonObject = {};
+  const after: MutableJsonObject = {};
 
   for (const field of changedFields) {
     if (VALUE_OMITTED_FIELDS.has(field)) {
