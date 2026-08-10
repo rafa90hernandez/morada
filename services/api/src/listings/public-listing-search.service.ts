@@ -1,0 +1,220 @@
+import { Injectable } from '@nestjs/common';
+
+import { DatabaseService } from '../database/database.service';
+import { ListingStatus, ListingType } from '../generated/prisma/enums';
+import {
+  PublicListingSearchQueryDto,
+  PublicListingSort,
+} from './dto/public-listing-search-query.dto';
+
+@Injectable()
+export class PublicListingSearchService {
+  constructor(private readonly database: DatabaseService) {}
+
+  async search(query: PublicListingSearchQueryDto, now = new Date()) {
+    const eligibleLifecycle = await this.database.listingLifecycle.findMany({
+      where: {
+        expiresAt: {
+          gt: now,
+        },
+      },
+      select: {
+        listingId: true,
+        expiresAt: true,
+      },
+    });
+
+    if (eligibleLifecycle.length === 0) {
+      return this.emptyResult(query);
+    }
+
+    const eligibleIds = eligibleLifecycle.map((row) => row.listingId);
+    const expiryByListingId = new Map(
+      eligibleLifecycle.map((row) => [row.listingId, row.expiresAt]),
+    );
+    const availableOn = query.availableOn ? new Date(query.availableOn) : null;
+
+    const where = {
+      id: {
+        in: eligibleIds,
+      },
+      status: ListingStatus.ACTIVE,
+      deletedAt: null,
+      type: query.listingType ?? {
+        in: [ListingType.RENTAL, ListingType.TRANSFER],
+      },
+      county: query.county
+        ? {
+            equals: query.county,
+            mode: 'insensitive' as const,
+          }
+        : undefined,
+      city: query.city
+        ? {
+            equals: query.city,
+            mode: 'insensitive' as const,
+          }
+        : undefined,
+      area: query.area
+        ? {
+            equals: query.area,
+            mode: 'insensitive' as const,
+          }
+        : undefined,
+      propertyType: query.propertyType,
+      propertyOccupancyType: query.propertyOccupancyType,
+      advertisedSpaceType: query.advertisedSpaceType,
+      bathroomType: query.bathroomType,
+      billsIncludedType: query.billsIncludedType,
+      monthlyPriceCents:
+        query.maxPriceCents !== undefined
+          ? {
+              lte: query.maxPriceCents,
+            }
+          : undefined,
+      couplesAllowed: query.couplesAllowed,
+      petsAllowed: query.petsAllowed,
+      furnished: query.furnished,
+      smokingAllowed: query.smokingAllowed,
+      childrenFamiliesAllowed: query.childrenFamiliesAllowed,
+      studentsAllowed: query.studentsAllowed,
+      bedroomCount:
+        query.bedroomCountMin !== undefined
+          ? {
+              gte: query.bedroomCountMin,
+            }
+          : undefined,
+      bathroomCount:
+        query.bathroomCountMin !== undefined
+          ? {
+              gte: query.bathroomCountMin,
+            }
+          : undefined,
+      minimumStayDays:
+        query.maxMinimumStayDays !== undefined
+          ? {
+              lte: query.maxMinimumStayDays,
+            }
+          : undefined,
+      AND: availableOn
+        ? [
+            {
+              OR: [{ availableFrom: null }, { availableFrom: { lte: availableOn } }],
+            },
+            {
+              OR: [
+                { availableUntil: null },
+                { availableUntil: { gte: availableOn } },
+              ],
+            },
+          ]
+        : undefined,
+    };
+
+    const [total, listings] = await Promise.all([
+      this.database.listing.count({ where }),
+      this.database.listing.findMany({
+        where,
+        orderBy: this.getOrderBy(query.sort),
+        skip: (query.page - 1) * query.limit,
+        take: query.limit,
+        select: {
+          id: true,
+          type: true,
+          title: true,
+          city: true,
+          area: true,
+          county: true,
+          postalDistrict: true,
+          propertyType: true,
+          propertyOccupancyType: true,
+          advertisedSpaceType: true,
+          bathroomType: true,
+          bedroomCount: true,
+          bathroomCount: true,
+          monthlyPriceCents: true,
+          billsIncludedType: true,
+          furnished: true,
+          couplesAllowed: true,
+          petsAllowed: true,
+          smokingAllowed: true,
+          availableFrom: true,
+          minimumStayDays: true,
+          trustScore: true,
+          publishedAt: true,
+          photos: {
+            orderBy: {
+              position: 'asc',
+            },
+            take: 1,
+            select: {
+              id: true,
+              url: true,
+              position: true,
+            },
+          },
+          publicLocation: {
+            select: {
+              latitude: true,
+              longitude: true,
+              radiusMeters: true,
+              approximationVersion: true,
+            },
+          },
+        },
+      }),
+    ]);
+
+    return {
+      items: listings.map((listing) => ({
+        ...listing,
+        expiresAt: expiryByListingId.get(listing.id) ?? null,
+      })),
+      page: query.page,
+      limit: query.limit,
+      total,
+      totalPages: total === 0 ? 0 : Math.ceil(total / query.limit),
+      sort: query.sort,
+    };
+  }
+
+  private emptyResult(query: PublicListingSearchQueryDto) {
+    return {
+      items: [],
+      page: query.page,
+      limit: query.limit,
+      total: 0,
+      totalPages: 0,
+      sort: query.sort,
+    };
+  }
+
+  private getOrderBy(sort: PublicListingSort) {
+    switch (sort) {
+      case PublicListingSort.PRICE_ASC:
+        return [
+          { monthlyPriceCents: 'asc' as const },
+          { publishedAt: 'desc' as const },
+          { id: 'asc' as const },
+        ];
+      case PublicListingSort.PRICE_DESC:
+        return [
+          { monthlyPriceCents: 'desc' as const },
+          { publishedAt: 'desc' as const },
+          { id: 'asc' as const },
+        ];
+      case PublicListingSort.NEWEST:
+        return [
+          { publishedAt: 'desc' as const },
+          { id: 'asc' as const },
+        ];
+      case PublicListingSort.RELEVANCE:
+      default:
+        return [
+          { trustScore: 'desc' as const },
+          { publishedAt: 'desc' as const },
+          { id: 'asc' as const },
+        ];
+    }
+  }
+}
