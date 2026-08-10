@@ -17,9 +17,6 @@ model ListingRevision {
   previousPublishedAt DateTime?
   createdAt           DateTime @default(now())
 
-  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  actor   User    @relation("ListingRevisionActor", fields: [actorUserId], references: [id], onDelete: Restrict)
-
   @@index([listingId, createdAt])
   @@index([actorUserId, createdAt])
   @@index([classification])
