@@ -5,7 +5,10 @@ import {
 } from '@nestjs/common';
 
 import { DatabaseService } from '../database/database.service';
-import { ListingStatus } from '../generated/prisma/enums';
+import {
+  ListingRevisionClassification,
+  ListingStatus,
+} from '../generated/prisma/enums';
 import { ListingPrivateLocationDto } from './dto/listing-private-location.dto';
 import { deriveApproximatePublicLocation } from './listing-location-privacy';
 
@@ -30,25 +33,37 @@ function normalizeOptional(value: string | undefined): string | null {
   return normalized ? normalized : null;
 }
 
-function hasLocationChanged(
-  current: StoredListingLocation,
+function hasPrivateLocationChanged(
+  current: StoredPrivateLocation | null,
   next: ListingPrivateLocationDto,
 ): boolean {
-  const privateLocation = current.privateLocation;
-
   return (
-    current.city !== next.city.trim() ||
-    current.area !== next.area.trim() ||
-    current.county !== next.county.trim() ||
-    current.postalDistrict !== normalizeOptional(next.postalDistrict) ||
-    !privateLocation ||
-    privateLocation.addressLine1 !== next.addressLine1.trim() ||
-    privateLocation.addressLine2 !== normalizeOptional(next.addressLine2) ||
-    privateLocation.eircode !==
-      normalizeOptional(next.eircode)?.toUpperCase() ||
-    privateLocation.exactLatitude !== next.exactLatitude ||
-    privateLocation.exactLongitude !== next.exactLongitude
+    !current ||
+    current.addressLine1 !== next.addressLine1.trim() ||
+    current.addressLine2 !== normalizeOptional(next.addressLine2) ||
+    current.eircode !== normalizeOptional(next.eircode)?.toUpperCase() ||
+    current.exactLatitude !== next.exactLatitude ||
+    current.exactLongitude !== next.exactLongitude
   );
+}
+
+function getLocationChangedFields(
+  current: StoredListingLocation,
+  next: ListingPrivateLocationDto,
+): string[] {
+  const changedFields: string[] = [];
+
+  if (current.city !== next.city.trim()) changedFields.push('city');
+  if (current.area !== next.area.trim()) changedFields.push('area');
+  if (current.county !== next.county.trim()) changedFields.push('county');
+  if (current.postalDistrict !== normalizeOptional(next.postalDistrict)) {
+    changedFields.push('postalDistrict');
+  }
+  if (hasPrivateLocationChanged(current.privateLocation, next)) {
+    changedFields.push('privateLocation');
+  }
+
+  return changedFields.sort();
 }
 
 @Injectable()
@@ -87,7 +102,8 @@ export class ListingLocationService {
         );
       }
 
-      const changed = hasLocationChanged(current, dto);
+      const changedFields = getLocationChangedFields(current, dto);
+      const changed = changedFields.length > 0;
       const wasApproved =
         current.status === ListingStatus.ACTIVE ||
         current.status === ListingStatus.PAUSED;
@@ -145,6 +161,41 @@ export class ListingLocationService {
           publicLocation: true,
         },
       });
+
+      if (changed) {
+        const before: Record<string, string | null> = {};
+        const after: Record<string, string | null> = {};
+
+        for (const field of ['city', 'area', 'county', 'postalDistrict']) {
+          if (!changedFields.includes(field)) {
+            continue;
+          }
+
+          before[field] = current[field as keyof StoredListingLocation] as
+            | string
+            | null;
+          after[field] = {
+            city,
+            area,
+            county,
+            postalDistrict,
+          }[field as 'city' | 'area' | 'county' | 'postalDistrict'];
+        }
+
+        await transaction.listingRevision.create({
+          data: {
+            listingId,
+            actorUserId: userId,
+            classification: ListingRevisionClassification.CRITICAL,
+            changedFields,
+            before,
+            after,
+            statusBefore: current.status,
+            statusAfter: listing.status,
+            previousPublishedAt: current.publishedAt,
+          },
+        });
+      }
 
       return this.toOwnerResponse(listing);
     });
