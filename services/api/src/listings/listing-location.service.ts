@@ -171,9 +171,9 @@ export class ListingLocationService {
             continue;
           }
 
-          before[field] = current[field as keyof StoredListingLocation] as
-            | string
-            | null;
+          before[field] = current[
+            field as keyof StoredListingLocation
+          ] as string | null;
           after[field] = {
             city,
             area,
