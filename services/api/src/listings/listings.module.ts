@@ -20,10 +20,13 @@ import { ListingTrustService } from './listing-trust.service';
 import { ListingsController } from './listings.controller';
 import { ListingsRepository } from './listings.repository';
 import { ListingsService } from './listings.service';
+import { PublicListingSearchController } from './public-listing-search.controller';
+import { PublicListingSearchService } from './public-listing-search.service';
 
 @Module({
   imports: [DatabaseModule],
   controllers: [
+    PublicListingSearchController,
     ListingsController,
     ListingTrustController,
     ListingLocationController,
@@ -36,6 +39,7 @@ import { ListingsService } from './listings.service';
   providers: [
     ListingsService,
     ListingLifecycleService,
+    PublicListingSearchService,
     ListingTrustService,
     ListingLocationService,
     ListingAuthorizationEvidenceProcessor,
