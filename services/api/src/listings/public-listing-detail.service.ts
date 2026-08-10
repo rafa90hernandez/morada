@@ -17,7 +17,10 @@ export class PublicListingDetailService {
       select: { expiresAt: true },
     });
 
-    if (!lifecycle?.expiresAt || lifecycle.expiresAt.getTime() <= now.getTime()) {
+    if (
+      !lifecycle?.expiresAt ||
+      lifecycle.expiresAt.getTime() <= now.getTime()
+    ) {
       throw new NotFoundException('Listing not found.');
     }
 
