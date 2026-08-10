@@ -56,6 +56,10 @@ export type ListingRevisionSnapshot = ListingEditSnapshot & {
     | null;
 };
 
+type ExchangePreferenceKey = keyof NonNullable<
+  ListingRevisionSnapshot['exchangePreference']
+>;
+
 const VALUE_OMITTED_FIELDS = new Set([
   'title',
   'description',
@@ -69,7 +73,7 @@ const VALUE_OMITTED_FIELDS = new Set([
   'exchangeNotes',
 ]);
 
-const EXCHANGE_FIELD_MAP: Record<string, string> = {
+const EXCHANGE_FIELD_MAP = {
   desiredCity: 'desiredCity',
   desiredAreas: 'desiredAreas',
   desiredMinPriceCents: 'desiredMinPriceCents',
@@ -77,7 +81,7 @@ const EXCHANGE_FIELD_MAP: Record<string, string> = {
   desiredPropertyTypes: 'desiredPropertyTypes',
   desiredMoveDate: 'desiredMoveDate',
   exchangeNotes: 'notes',
-};
+} satisfies Record<string, ExchangePreferenceKey>;
 
 const DATE_FIELDS = new Set([
   'availableFrom',
@@ -92,27 +96,46 @@ function normalizeTransportOptions(value: unknown): Prisma.InputJsonArray {
 
   const normalized = value.map((item) => {
     const option = item as {
-      mode?: unknown;
-      stopName?: unknown;
-      lineName?: unknown;
-      walkingMinutes?: unknown;
-      distanceMeters?: unknown;
+      mode?: string;
+      stopName?: string | null;
+      lineName?: string | null;
+      walkingMinutes?: number | null;
+      distanceMeters?: number | null;
     };
 
     return {
-      mode: String(option.mode ?? ''),
-      stopName: option.stopName == null ? null : String(option.stopName),
-      lineName: option.lineName == null ? null : String(option.lineName),
-      walkingMinutes:
-        option.walkingMinutes == null ? null : Number(option.walkingMinutes),
-      distanceMeters:
-        option.distanceMeters == null ? null : Number(option.distanceMeters),
+      mode: option.mode ?? '',
+      stopName: option.stopName ?? null,
+      lineName: option.lineName ?? null,
+      walkingMinutes: option.walkingMinutes ?? null,
+      distanceMeters: option.distanceMeters ?? null,
     } satisfies Prisma.InputJsonObject;
   });
 
   return normalized.sort((left, right) =>
     JSON.stringify(left).localeCompare(JSON.stringify(right)),
   );
+}
+
+function normalizeArrayEntry(value: unknown): string | null {
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return `${value}`;
+  }
+
+  return null;
+}
+
+function normalizeDate(value: unknown): string | null {
+  if (!(value instanceof Date) && typeof value !== 'string') {
+    return null;
+  }
+
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
 function normalizeValue(field: string, value: unknown): Prisma.InputJsonValue {
@@ -125,25 +148,25 @@ function normalizeValue(field: string, value: unknown): Prisma.InputJsonValue {
   }
 
   if (DATE_FIELDS.has(field)) {
-    const date = value instanceof Date ? value : new Date(String(value));
-    return Number.isNaN(date.getTime()) ? String(value) : date.toISOString();
+    return normalizeDate(value);
   }
 
   if (Array.isArray(value)) {
     return value
-      .map((entry) => String(entry))
+      .map(normalizeArrayEntry)
+      .filter((entry): entry is string => entry !== null)
       .sort((left, right) => left.localeCompare(right));
   }
 
-  if (typeof value === 'string' || typeof value === 'boolean') {
+  if (
+    typeof value === 'string' ||
+    typeof value === 'boolean' ||
+    typeof value === 'number'
+  ) {
     return value;
   }
 
-  if (typeof value === 'number') {
-    return value;
-  }
-
-  return String(value);
+  return null;
 }
 
 function getCurrentValue(
@@ -151,9 +174,10 @@ function getCurrentValue(
   field: string,
 ): unknown {
   if (field in EXCHANGE_FIELD_MAP) {
-    return current.exchangePreference?.[EXCHANGE_FIELD_MAP[field] as keyof NonNullable<
-      ListingRevisionSnapshot['exchangePreference']
-    >];
+    const preferenceField = EXCHANGE_FIELD_MAP[
+      field as keyof typeof EXCHANGE_FIELD_MAP
+    ];
+    return current.exchangePreference?.[preferenceField];
   }
 
   if (field === 'transportOptions') {
@@ -178,7 +202,10 @@ export function getChangedListingFields(
 
   return Object.keys(next)
     .filter((field) => next[field] !== undefined)
-    .filter((field) => !valuesEqual(field, getCurrentValue(current, field), next[field]))
+    .filter(
+      (field) =>
+        !valuesEqual(field, getCurrentValue(current, field), next[field]),
+    )
     .sort();
 }
 
