@@ -174,9 +174,8 @@ function getCurrentValue(
   field: string,
 ): unknown {
   if (field in EXCHANGE_FIELD_MAP) {
-    const preferenceField = EXCHANGE_FIELD_MAP[
-      field as keyof typeof EXCHANGE_FIELD_MAP
-    ];
+    const exchangeField = field as keyof typeof EXCHANGE_FIELD_MAP;
+    const preferenceField = EXCHANGE_FIELD_MAP[exchangeField];
     return current.exchangePreference?.[preferenceField];
   }
 
