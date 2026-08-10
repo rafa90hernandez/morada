@@ -80,8 +80,8 @@ export class ListingAuthorizationReviewService {
     submissionId: string,
     evidenceId: string,
   ) {
-    const evidence =
-      await this.database.listingAuthorizationEvidence.findFirst({
+    const evidence = await this.database.listingAuthorizationEvidence.findFirst(
+      {
         where: {
           id: evidenceId,
           submissionId,
@@ -100,7 +100,8 @@ export class ListingAuthorizationReviewService {
           objectKey: true,
           mimeType: true,
         },
-      });
+      },
+    );
 
     if (!evidence) {
       throw new NotFoundException('Listing authorization evidence not found.');
