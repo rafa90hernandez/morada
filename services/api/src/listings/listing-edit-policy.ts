@@ -1,7 +1,7 @@
 import { ListingStatus } from '../generated/prisma/enums';
 import { UpdateListingDto } from './dto/update-listing.dto';
 
-type ExchangePreferenceSnapshot = {
+export type ExchangePreferenceSnapshot = {
   desiredCity?: string | null;
   desiredAreas?: string[];
   desiredMinPriceCents?: number | null;
@@ -10,7 +10,7 @@ type ExchangePreferenceSnapshot = {
   desiredMoveDate?: Date | null;
 };
 
-type ListingEditSnapshot = {
+export type ListingEditSnapshot = {
   status: ListingStatus;
   type: string;
   city?: string | null;
