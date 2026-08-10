@@ -277,11 +277,7 @@ export class ListingModerationService {
     return listing;
   }
 
-  async approve(
-    adminId: string,
-    listingId: string,
-    expectedUpdatedAt: string,
-  ) {
+  async approve(adminId: string, listingId: string, expectedUpdatedAt: string) {
     const expectedTimestamp = new Date(expectedUpdatedAt);
 
     if (Number.isNaN(expectedTimestamp.getTime())) {
@@ -474,7 +470,9 @@ export class ListingModerationService {
     }
 
     if (listing.type === ListingType.WANTED) {
-      throw new BadRequestException('Wanted listings are not publishable in Beta 1.');
+      throw new BadRequestException(
+        'Wanted listings are not publishable in Beta 1.',
+      );
     }
 
     if (listing.updatedAt.getTime() !== expectedUpdatedAt.getTime()) {
