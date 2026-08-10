@@ -1,5 +1,4 @@
 import type { Prisma } from '../../generated/prisma/client';
-import { ListingAuthorizationStatus } from '../../generated/prisma/enums';
 
 import { UserMapper } from './user.mapper';
 
@@ -9,24 +8,16 @@ export type ListingWithRelations = Prisma.ListingGetPayload<{
       include: {
         profile: true;
         trustScore: true;
-        verification: true;
       };
     };
     photos: true;
     exchangePreference: true;
     transportOptions: true;
-    authorizationSubmissions: true;
   };
 }>;
 
 export class ListingMapper {
   static toResponse(listing: ListingWithRelations) {
-    const authorization = [...listing.authorizationSubmissions].sort(
-      (first, second) => second.submittedAt.getTime() - first.submittedAt.getTime(),
-    )[0];
-    const authorizationApproved =
-      authorization?.status === ListingAuthorizationStatus.APPROVED;
-
     return {
       id: listing.id,
       type: listing.type,
@@ -151,18 +142,6 @@ export class ListingMapper {
           walkingMinutes: option.walkingMinutes,
           distanceMeters: option.distanceMeters,
         })),
-      },
-
-      trust: {
-        identityVerified:
-          listing.user.verification?.documentStatus === 'APPROVED',
-        relationshipVerified:
-          authorizationApproved && authorization.relationshipVerified === true,
-        landlordAuthorization:
-          authorizationApproved &&
-          authorization.landlordAuthorizationVerified === true
-            ? 'VERIFIED'
-            : 'NOT_VERIFIED',
       },
 
       trustScore: listing.trustScore,
