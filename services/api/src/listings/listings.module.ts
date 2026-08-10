@@ -6,6 +6,8 @@ import { AdminListingLocationController } from './admin-listing-location.control
 import { AdminListingRevisionController } from './admin-listing-revision.controller';
 import { ListingAuthorizationController } from './listing-authorization.controller';
 import { ListingAuthorizationEvidenceProcessor } from './listing-authorization-evidence.processor';
+import { ListingAuthorizationReviewController } from './listing-authorization-review.controller';
+import { ListingAuthorizationReviewService } from './listing-authorization-review.service';
 import { ListingAuthorizationSubmissionService } from './listing-authorization-submission.service';
 import { ListingLocationController } from './listing-location.controller';
 import { ListingLocationService } from './listing-location.service';
@@ -22,6 +24,7 @@ import { ListingsService } from './listings.service';
     ListingsController,
     ListingLocationController,
     ListingAuthorizationController,
+    ListingAuthorizationReviewController,
     ListingModerationController,
     AdminListingLocationController,
     AdminListingRevisionController,
@@ -31,6 +34,7 @@ import { ListingsService } from './listings.service';
     ListingLocationService,
     ListingAuthorizationEvidenceProcessor,
     ListingAuthorizationSubmissionService,
+    ListingAuthorizationReviewService,
     ListingModerationService,
     ListingRevisionService,
     ListingsRepository,
