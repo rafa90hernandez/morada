@@ -80,31 +80,30 @@ export class ListingAuthorizationReviewService {
     submissionId: string,
     evidenceId: string,
   ) {
-    const evidence = await this.database.listingAuthorizationEvidence.findFirst({
-      where: {
-        id: evidenceId,
-        submissionId,
-        deletedAt: null,
-        submission: {
-          listingId,
+    const evidence =
+      await this.database.listingAuthorizationEvidence.findFirst({
+        where: {
+          id: evidenceId,
+          submissionId,
           deletedAt: null,
-          listing: {
+          submission: {
+            listingId,
             deletedAt: null,
+            listing: {
+              deletedAt: null,
+            },
           },
         },
-      },
-      select: {
-        id: true,
-        type: true,
-        objectKey: true,
-        mimeType: true,
-      },
-    });
+        select: {
+          id: true,
+          type: true,
+          objectKey: true,
+          mimeType: true,
+        },
+      });
 
     if (!evidence) {
-      throw new NotFoundException(
-        'Listing authorization evidence not found.',
-      );
+      throw new NotFoundException('Listing authorization evidence not found.');
     }
 
     const buffer = await this.privateStorage.read(evidence.objectKey);
