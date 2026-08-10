@@ -56,7 +56,8 @@ export class ListingTrustService {
 
     return {
       listingId: listing.id,
-      identityVerified: listing.user.verification?.documentStatus === 'APPROVED',
+      identityVerified:
+        listing.user.verification?.documentStatus === 'APPROVED',
       relationshipVerified:
         authorizationApproved && authorization.relationshipVerified === true,
       landlordAuthorization: {
