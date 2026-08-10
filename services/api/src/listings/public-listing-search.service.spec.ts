@@ -1,3 +1,5 @@
+import 'reflect-metadata';
+
 jest.mock('../database/database.service', () => ({
   DatabaseService: class DatabaseService {},
 }));
