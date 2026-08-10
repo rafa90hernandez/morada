@@ -20,6 +20,7 @@ import { ListingTrustService } from './listing-trust.service';
 import { ListingsController } from './listings.controller';
 import { ListingsRepository } from './listings.repository';
 import { ListingsService } from './listings.service';
+import { PublicListingDetailService } from './public-listing-detail.service';
 import { PublicListingSearchController } from './public-listing-search.controller';
 import { PublicListingSearchService } from './public-listing-search.service';
 
@@ -40,6 +41,7 @@ import { PublicListingSearchService } from './public-listing-search.service';
     ListingsService,
     ListingLifecycleService,
     PublicListingSearchService,
+    PublicListingDetailService,
     ListingTrustService,
     ListingLocationService,
     ListingAuthorizationEvidenceProcessor,
