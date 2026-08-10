@@ -251,22 +251,6 @@ export class ListingModerationService {
             },
           },
         },
-        revisions: {
-          orderBy: {
-            createdAt: 'desc',
-          },
-          take: 20,
-          select: {
-            id: true,
-            classification: true,
-            changedFields: true,
-            before: true,
-            after: true,
-            statusBefore: true,
-            statusAfter: true,
-            createdAt: true,
-          },
-        },
       },
     });
 
@@ -274,7 +258,30 @@ export class ListingModerationService {
       throw new NotFoundException('Listing not found.');
     }
 
-    return listing;
+    const revisions = await this.database.listingRevision.findMany({
+      where: {
+        listingId,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: 20,
+      select: {
+        id: true,
+        classification: true,
+        changedFields: true,
+        before: true,
+        after: true,
+        statusBefore: true,
+        statusAfter: true,
+        createdAt: true,
+      },
+    });
+
+    return {
+      ...listing,
+      revisions,
+    };
   }
 
   async approve(adminId: string, listingId: string, expectedUpdatedAt: string) {
