@@ -99,7 +99,10 @@ export class PublicListingSearchService {
       AND: availableOn
         ? [
             {
-              OR: [{ availableFrom: null }, { availableFrom: { lte: availableOn } }],
+              OR: [
+                { availableFrom: null },
+                { availableFrom: { lte: availableOn } },
+              ],
             },
             {
               OR: [
@@ -204,10 +207,7 @@ export class PublicListingSearchService {
           { id: 'asc' as const },
         ];
       case PublicListingSort.NEWEST:
-        return [
-          { publishedAt: 'desc' as const },
-          { id: 'asc' as const },
-        ];
+        return [{ publishedAt: 'desc' as const }, { id: 'asc' as const }];
       case PublicListingSort.RELEVANCE:
       default:
         return [
