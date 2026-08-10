@@ -65,7 +65,13 @@ describe('PublicListingSearchService', () => {
         minimumStayDays: 90,
         trustScore: 80,
         publishedAt: new Date('2026-08-01T00:00:00.000Z'),
-        photos: [{ id: 'photo-1', url: 'https://example.test/photo.jpg', position: 0 }],
+        photos: [
+          {
+            id: 'photo-1',
+            url: 'https://example.test/photo.jpg',
+            position: 0,
+          },
+        ],
         publicLocation: {
           latitude: 53.34,
           longitude: -6.29,
