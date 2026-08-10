@@ -14,6 +14,8 @@ import { ListingLocationService } from './listing-location.service';
 import { ListingModerationController } from './listing-moderation.controller';
 import { ListingModerationService } from './listing-moderation.service';
 import { ListingRevisionService } from './listing-revision.service';
+import { ListingTrustController } from './listing-trust.controller';
+import { ListingTrustService } from './listing-trust.service';
 import { ListingsController } from './listings.controller';
 import { ListingsRepository } from './listings.repository';
 import { ListingsService } from './listings.service';
@@ -22,6 +24,7 @@ import { ListingsService } from './listings.service';
   imports: [DatabaseModule],
   controllers: [
     ListingsController,
+    ListingTrustController,
     ListingLocationController,
     ListingAuthorizationController,
     ListingAuthorizationReviewController,
@@ -31,6 +34,7 @@ import { ListingsService } from './listings.service';
   ],
   providers: [
     ListingsService,
+    ListingTrustService,
     ListingLocationService,
     ListingAuthorizationEvidenceProcessor,
     ListingAuthorizationSubmissionService,
