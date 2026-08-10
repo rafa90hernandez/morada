@@ -9,6 +9,7 @@ import { DatabaseService } from '../database/database.service';
 import {
   BathroomType,
   BillsIncludedType,
+  ListingRevisionClassification,
   ListingStatus,
   ListingType,
 } from '../generated/prisma/enums';
@@ -16,6 +17,11 @@ import { CreateListingDto } from './dto/create-listing.dto';
 import { MyListingsQueryDto } from './dto/my-listings-query.dto';
 import { UpdateListingDto } from './dto/update-listing.dto';
 import { shouldReturnListingToReview } from './listing-edit-policy';
+import {
+  buildListingRevisionValues,
+  classifyListingRevision,
+  getChangedListingFields,
+} from './listing-revision-policy';
 
 const listingRelations = {
   user: {
@@ -233,9 +239,20 @@ export class ListingsService {
 
     this.validateListing(mergedListing);
 
+    const changedFields = getChangedListingFields(currentListing, dto);
+    const classification = classifyListingRevision(
+      currentListing,
+      dto,
+      changedFields,
+    );
+    const revisionValues = buildListingRevisionValues(
+      currentListing,
+      dto,
+      changedFields,
+    );
     const requiresReview = shouldReturnListingToReview(currentListing, dto);
 
-    const listing = await this.database.listing.update({
+    const updateArgs = {
       where: {
         id,
       },
@@ -365,7 +382,32 @@ export class ListingsService {
               : undefined,
       },
       include: listingRelations,
-    });
+    };
+
+    const listing = classification
+      ? await this.database.$transaction(async (transaction) => {
+          const updatedListing = await transaction.listing.update(updateArgs);
+
+          await transaction.listingRevision.create({
+            data: {
+              listingId: id,
+              actorUserId: userId,
+              classification:
+                classification === 'CRITICAL'
+                  ? ListingRevisionClassification.CRITICAL
+                  : ListingRevisionClassification.MINOR,
+              changedFields,
+              before: revisionValues.before,
+              after: revisionValues.after,
+              statusBefore: currentListing.status,
+              statusAfter: updatedListing.status,
+              previousPublishedAt: currentListing.publishedAt,
+            },
+          });
+
+          return updatedListing;
+        })
+      : await this.database.listing.update(updateArgs);
 
     return ListingMapper.toOwnerResponse(listing);
   }
