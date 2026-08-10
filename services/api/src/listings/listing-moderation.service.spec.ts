@@ -86,6 +86,9 @@ describe('ListingModerationService', () => {
       findMany,
       findFirst: databaseFindFirst,
     },
+    listingRevision: {
+      findMany: jest.fn(),
+    },
     $transaction,
   } as never);
 
@@ -259,12 +262,12 @@ describe('ListingModerationService', () => {
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
-  it('rejects a blank correction/rejection reason before starting a transaction', () => {
-    expect(() =>
+  it('rejects a blank correction/rejection reason before starting a transaction', async () => {
+    await expect(
       service.requestCorrection('admin-id', 'listing-id', '   '),
-    ).toThrow(BadRequestException);
-    expect(() => service.reject('admin-id', 'listing-id', '   ')).toThrow(
-      BadRequestException,
-    );
+    ).rejects.toBeInstanceOf(BadRequestException);
+    await expect(
+      service.reject('admin-id', 'listing-id', '   '),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 });
