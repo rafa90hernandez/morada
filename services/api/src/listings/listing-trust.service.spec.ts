@@ -12,15 +12,20 @@ import { ListingTrustService } from './listing-trust.service';
 
 describe('ListingTrustService', () => {
   const findFirst = jest.fn();
+  const findLifecycle = jest.fn();
   const service = new ListingTrustService({
     listing: { findFirst },
+    listingLifecycle: { findUnique: findLifecycle },
   } as never);
 
   beforeEach(() => {
     jest.clearAllMocks();
+    findLifecycle.mockResolvedValue({
+      expiresAt: new Date('2099-01-01T00:00:00.000Z'),
+    });
   });
 
-  it('reads trust only for active non-deleted listings', async () => {
+  it('reads trust only for active non-deleted non-expired listings', async () => {
     findFirst.mockResolvedValue({
       id: 'listing-id',
       landlordApprovalRequired: false,
@@ -105,6 +110,18 @@ describe('ListingTrustService', () => {
         status: 'NOT_VERIFIED',
       },
     });
+  });
+
+  it('does not expose trust for an expired listing', async () => {
+    findLifecycle.mockResolvedValue({
+      expiresAt: new Date('2020-01-01T00:00:00.000Z'),
+    });
+
+    await expect(service.getPublicTrust('listing-id')).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+
+    expect(findFirst).not.toHaveBeenCalled();
   });
 
   it('does not expose trust for a non-public listing', async () => {

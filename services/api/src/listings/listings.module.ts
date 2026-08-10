@@ -9,6 +9,7 @@ import { ListingAuthorizationEvidenceProcessor } from './listing-authorization-e
 import { ListingAuthorizationReviewController } from './listing-authorization-review.controller';
 import { ListingAuthorizationReviewService } from './listing-authorization-review.service';
 import { ListingAuthorizationSubmissionService } from './listing-authorization-submission.service';
+import { ListingLifecycleService } from './listing-lifecycle.service';
 import { ListingLocationController } from './listing-location.controller';
 import { ListingLocationService } from './listing-location.service';
 import { ListingModerationController } from './listing-moderation.controller';
@@ -34,6 +35,7 @@ import { ListingsService } from './listings.service';
   ],
   providers: [
     ListingsService,
+    ListingLifecycleService,
     ListingTrustService,
     ListingLocationService,
     ListingAuthorizationEvidenceProcessor,

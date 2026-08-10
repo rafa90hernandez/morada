@@ -11,6 +11,19 @@ export class ListingTrustService {
   constructor(private readonly database: DatabaseService) {}
 
   async getPublicTrust(listingId: string) {
+    const lifecycle = await this.database.listingLifecycle.findUnique({
+      where: {
+        listingId,
+      },
+      select: {
+        expiresAt: true,
+      },
+    });
+
+    if (!lifecycle?.expiresAt || lifecycle.expiresAt.getTime() <= Date.now()) {
+      throw new NotFoundException('Listing not found.');
+    }
+
     const listing = await this.database.listing.findFirst({
       where: {
         id: listingId,

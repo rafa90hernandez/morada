@@ -1,0 +1,23 @@
+enum ListingCloseReason {
+  RENTED_VIA_MORADA
+  CLOSED_OUTSIDE_MORADA
+  STOPPED_ADVERTISING
+  PROPERTY_UNAVAILABLE
+  LISTING_MISTAKE
+  OTHER
+}
+
+model ListingLifecycle {
+  id                String             @id @default(cuid())
+  listingId         String             @unique
+  expiresAt         DateTime?
+  lastRenewedAt     DateTime?
+  closeReason       ListingCloseReason?
+  closeReasonDetail String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([expiresAt])
+  @@index([closeReason])
+}

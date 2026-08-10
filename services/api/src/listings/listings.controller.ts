@@ -21,15 +21,20 @@ import {
 
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CloseListingDto } from './dto/close-listing.dto';
 import { CreateListingDto } from './dto/create-listing.dto';
 import { MyListingsQueryDto } from './dto/my-listings-query.dto';
 import { UpdateListingDto } from './dto/update-listing.dto';
+import { ListingLifecycleService } from './listing-lifecycle.service';
 import { ListingsService } from './listings.service';
 
 @ApiTags('Listings')
 @Controller('listings')
 export class ListingsController {
-  constructor(private readonly listingsService: ListingsService) {}
+  constructor(
+    private readonly listingsService: ListingsService,
+    private readonly listingLifecycleService: ListingLifecycleService,
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
@@ -121,12 +126,26 @@ export class ListingsController {
 
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
+  @Post(':id/renew')
+  @ApiOperation({
+    summary: 'Renew an eligible active listing for another 45 days',
+  })
+  renew(@CurrentUser('id') userId: string, @Param('id') id: string) {
+    return this.listingLifecycleService.renew(userId, id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   @Post(':id/close')
   @ApiOperation({
-    summary: 'Close a listing',
+    summary: 'Close a listing with a structured reason',
   })
-  close(@CurrentUser('id') userId: string, @Param('id') id: string) {
-    return this.listingsService.close(userId, id);
+  close(
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+    @Body() dto: CloseListingDto,
+  ) {
+    return this.listingLifecycleService.close(userId, id, dto);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -141,15 +160,15 @@ export class ListingsController {
 
   @Get(':id')
   @ApiOperation({
-    summary: 'Get an active public listing by ID',
+    summary: 'Get an active, non-expired public listing by ID',
   })
   @ApiOkResponse({
     description: 'Listing returned successfully.',
   })
   @ApiNotFoundResponse({
-    description: 'Active listing not found.',
+    description: 'Active non-expired listing not found.',
   })
   findPublicById(@Param('id') id: string) {
-    return this.listingsService.findPublicById(id);
+    return this.listingLifecycleService.findPublicById(id);
   }
 }
