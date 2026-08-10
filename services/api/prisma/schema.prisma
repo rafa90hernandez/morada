@@ -235,7 +235,8 @@ model User {
   notifications Notification[]
   adminActions  AdminActionLog[] @relation("AdminActions")
 
-  identityReviews IdentityVerificationSubmission[] @relation("IdentityReviewer")
+  identityReviews             IdentityVerificationSubmission[] @relation("IdentityReviewer")
+  listingAuthorizationReviews ListingAuthorizationSubmission[] @relation("ListingAuthorizationReviewer")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -293,16 +294,16 @@ model IdentityVerificationSubmission {
   documentType   IdentityDocumentType
   status         IdentityVerificationStatus @default(SUBMITTED)
 
-  submittedAt DateTime @default(now())
-  reviewedAt  DateTime?
-  reviewedBy  String?
+  submittedAt  DateTime @default(now())
+  reviewedAt   DateTime?
+  reviewedBy   String?
   reviewReason String?
 
   retainUntil DateTime?
   deletedAt   DateTime?
 
-  verification Verification @relation(fields: [verificationId], references: [id], onDelete: Cascade)
-  reviewer     User?        @relation("IdentityReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
+  verification Verification                   @relation(fields: [verificationId], references: [id], onDelete: Cascade)
+  reviewer     User?                          @relation("IdentityReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
   evidence     IdentityVerificationEvidence[]
 
   createdAt DateTime @default(now())
@@ -363,18 +364,18 @@ model Listing {
   postalDistrict String?
   propertyType   PropertyType?
 
-  propertyOccupancyType       PropertyOccupancyType?
-  advertisedSpaceType         AdvertisedSpaceType?
-  bedroomCount                Int?
-  bathroomCount               Int?
-  roomType                    RoomType?
-  bedType                     BedType?
-  maxOccupants                Int?
-  peopleSharingSpace          Int?
-  bathroomType                BathroomType?
-  peopleSharingBathroom       Int?
-  currentResidentCount        Int?
-  householdGenderComposition  HouseholdGenderComposition?
+  propertyOccupancyType      PropertyOccupancyType?
+  advertisedSpaceType        AdvertisedSpaceType?
+  bedroomCount               Int?
+  bathroomCount              Int?
+  roomType                   RoomType?
+  bedType                    BedType?
+  maxOccupants               Int?
+  peopleSharingSpace         Int?
+  bathroomType               BathroomType?
+  peopleSharingBathroom      Int?
+  currentResidentCount       Int?
+  householdGenderComposition HouseholdGenderComposition?
 
   monthlyPriceCents          Int?
   depositAmountCents         Int?
@@ -392,26 +393,26 @@ model Listing {
   childrenFamiliesAllowed Boolean?
   studentsAllowed         Boolean?
 
-  formalContract              Boolean?
-  landlordApprovalRequired    Boolean?
-  proofOfIncomeRequired       Boolean?
-  proofOfEmploymentRequired   Boolean?
-  priorReferenceRequired      Boolean?
-  otherRequirementsNote       String?
+  formalContract             Boolean?
+  landlordApprovalRequired   Boolean?
+  proofOfIncomeRequired      Boolean?
+  proofOfEmploymentRequired  Boolean?
+  priorReferenceRequired     Boolean?
+  otherRequirementsNote      String?
 
   availableFrom   DateTime?
   availableUntil  DateTime?
   minimumStayDays Int?
 
-  floorNumber             Int?
-  isGroundFloor           Boolean?
-  hasLift                 Boolean?
-  stepFreeAccess          Boolean?
-  accessibleEntrance      Boolean?
-  adaptedBathroom         Boolean?
-  wheelchairSpace         Boolean?
-  accessibleParking       Boolean?
-  accessibilityOtherNote  String?
+  floorNumber            Int?
+  isGroundFloor          Boolean?
+  hasLift                Boolean?
+  stepFreeAccess         Boolean?
+  accessibleEntrance     Boolean?
+  adaptedBathroom        Boolean?
+  wheelchairSpace        Boolean?
+  accessibleParking      Boolean?
+  accessibilityOtherNote String?
 
   heatingType             HeatingType?
   internetAvailable       Boolean?
@@ -448,15 +449,16 @@ model Listing {
   closedAt    DateTime?
   deletedAt   DateTime?
 
-  user               User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  photos             ListingPhoto[]
-  exchangePreference ExchangePreference?
-  transportOptions   ListingTransportOption[]
-  privateLocation    ListingPrivateLocation?
-  publicLocation     ListingPublicLocation?
-  favorites          Favorite[]
-  conversations      Conversation[]
-  reports            Report[]
+  user                     User                             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  photos                   ListingPhoto[]
+  exchangePreference       ExchangePreference?
+  transportOptions         ListingTransportOption[]
+  privateLocation          ListingPrivateLocation?
+  publicLocation           ListingPublicLocation?
+  authorizationSubmissions ListingAuthorizationSubmission[]
+  favorites                Favorite[]
+  conversations            Conversation[]
+  reports                  Report[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -480,8 +482,8 @@ model Listing {
 }
 
 model ListingPrivateLocation {
-  id             String  @id @default(cuid())
-  listingId      String  @unique
+  id             String @id @default(cuid())
+  listingId      String @unique
   addressLine1   String
   addressLine2   String?
   eircode        String?
@@ -673,7 +675,7 @@ model Notification {
 }
 
 model AdminActionLog {
-  id         String  @id @default(cuid())
+  id         String @id @default(cuid())
   adminId    String
   action     String
   targetType String
@@ -692,7 +694,7 @@ model AdminActionLog {
 }
 
 model ListingPhoto {
-  id        String  @id @default(cuid())
+  id        String @id @default(cuid())
   listingId String
   listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
