@@ -111,9 +111,9 @@ describe('FavoritesService', () => {
   it('rejects an expired listing before creating a favorite', async () => {
     lifecycleFindUnique.mockResolvedValue({ expiresAt: now });
 
-    await expect(service.add('user-id', 'listing-id', now)).rejects.toBeInstanceOf(
-      NotFoundException,
-    );
+    await expect(
+      service.add('user-id', 'listing-id', now),
+    ).rejects.toBeInstanceOf(NotFoundException);
     expect(favoriteUpsert).not.toHaveBeenCalled();
   });
 
