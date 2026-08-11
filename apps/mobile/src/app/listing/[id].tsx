@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import {
   ActivityIndicator,
   Image,
@@ -9,9 +9,10 @@ import {
   View,
 } from "react-native";
 
-import { getListingDetail } from "@/api/client";
+import { getListingDetail, startConversation } from "@/api/client";
 import type { ListingDetail } from "@/api/types";
 import { AppButton } from "@/components/ui/AppButton";
+import { useSession } from "@/session/SessionContext";
 import { colors, radius, spacing } from "@/theme/tokens";
 
 function price(cents: number | null) {
@@ -25,9 +26,12 @@ function price(cents: number | null) {
 
 export default function ListingDetailScreen() {
   const params = useLocalSearchParams<{ id: string }>();
+  const { session } = useSession();
   const [listing, setListing] = useState<ListingDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [contacting, setContacting] = useState(false);
   const [error, setError] = useState(false);
+  const [contactError, setContactError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -49,6 +53,35 @@ export default function ListingDetailScreen() {
       active = false;
     };
   }, [params.id]);
+
+  const contactAdvertiser = async () => {
+    if (!session) {
+      router.push({
+        pathname: "/login",
+        params: { returnTo: `/listing/${params.id}` },
+      });
+      return;
+    }
+
+    setContacting(true);
+    setContactError(null);
+    try {
+      const conversation = await startConversation(
+        params.id,
+        session.accessToken,
+      );
+      router.push({
+        pathname: "/conversations/[id]",
+        params: { id: conversation.id },
+      });
+    } catch {
+      setContactError(
+        "O contato não está disponível para este anúncio neste momento.",
+      );
+    } finally {
+      setContacting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -140,9 +173,9 @@ export default function ListingDetailScreen() {
 
       <View style={styles.sectionCard}>
         <Text style={styles.sectionTitle}>Localização</Text>
-        <Text style={styles.muted}>
-          Por privacidade, o Morada mostra apenas uma área aproximada antes do
-          contato com o anunciante.
+        <Text style={styles.mutedLeft}>
+          Por privacidade, o Morada mostra apenas uma área aproximada antes de
+          uma visita aceita. O endereço exato não vem deste anúncio.
         </Text>
         {listing.location.approximate ? (
           <Text style={styles.locationHint}>
@@ -152,15 +185,32 @@ export default function ListingDetailScreen() {
         ) : null}
       </View>
 
-      <AppButton
-        disabled
-        label="Entrar para salvar"
-        accessibilityHint="Favoritos serão ativados quando a sessão autenticada do aplicativo estiver conectada"
-      />
-      <Text style={styles.favoriteNote}>
-        A API de favoritos já está pronta; o botão permanece desabilitado até o
-        fluxo de autenticação mobile ser conectado.
-      </Text>
+      <View style={styles.contactCard}>
+        <Text style={styles.sectionTitle}>Interessado nesta moradia?</Text>
+        <Text style={styles.mutedLeft}>
+          A conversa fica vinculada a este anúncio. Depois vocês podem combinar
+          uma visita pelo próprio Morada.
+        </Text>
+        {contactError ? <Text style={styles.error}>{contactError}</Text> : null}
+        <AppButton
+          disabled={contacting}
+          label={
+            contacting
+              ? "Abrindo conversa..."
+              : session
+                ? "Falar com anunciante"
+                : "Entrar para falar com anunciante"
+          }
+          onPress={() => void contactAdvertiser()}
+        />
+        {session ? (
+          <AppButton
+            label="Ver minhas conversas"
+            onPress={() => router.push("/conversations")}
+            variant="secondary"
+          />
+        ) : null}
+      </View>
     </ScrollView>
   );
 }
@@ -251,6 +301,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     padding: spacing.md,
   },
+  contactCard: {
+    gap: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
+    padding: spacing.md,
+  },
   sectionTitle: {
     color: colors.text,
     fontSize: 18,
@@ -288,6 +346,10 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 22,
   },
+  mutedLeft: {
+    color: colors.textMuted,
+    lineHeight: 22,
+  },
   stateTitle: {
     color: colors.text,
     fontSize: 22,
@@ -297,10 +359,8 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontWeight: "700",
   },
-  favoriteNote: {
-    color: colors.textMuted,
-    fontSize: 12,
-    lineHeight: 18,
-    textAlign: "center",
+  error: {
+    color: colors.danger,
+    lineHeight: 20,
   },
 });
