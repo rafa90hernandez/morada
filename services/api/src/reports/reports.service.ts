@@ -81,9 +81,7 @@ export class ReportsService {
       dto.reportedUserId,
       dto.listingId,
       dto.conversationId,
-    ].filter(
-      (value) => typeof value === 'string' && value.trim().length > 0,
-    );
+    ].filter((value) => typeof value === 'string' && value.trim().length > 0);
 
     if (contexts.length !== 1) {
       throw new BadRequestException(
