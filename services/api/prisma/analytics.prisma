@@ -1,0 +1,13 @@
+enum ProductEventType {
+  SEARCH_PERFORMED
+}
+
+model ProductEvent {
+  id            String           @id @default(cuid())
+  type          ProductEventType
+  schemaVersion Int              @default(1)
+  occurredAt    DateTime         @default(now())
+
+  @@index([type, occurredAt])
+  @@index([occurredAt])
+}
