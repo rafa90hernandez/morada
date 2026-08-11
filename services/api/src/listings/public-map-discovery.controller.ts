@@ -12,7 +12,9 @@ export class PublicMapDiscoveryController {
   ) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get approximate listing markers in a visible area' })
+  @ApiOperation({
+    summary: 'Get approximate listing markers in a visible area',
+  })
   @ApiOkResponse({ description: 'Approximate clustering-friendly markers.' })
   search(@Query() query: PublicMapBoundsQueryDto) {
     return this.publicMapDiscoveryService.searchVisibleArea(query);
