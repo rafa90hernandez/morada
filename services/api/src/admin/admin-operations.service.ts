@@ -9,6 +9,18 @@ import {
 } from '../generated/prisma/enums';
 
 const PREVIEW_LIMIT = 10;
+const IDENTITY_REVIEWABLE_STATUSES: IdentityVerificationStatus[] = [
+  IdentityVerificationStatus.SUBMITTED,
+  IdentityVerificationStatus.UNDER_REVIEW,
+];
+const AUTHORIZATION_REVIEWABLE_STATUSES: ListingAuthorizationStatus[] = [
+  ListingAuthorizationStatus.SUBMITTED,
+  ListingAuthorizationStatus.UNDER_REVIEW,
+];
+const REPORT_REVIEWABLE_STATUSES: ReportStatus[] = [
+  ReportStatus.OPEN,
+  ReportStatus.UNDER_REVIEW,
+];
 
 @Injectable()
 export class AdminOperationsService {
@@ -18,36 +30,30 @@ export class AdminOperationsService {
     const identityWhere = {
       deletedAt: null,
       status: {
-        in: [
-          IdentityVerificationStatus.SUBMITTED,
-          IdentityVerificationStatus.UNDER_REVIEW,
-        ],
+        in: IDENTITY_REVIEWABLE_STATUSES,
       },
-    } as const;
+    };
 
     const authorizationWhere = {
       deletedAt: null,
       status: {
-        in: [
-          ListingAuthorizationStatus.SUBMITTED,
-          ListingAuthorizationStatus.UNDER_REVIEW,
-        ],
+        in: AUTHORIZATION_REVIEWABLE_STATUSES,
       },
       listing: {
         deletedAt: null,
       },
-    } as const;
+    };
 
     const listingWhere = {
       status: ListingStatus.PENDING_REVIEW,
       deletedAt: null,
-    } as const;
+    };
 
     const reportWhere = {
       status: {
-        in: [ReportStatus.OPEN, ReportStatus.UNDER_REVIEW],
+        in: REPORT_REVIEWABLE_STATUSES,
       },
-    } as const;
+    };
 
     const [
       identityCount,
