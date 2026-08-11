@@ -121,7 +121,8 @@ describe('Beta 1 critical journey (PostgreSQL integration)', () => {
         type: ListingType.RENTAL,
         status: ListingStatus.PENDING_REVIEW,
         title: 'E2E room in Dublin',
-        description: 'Synthetic listing used only by the disposable Beta 1 journey test.',
+        description:
+          'Synthetic listing used only by the disposable Beta 1 journey test.',
         city: 'Dublin',
         area: 'Dublin 8',
         county: 'Dublin',
@@ -211,7 +212,11 @@ describe('Beta 1 critical journey (PostgreSQL integration)', () => {
       data: { expiresAt: new Date(NOW.getTime() + 45 * 24 * 60 * 60 * 1000) },
     });
 
-    const conversation = await conversations.startOrGet(seekerId, listingId, NOW);
+    const conversation = await conversations.startOrGet(
+      seekerId,
+      listingId,
+      NOW,
+    );
     expect(conversation.listing.id).toBe(listingId);
 
     const firstMessage = await conversations.sendText(
@@ -239,7 +244,9 @@ describe('Beta 1 critical journey (PostgreSQL integration)', () => {
       visits.getExactLocation(outsiderId, proposed.id, NOW),
     ).rejects.toBeInstanceOf(NotFoundException);
 
-    await expect(visits.getExactLocation(seekerId, proposed.id, NOW)).resolves.toMatchObject({
+    await expect(
+      visits.getExactLocation(seekerId, proposed.id, NOW),
+    ).resolves.toMatchObject({
       addressLine1: '1 Integration Test Street',
       eircode: 'D00 TEST',
     });
@@ -247,10 +254,18 @@ describe('Beta 1 critical journey (PostgreSQL integration)', () => {
     await blocking.block(seekerId, advertiserId);
 
     await expect(
-      conversations.sendText(advertiserId, conversation.id, 'This must be blocked.', NOW),
+      conversations.sendText(
+        advertiserId,
+        conversation.id,
+        'This must be blocked.',
+        NOW,
+      ),
     ).rejects.toBeInstanceOf(ForbiddenException);
 
-    const blockedConversation = await conversations.get(seekerId, conversation.id);
+    const blockedConversation = await conversations.get(
+      seekerId,
+      conversation.id,
+    );
     expect(blockedConversation.status).toBe('BLOCKED');
 
     await expect(
@@ -258,7 +273,9 @@ describe('Beta 1 critical journey (PostgreSQL integration)', () => {
     ).rejects.toBeInstanceOf(NotFoundException);
 
     await blocking.unblock(seekerId, advertiserId);
-    await expect(visits.getExactLocation(seekerId, proposed.id, NOW)).resolves.toMatchObject({
+    await expect(
+      visits.getExactLocation(seekerId, proposed.id, NOW),
+    ).resolves.toMatchObject({
       addressLine1: '1 Integration Test Street',
     });
 
