@@ -166,9 +166,7 @@ describe('ConversationsService', () => {
   it('returns effective blocked status in the conversation list without exposing block direction', async () => {
     blockFindFirst.mockResolvedValue({ id: 'block-id' });
 
-    await expect(
-      service.list('seeker-id', { limit: 20 }),
-    ).resolves.toEqual({
+    await expect(service.list('seeker-id', { limit: 20 })).resolves.toEqual({
       items: [
         {
           ...conversationRow,
