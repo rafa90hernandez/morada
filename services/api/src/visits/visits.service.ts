@@ -401,11 +401,7 @@ export class VisitsService {
     return location;
   }
 
-  private async respondToProposal(
-    userId: string,
-    visitId: string,
-    now: Date,
-  ) {
+  private async respondToProposal(userId: string, visitId: string, now: Date) {
     await this.assertActiveUser(userId);
 
     return this.database.$transaction(async (transaction) => {
