@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { constants } from 'node:fs';
+import { access, mkdir, rm, writeFile } from 'node:fs/promises';
 import { dirname, resolve, sep } from 'node:path';
 
 import type { StorageService } from './storage.interface';
@@ -42,6 +43,11 @@ export class LocalStorageService implements StorageService {
     });
 
     this.logger.debug(`Deleted local object: ${normalizedKey}`);
+  }
+
+  async healthCheck(): Promise<void> {
+    await mkdir(this.storageRoot, { recursive: true });
+    await access(this.storageRoot, constants.R_OK | constants.W_OK);
   }
 
   private normalizeKey(key: string): string {
