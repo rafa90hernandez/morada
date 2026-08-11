@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, resolve, sep } from 'node:path';
 
@@ -8,11 +9,21 @@ import type {
   PrivateUploadObjectInput,
 } from './private-storage.interface';
 
+const LOCAL_PRIVATE_STORAGE_ENVIRONMENTS = new Set(['development', 'test']);
+
 @Injectable()
 export class LocalPrivateStorageService implements PrivateStorageService {
-  private readonly logger = new Logger(LocalPrivateStorageService.name);
-
   private readonly storageRoot = resolve(process.cwd(), 'storage', 'private');
+
+  constructor(private readonly configService: ConfigService) {
+    const nodeEnv = this.configService.get<string>('NODE_ENV') ?? 'development';
+
+    if (!LOCAL_PRIVATE_STORAGE_ENVIRONMENTS.has(nodeEnv)) {
+      throw new Error(
+        'Local private storage is disabled outside development/test. Configure an approved private storage provider before starting staging or production.',
+      );
+    }
+  }
 
   async upload(input: PrivateUploadObjectInput): Promise<PrivateStoredObject> {
     const normalizedKey = this.normalizeKey(input.key);
@@ -23,8 +34,6 @@ export class LocalPrivateStorageService implements PrivateStorageService {
     });
 
     await writeFile(destinationPath, input.body);
-
-    this.logger.debug(`Stored private local object: ${normalizedKey}`);
 
     return {
       key: normalizedKey,
@@ -41,8 +50,6 @@ export class LocalPrivateStorageService implements PrivateStorageService {
     await rm(this.resolveSafePath(normalizedKey), {
       force: true,
     });
-
-    this.logger.debug(`Deleted private local object: ${normalizedKey}`);
   }
 
   private normalizeKey(key: string): string {

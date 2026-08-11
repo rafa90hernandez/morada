@@ -17,11 +17,9 @@ export class LoggerMiddleware implements NestMiddleware {
       const logData = {
         requestId: request.requestId,
         method: request.method,
-        path: request.originalUrl,
+        path: request.path,
         statusCode: response.statusCode,
         durationMs: Number(durationMilliseconds.toFixed(2)),
-        ip: request.ip,
-        userAgent: request.get('user-agent') ?? null,
       };
 
       this.logger.log(JSON.stringify(logData));
