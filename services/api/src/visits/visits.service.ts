@@ -376,10 +376,26 @@ export class VisitsService {
       select: {
         id: true,
         listingId: true,
+        requesterId: true,
+        responderId: true,
       },
     });
 
     if (!visit) {
+      throw new NotFoundException('Visit location is not available.');
+    }
+
+    const blocked = await this.database.block.findFirst({
+      where: {
+        OR: [
+          { blockerId: visit.requesterId, blockedId: visit.responderId },
+          { blockerId: visit.responderId, blockedId: visit.requesterId },
+        ],
+      },
+      select: { id: true },
+    });
+
+    if (blocked) {
       throw new NotFoundException('Visit location is not available.');
     }
 
