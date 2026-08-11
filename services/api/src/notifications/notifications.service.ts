@@ -22,7 +22,7 @@ export class NotificationsService {
 
   async list(userId: string, query: NotificationPageQueryDto) {
     if (query.cursor) {
-      const cursor = await this.database.notification.findFirst({
+      const cursor = await this.database.inAppNotification.findFirst({
         where: { id: query.cursor, userId },
         select: { id: true },
       });
@@ -32,7 +32,7 @@ export class NotificationsService {
       }
     }
 
-    const rows = await this.database.notification.findMany({
+    const rows = await this.database.inAppNotification.findMany({
       where: { userId },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take: query.limit + 1,
@@ -58,7 +58,7 @@ export class NotificationsService {
   }
 
   async unreadCount(userId: string) {
-    const count = await this.database.notification.count({
+    const count = await this.database.inAppNotification.count({
       where: { userId, isRead: false },
     });
 
@@ -66,7 +66,7 @@ export class NotificationsService {
   }
 
   async markRead(userId: string, notificationId: string, now = new Date()) {
-    const notification = await this.database.notification.findFirst({
+    const notification = await this.database.inAppNotification.findFirst({
       where: { id: notificationId, userId },
       select: { id: true, isRead: true },
     });
@@ -76,13 +76,13 @@ export class NotificationsService {
     }
 
     if (notification.isRead) {
-      return this.database.notification.findFirst({
+      return this.database.inAppNotification.findFirst({
         where: { id: notificationId, userId },
         select: notificationSelect,
       });
     }
 
-    return this.database.notification.update({
+    return this.database.inAppNotification.update({
       where: { id: notificationId },
       data: { isRead: true, readAt: now },
       select: notificationSelect,
@@ -90,7 +90,7 @@ export class NotificationsService {
   }
 
   async markAllRead(userId: string, now = new Date()) {
-    const result = await this.database.notification.updateMany({
+    const result = await this.database.inAppNotification.updateMany({
       where: { userId, isRead: false },
       data: { isRead: true, readAt: now },
     });
