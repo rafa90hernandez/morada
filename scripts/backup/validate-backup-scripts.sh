@@ -27,8 +27,8 @@ if TARGET_ENVIRONMENT=staging \
   exit 1
 fi
 
-if grep -Eq 'echo .*DATABASE_URL|printf .*DATABASE_URL' "$backup_script" "$restore_script"; then
-  echo "Backup scripts must not print DATABASE_URL." >&2
+if grep -Eq '(echo|printf).*\$\{?DATABASE_URL' "$backup_script" "$restore_script"; then
+  echo "Backup scripts must not print the DATABASE_URL value." >&2
   exit 1
 fi
 
