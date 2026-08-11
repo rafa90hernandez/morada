@@ -1,0 +1,29 @@
+enum InAppNotificationType {
+  NEW_MESSAGE
+  VISIT_PROPOSED
+  VISIT_ACCEPTED
+  VISIT_DECLINED
+  VISIT_REPLACED
+  VISIT_CANCELLED
+  REPORT_RESOLVED
+  REPORT_DISMISSED
+  LISTING_PAUSED
+}
+
+model InAppNotification {
+  id         String                @id @default(cuid())
+  userId     String
+  type       InAppNotificationType
+  title      String
+  body       String
+  isRead     Boolean               @default(false)
+  targetType String?
+  targetId   String?
+  metadata   Json?
+  readAt     DateTime?
+  createdAt  DateTime              @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userId, isRead])
+  @@index([targetType, targetId])
+}
