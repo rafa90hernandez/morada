@@ -331,10 +331,14 @@ export class ConversationsService {
     },
     now: Date,
   ): Promise<void> {
+    const supportedType =
+      listing.type === ListingType.RENTAL ||
+      listing.type === ListingType.TRANSFER;
+
     if (
       listing.status !== ListingStatus.ACTIVE ||
       listing.deletedAt ||
-      ![ListingType.RENTAL, ListingType.TRANSFER].includes(listing.type)
+      !supportedType
     ) {
       throw new NotFoundException('Listing not found.');
     }
