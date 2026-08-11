@@ -7,7 +7,7 @@ on:
       - main
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -20,10 +20,8 @@ jobs:
     timeout-minutes: 20
 
     steps:
-      - name: Checkout PR branch
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
@@ -39,21 +37,6 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
-      - name: Format mobile sources
-        run: pnpm --filter @morada/mobile exec prettier --write "src/**/*.{ts,tsx}"
-
-      - name: Commit formatting when changed
-        run: |
-          if git diff --quiet -- apps/mobile/src; then
-            echo "Mobile sources already formatted."
-          else
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add apps/mobile/src
-            git commit -m "style(mobile): format discovery sources"
-            git push origin HEAD:${{ github.event.pull_request.head.ref }}
-          fi
 
       - name: Run quality gates
         run: pnpm quality
