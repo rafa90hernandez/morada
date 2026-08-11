@@ -17,6 +17,7 @@ import { ConversationsModule } from './conversations/conversations.module';
 import { DatabaseModule } from './database/database.module';
 import { ListingPhotosModule } from './listing-photos/listing-photos.module';
 import { ListingsModule } from './listings/listings.module';
+import { ReportsModule } from './reports/reports.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -68,6 +69,7 @@ import { UsersModule } from './users/users.module';
     ListingsModule,
     ListingPhotosModule,
     ConversationsModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [
