@@ -17,6 +17,7 @@ import { ConversationsModule } from './conversations/conversations.module';
 import { DatabaseModule } from './database/database.module';
 import { ListingPhotosModule } from './listing-photos/listing-photos.module';
 import { ListingsModule } from './listings/listings.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { ReportsModule } from './reports/reports.module';
 import { UsersModule } from './users/users.module';
 import { VisitsModule } from './visits/visits.module';
@@ -72,6 +73,7 @@ import { VisitsModule } from './visits/visits.module';
     ConversationsModule,
     ReportsModule,
     VisitsModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [
