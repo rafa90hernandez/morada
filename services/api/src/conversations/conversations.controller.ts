@@ -78,10 +78,6 @@ export class ConversationsController {
     @Param('conversationId') conversationId: string,
     @Body() dto: SendTextMessageDto,
   ) {
-    return this.conversationsService.sendText(
-      userId,
-      conversationId,
-      dto.body,
-    );
+    return this.conversationsService.sendText(userId, conversationId, dto.body);
   }
 }
