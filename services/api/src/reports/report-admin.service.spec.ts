@@ -214,7 +214,11 @@ describe('ReportAdminService', () => {
       pausedReason: 'Preventive safety pause for report report-id',
     });
 
-    await service.restoreListing('admin-id', 'report-id', 'Cleared after review');
+    await service.restoreListing(
+      'admin-id',
+      'report-id',
+      'Cleared after review',
+    );
 
     expect(listingUpdate).toHaveBeenCalledWith({
       where: { id: 'listing-id' },
