@@ -25,11 +25,14 @@ import { ListingsService } from './listings.service';
 import { PublicListingDetailService } from './public-listing-detail.service';
 import { PublicListingSearchController } from './public-listing-search.controller';
 import { PublicListingSearchService } from './public-listing-search.service';
+import { PublicMapDiscoveryController } from './public-map-discovery.controller';
+import { PublicMapDiscoveryService } from './public-map-discovery.service';
 
 @Module({
   imports: [DatabaseModule],
   controllers: [
     PublicListingSearchController,
+    PublicMapDiscoveryController,
     FavoritesController,
     ListingsController,
     ListingTrustController,
@@ -45,6 +48,7 @@ import { PublicListingSearchService } from './public-listing-search.service';
     ListingLifecycleService,
     PublicListingSearchService,
     PublicListingDetailService,
+    PublicMapDiscoveryService,
     FavoritesService,
     ListingTrustService,
     ListingLocationService,

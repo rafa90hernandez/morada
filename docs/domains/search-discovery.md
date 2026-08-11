@@ -44,6 +44,25 @@ Trust is never represented as a generic `safe` or `fully verified` claim. The de
 - relationship to the property verified;
 - landlord authorization verified or not verified, together with whether the listing requires it.
 
+### Approximate map / visible area
+
+`GET /discovery/map?north=...&south=...&east=...&west=...`
+
+The map endpoint is provider-agnostic and returns only approximate marker positions from `ListingPublicLocation`. It never loads `ListingPrivateLocation`.
+
+The viewport contract is deliberately bounded:
+
+- latitude and longitude values must be valid geographic coordinates;
+- `north` must be greater than `south`;
+- `east` must be greater than `west` in the Beta 1 contract;
+- maximum latitude span is 5 degrees;
+- maximum longitude span is 6 degrees;
+- response limit defaults to 200 and is capped at 500 markers.
+
+The service requests one extra row to report `truncated = true` without returning more than the requested limit. Marker ordering is deterministic by listing ID, making list/map synchronization predictable for Beta 1.
+
+Markers include only listing ID, approximate latitude/longitude, approximation radius/version and the compact label data required by the client. Client-side clustering can be implemented without a paid map/search backend.
+
 ## Filters
 
 Current essential filters include:
@@ -87,10 +106,12 @@ Discovery uses dedicated Prisma selects rather than loading full listing domain 
 
 Public advertiser data is limited to presentation fields intentionally allowed for discovery. Approximate location always comes from `ListingPublicLocation`.
 
+The map endpoint queries `ListingPublicLocation` directly and only joins the minimal public listing label fields. Exact address, Eircode and exact coordinates therefore do not enter the query result at all.
+
 ## Pagination
 
 Pagination is page-based for Beta 1 with deterministic ordering and a hard limit of 50 items per page. Cursor pagination may replace it later if inventory size or query latency justifies the additional complexity.
 
 ## Cost posture
 
-Beta 1 search/read models use PostgreSQL + Prisma already present in the project. No paid search SaaS, geocoding provider or analytics/search service is required for this implementation.
+Beta 1 search/read/map contracts use PostgreSQL + Prisma already present in the project. No paid search SaaS, geocoding provider, map backend or analytics/search service is required for this implementation.
