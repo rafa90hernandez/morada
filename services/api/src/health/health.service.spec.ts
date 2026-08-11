@@ -15,7 +15,11 @@ describe('HealthService', () => {
     const database = {
       $queryRaw: jest.fn().mockResolvedValue([{ '?column?': 1 }]),
     };
-    const service = new HealthService(database as never, {} as never, {} as never);
+    const service = new HealthService(
+      database as never,
+      {} as never,
+      {} as never,
+    );
 
     await expect(service.ready()).resolves.toEqual({ status: 'ready' });
   });
@@ -24,7 +28,11 @@ describe('HealthService', () => {
     const database = {
       $queryRaw: jest.fn().mockRejectedValue(new Error('connection refused')),
     };
-    const service = new HealthService(database as never, {} as never, {} as never);
+    const service = new HealthService(
+      database as never,
+      {} as never,
+      {} as never,
+    );
 
     await expect(service.ready()).resolves.toEqual({ status: 'unavailable' });
   });
