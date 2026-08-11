@@ -77,7 +77,11 @@ export class ReportsService {
     reporterId: string,
     dto: CreateReportDto,
   ): Promise<ResolvedReportTarget> {
-    const contexts = [dto.reportedUserId, dto.listingId, dto.conversationId].filter(
+    const contexts = [
+      dto.reportedUserId,
+      dto.listingId,
+      dto.conversationId,
+    ].filter(
       (value) => typeof value === 'string' && value.trim().length > 0,
     );
 
