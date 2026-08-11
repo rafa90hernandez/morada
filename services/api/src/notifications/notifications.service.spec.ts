@@ -30,6 +30,7 @@ describe('NotificationsService', () => {
   const conversationFindFirst = jest.fn();
   const visitFindFirst = jest.fn();
   const listingFindFirst = jest.fn();
+  const lifecycleFindUnique = jest.fn();
   const reportFindFirst = jest.fn();
 
   const database = {
@@ -43,6 +44,7 @@ describe('NotificationsService', () => {
     conversation: { findFirst: conversationFindFirst },
     visit: { findFirst: visitFindFirst },
     listing: { findFirst: listingFindFirst },
+    listingLifecycle: { findUnique: lifecycleFindUnique },
     report: { findFirst: reportFindFirst },
   };
 
@@ -61,7 +63,15 @@ describe('NotificationsService', () => {
     notificationUpdateMany.mockResolvedValue({ count: 2 });
     conversationFindFirst.mockResolvedValue({ id: 'conversation-id' });
     visitFindFirst.mockResolvedValue({ id: 'visit-id' });
-    listingFindFirst.mockResolvedValue({ id: 'listing-id' });
+    listingFindFirst.mockResolvedValue({
+      id: 'listing-id',
+      userId: 'owner-id',
+      status: 'ACTIVE',
+      deletedAt: null,
+    });
+    lifecycleFindUnique.mockResolvedValue({
+      expiresAt: new Date('2026-08-20T00:00:00.000Z'),
+    });
     reportFindFirst.mockResolvedValue({ id: 'report-id' });
   });
 
@@ -131,6 +141,48 @@ describe('NotificationsService', () => {
         metadata: null,
       }),
     );
+  });
+
+  it('strips an expired public listing target for a non-owner', async () => {
+    notificationFindMany.mockResolvedValue([
+      {
+        ...notificationRow,
+        targetType: 'LISTING',
+        targetId: 'listing-id',
+        metadata: null,
+      },
+    ]);
+    lifecycleFindUnique.mockResolvedValue({ expiresAt: now });
+
+    const result = await service.list('user-id', { limit: 20 });
+
+    expect(lifecycleFindUnique).toHaveBeenCalledWith({
+      where: { listingId: 'listing-id' },
+      select: { expiresAt: true },
+    });
+    expect(result.items[0].targetId).toBeNull();
+  });
+
+  it('preserves an owner listing target without requiring public lifecycle eligibility', async () => {
+    notificationFindMany.mockResolvedValue([
+      {
+        ...notificationRow,
+        targetType: 'LISTING',
+        targetId: 'listing-id',
+        metadata: null,
+      },
+    ]);
+    listingFindFirst.mockResolvedValue({
+      id: 'listing-id',
+      userId: 'owner-id',
+      status: 'PAUSED',
+      deletedAt: null,
+    });
+
+    const result = await service.list('owner-id', { limit: 20 });
+
+    expect(result.items[0].targetId).toBe('listing-id');
+    expect(lifecycleFindUnique).not.toHaveBeenCalled();
   });
 
   it('never resolves report targets for anyone except the original reporter', async () => {
