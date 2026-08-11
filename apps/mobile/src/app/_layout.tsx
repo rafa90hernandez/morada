@@ -1,7 +1,7 @@
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
+import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 
-import { colors } from '@/theme/tokens';
+import { colors } from "@/theme/tokens";
 
 export default function RootLayout() {
   return (
@@ -18,7 +18,7 @@ export default function RootLayout() {
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen
           name="listing/[id]"
-          options={{ title: 'Detalhes da moradia' }}
+          options={{ title: "Detalhes da moradia" }}
         />
       </Stack>
     </>

@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { router } from 'expo-router';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { router } from "expo-router";
 import {
   ActivityIndicator,
   FlatList,
@@ -10,36 +10,36 @@ import {
   Text,
   TextInput,
   View,
-} from 'react-native';
+} from "react-native";
 
-import { getMapMarkers, searchListings } from '@/api/client';
-import type { ListingCard as ListingCardType, MapMarker } from '@/api/types';
-import { ApproximateMap } from '@/components/ApproximateMap';
-import { ListingCard } from '@/components/ListingCard';
-import { AppButton } from '@/components/ui/AppButton';
-import { boundsFromCards } from '@/features/discovery/discovery-utils';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { getMapMarkers, searchListings } from "@/api/client";
+import type { ListingCard as ListingCardType, MapMarker } from "@/api/types";
+import { ApproximateMap } from "@/components/ApproximateMap";
+import { ListingCard } from "@/components/ListingCard";
+import { AppButton } from "@/components/ui/AppButton";
+import { boundsFromCards } from "@/features/discovery/discovery-utils";
+import { colors, radius, spacing } from "@/theme/tokens";
 
-type ViewMode = 'list' | 'map';
+type ViewMode = "list" | "map";
 
 export default function DiscoveryScreen() {
   const [listings, setListings] = useState<ListingCardType[]>([]);
   const [markers, setMarkers] = useState<MapMarker[]>([]);
-  const [mode, setMode] = useState<ViewMode>('list');
-  const [city, setCity] = useState('Dublin');
-  const [maxPrice, setMaxPrice] = useState('');
+  const [mode, setMode] = useState<ViewMode>("list");
+  const [city, setCity] = useState("Dublin");
+  const [maxPrice, setMaxPrice] = useState("");
   const [furnished, setFurnished] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const filters = useMemo(() => {
-    const parsedPrice = Number(maxPrice.replace(/[^0-9]/g, ''));
+    const parsedPrice = Number(maxPrice.replace(/[^0-9]/g, ""));
     return {
       city: city.trim() || undefined,
       maxPriceCents: parsedPrice > 0 ? parsedPrice * 100 : undefined,
       furnished: furnished ? true : undefined,
-      sort: 'RELEVANCE' as const,
+      sort: "RELEVANCE" as const,
     };
   }, [city, furnished, maxPrice]);
 
@@ -58,7 +58,7 @@ export default function DiscoveryScreen() {
         setMarkers(mapResult.markers);
       } catch {
         setError(
-          'Não foi possível carregar as moradias agora. Verifique sua conexão e tente novamente.',
+          "Não foi possível carregar as moradias agora. Verifique sua conexão e tente novamente.",
         );
       } finally {
         setLoading(false);
@@ -73,7 +73,7 @@ export default function DiscoveryScreen() {
   }, [load]);
 
   const openListing = (listingId: string) => {
-    router.push({ pathname: '/listing/[id]', params: { id: listingId } });
+    router.push({ pathname: "/listing/[id]", params: { id: listingId } });
   };
 
   return (
@@ -84,7 +84,8 @@ export default function DiscoveryScreen() {
           Encontre sua próxima moradia
         </Text>
         <Text style={styles.subtitle}>
-          Explore anúncios ativos com localização aproximada e sinais de confiança claros.
+          Explore anúncios ativos com localização aproximada e sinais de
+          confiança claros.
         </Text>
       </View>
 
@@ -115,7 +116,9 @@ export default function DiscoveryScreen() {
             onPress={() => setFurnished((value) => !value)}
             style={[styles.chip, furnished && styles.chipSelected]}
           >
-            <Text style={[styles.chipText, furnished && styles.chipTextSelected]}>
+            <Text
+              style={[styles.chipText, furnished && styles.chipTextSelected]}
+            >
               Mobilado
             </Text>
           </Pressable>
@@ -124,15 +127,20 @@ export default function DiscoveryScreen() {
       </View>
 
       <View style={styles.modeSwitch}>
-        {(['list', 'map'] as const).map((value) => (
+        {(["list", "map"] as const).map((value) => (
           <Pressable
             accessibilityRole="button"
             key={value}
             onPress={() => setMode(value)}
-            style={[styles.modeButton, mode === value && styles.modeButtonActive]}
+            style={[
+              styles.modeButton,
+              mode === value && styles.modeButtonActive,
+            ]}
           >
-            <Text style={[styles.modeText, mode === value && styles.modeTextActive]}>
-              {value === 'list' ? 'Lista' : 'Mapa'}
+            <Text
+              style={[styles.modeText, mode === value && styles.modeTextActive]}
+            >
+              {value === "list" ? "Lista" : "Mapa"}
             </Text>
           </Pressable>
         ))}
@@ -149,7 +157,7 @@ export default function DiscoveryScreen() {
           <Text style={styles.stateText}>{error}</Text>
           <AppButton label="Tentar novamente" onPress={() => void load()} />
         </View>
-      ) : mode === 'map' ? (
+      ) : mode === "map" ? (
         <View style={styles.mapContainer}>
           <ApproximateMap markers={markers} onMarkerPress={openListing} />
           <Text style={styles.mapFootnote}>
@@ -164,7 +172,9 @@ export default function DiscoveryScreen() {
           ListEmptyComponent={
             <View style={styles.centerState}>
               <Text style={styles.errorTitle}>Nenhuma moradia encontrada</Text>
-              <Text style={styles.stateText}>Tente ampliar a cidade ou o preço máximo.</Text>
+              <Text style={styles.stateText}>
+                Tente ampliar a cidade ou o preço máximo.
+              </Text>
             </View>
           }
           refreshControl={
@@ -196,13 +206,13 @@ const styles = StyleSheet.create({
   brand: {
     color: colors.primary,
     fontSize: 13,
-    fontWeight: '900',
+    fontWeight: "900",
     letterSpacing: 2,
   },
   title: {
     color: colors.text,
     fontSize: 30,
-    fontWeight: '900',
+    fontWeight: "900",
     letterSpacing: -0.8,
   },
   subtitle: {
@@ -225,14 +235,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   filterActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     gap: spacing.sm,
   },
   chip: {
     minHeight: 44,
-    justifyContent: 'center',
+    justifyContent: "center",
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.pill,
@@ -245,13 +255,13 @@ const styles = StyleSheet.create({
   },
   chipText: {
     color: colors.text,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   chipTextSelected: {
     color: colors.primary,
   },
   modeSwitch: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginHorizontal: spacing.lg,
     marginBottom: spacing.md,
     borderRadius: radius.pill,
@@ -260,7 +270,7 @@ const styles = StyleSheet.create({
   },
   modeButton: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
     borderRadius: radius.pill,
     paddingVertical: spacing.sm,
   },
@@ -269,7 +279,7 @@ const styles = StyleSheet.create({
   },
   modeText: {
     color: colors.textMuted,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   modeTextActive: {
     color: colors.text,
@@ -292,20 +302,20 @@ const styles = StyleSheet.create({
   },
   centerState: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     gap: spacing.md,
     padding: spacing.xl,
   },
   stateText: {
     maxWidth: 320,
     color: colors.textMuted,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 22,
   },
   errorTitle: {
     color: colors.text,
     fontSize: 20,
-    fontWeight: '800',
+    fontWeight: "800",
   },
 });

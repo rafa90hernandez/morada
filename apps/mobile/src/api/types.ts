@@ -7,7 +7,7 @@ export type ApproximateLocation = {
 
 export type ListingCard = {
   id: string;
-  type: 'RENTAL' | 'TRANSFER';
+  type: "RENTAL" | "TRANSFER";
   title: string;
   location: {
     city: string | null;
@@ -27,7 +27,7 @@ export type ListingCard = {
   };
   pricing: {
     monthlyPriceCents: number | null;
-    currency: 'EUR';
+    currency: "EUR";
     billsIncludedType: string | null;
   };
   suitability: {
@@ -55,7 +55,7 @@ export type ListingSearchResponse = {
   limit: number;
   total: number;
   totalPages: number;
-  sort: 'RELEVANCE' | 'PRICE_ASC' | 'PRICE_DESC' | 'NEWEST';
+  sort: "RELEVANCE" | "PRICE_ASC" | "PRICE_DESC" | "NEWEST";
 };
 
 export type ListingDetail = ListingCard & {
@@ -72,7 +72,7 @@ export type ListingDetail = ListingCard & {
     relationshipVerified: boolean;
     landlordAuthorization: {
       requiredByListing: boolean;
-      status: 'VERIFIED' | 'NOT_VERIFIED';
+      status: "VERIFIED" | "NOT_VERIFIED";
     };
   };
   transport: Array<{
@@ -91,7 +91,7 @@ export type MapMarker = {
   label: {
     title: string;
     monthlyPriceCents: number | null;
-    currency: 'EUR';
+    currency: "EUR";
     propertyType: string | null;
     advertisedSpaceType: string | null;
   };
@@ -110,5 +110,5 @@ export type ListingSearchFilters = {
   furnished?: boolean;
   couplesAllowed?: boolean;
   petsAllowed?: boolean;
-  sort?: ListingSearchResponse['sort'];
+  sort?: ListingSearchResponse["sort"];
 };

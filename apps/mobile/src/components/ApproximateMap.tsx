@@ -1,7 +1,7 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import type { MapMarker } from '@/api/types';
-import { colors, radius, spacing } from '@/theme/tokens';
+import type { MapMarker } from "@/api/types";
+import { colors, radius, spacing } from "@/theme/tokens";
 
 type Props = {
   markers: MapMarker[];
@@ -18,7 +18,9 @@ export function ApproximateMap({ markers, onMarkerPress }: Props) {
     return (
       <View style={[styles.map, styles.empty]}>
         <Text style={styles.emptyTitle}>Nenhum anúncio nesta área</Text>
-        <Text style={styles.emptyText}>Mova a área de busca ou ajuste os filtros.</Text>
+        <Text style={styles.emptyText}>
+          Mova a área de busca ou ajuste os filtros.
+        </Text>
       </View>
     );
   }
@@ -67,29 +69,29 @@ export function ApproximateMap({ markers, onMarkerPress }: Props) {
 const styles = StyleSheet.create({
   map: {
     minHeight: 420,
-    overflow: 'hidden',
+    overflow: "hidden",
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.xl,
-    backgroundColor: '#E8EEE9',
+    backgroundColor: "#E8EEE9",
   },
   empty: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     gap: spacing.sm,
     padding: spacing.xl,
   },
   emptyTitle: {
     color: colors.text,
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: "800",
   },
   emptyText: {
     color: colors.textMuted,
-    textAlign: 'center',
+    textAlign: "center",
   },
   notice: {
-    position: 'absolute',
+    position: "absolute",
     top: spacing.md,
     left: spacing.md,
     zIndex: 2,
@@ -101,14 +103,14 @@ const styles = StyleSheet.create({
   noticeText: {
     color: colors.textMuted,
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   marker: {
-    position: 'absolute',
+    position: "absolute",
     width: 38,
     height: 38,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 3,
     borderColor: colors.surface,
     borderRadius: radius.pill,
@@ -116,6 +118,6 @@ const styles = StyleSheet.create({
   },
   markerText: {
     color: colors.surface,
-    fontWeight: '900',
+    fontWeight: "900",
   },
 });

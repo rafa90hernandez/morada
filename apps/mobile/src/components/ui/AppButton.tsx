@@ -1,17 +1,17 @@
-import { Pressable, StyleSheet, Text, type PressableProps } from 'react-native';
+import { Pressable, StyleSheet, Text, type PressableProps } from "react-native";
 
-import { colors, radius, spacing } from '@/theme/tokens';
+import { colors, radius, spacing } from "@/theme/tokens";
 
 type AppButtonProps = PressableProps & {
   label: string;
-  variant?: 'primary' | 'secondary';
+  variant?: "primary" | "secondary";
 };
 
 export function AppButton({
   label,
   disabled,
   style,
-  variant = 'primary',
+  variant = "primary",
   ...props
 }: AppButtonProps) {
   return (
@@ -20,14 +20,16 @@ export function AppButton({
       disabled={disabled}
       style={({ pressed }) => [
         styles.button,
-        variant === 'secondary' && styles.secondary,
+        variant === "secondary" && styles.secondary,
         pressed && styles.pressed,
         disabled && styles.disabled,
-        typeof style === 'function' ? style({ pressed }) : style,
+        typeof style === "function" ? style({ pressed }) : style,
       ]}
       {...props}
     >
-      <Text style={[styles.label, variant === 'secondary' && styles.secondaryLabel]}>
+      <Text
+        style={[styles.label, variant === "secondary" && styles.secondaryLabel]}
+      >
         {label}
       </Text>
     </Pressable>
@@ -37,8 +39,8 @@ export function AppButton({
 const styles = StyleSheet.create({
   button: {
     minHeight: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     borderRadius: radius.md,
     backgroundColor: colors.primary,
     paddingHorizontal: spacing.lg,
@@ -58,7 +60,7 @@ const styles = StyleSheet.create({
   label: {
     color: colors.surface,
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   secondaryLabel: {
     color: colors.text,

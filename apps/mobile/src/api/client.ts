@@ -3,7 +3,7 @@ import type {
   ListingSearchFilters,
   ListingSearchResponse,
   MapResponse,
-} from './types';
+} from "./types";
 
 type ApiEnvelope<T> = {
   success: boolean;
@@ -12,34 +12,43 @@ type ApiEnvelope<T> = {
 };
 
 const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL?.replace(/\/$/, '') ??
-  'http://localhost:3001/api/v1';
+  process.env.EXPO_PUBLIC_API_URL?.replace(/\/$/, "") ??
+  "http://localhost:3001/api/v1";
 
-function buildQuery(params: Record<string, string | number | boolean | undefined>) {
-  const entries = Object.entries(params).filter(([, value]) => value !== undefined);
-  if (entries.length === 0) return '';
+function buildQuery(
+  params: Record<string, string | number | boolean | undefined>,
+) {
+  const entries = Object.entries(params).filter(
+    ([, value]) => value !== undefined,
+  );
+  if (entries.length === 0) return "";
 
   return `?${entries
-    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
-    .join('&')}`;
+    .map(
+      ([key, value]) =>
+        `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`,
+    )
+    .join("&")}`;
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
     headers: {
-      Accept: 'application/json',
+      Accept: "application/json",
       ...init?.headers,
     },
   });
 
   if (!response.ok) {
-    throw new Error(`Morada API request failed with status ${response.status}.`);
+    throw new Error(
+      `Morada API request failed with status ${response.status}.`,
+    );
   }
 
   const envelope = (await response.json()) as ApiEnvelope<T>;
   if (!envelope.success) {
-    throw new Error('Morada API returned an unsuccessful response.');
+    throw new Error("Morada API returned an unsuccessful response.");
   }
 
   return envelope.data;
@@ -62,7 +71,9 @@ export function searchListings(filters: ListingSearchFilters = {}) {
 }
 
 export function getListingDetail(id: string) {
-  return request<ListingDetail>(`/discovery/listings/${encodeURIComponent(id)}`);
+  return request<ListingDetail>(
+    `/discovery/listings/${encodeURIComponent(id)}`,
+  );
 }
 
 export function getMapMarkers(bounds: {
@@ -81,7 +92,7 @@ export async function addFavorite(listingId: string, accessToken: string) {
   return request<{ id: string; listingId: string; createdAt: string }>(
     `/favorites/${encodeURIComponent(listingId)}`,
     {
-      method: 'POST',
+      method: "POST",
       headers: { Authorization: `Bearer ${accessToken}` },
     },
   );
@@ -91,7 +102,7 @@ export async function removeFavorite(listingId: string, accessToken: string) {
   return request<{ removed: boolean }>(
     `/favorites/${encodeURIComponent(listingId)}`,
     {
-      method: 'DELETE',
+      method: "DELETE",
       headers: { Authorization: `Bearer ${accessToken}` },
     },
   );

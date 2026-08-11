@@ -1,7 +1,7 @@
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
-import type { ListingCard as ListingCardType } from '@/api/types';
-import { colors, radius, spacing } from '@/theme/tokens';
+import type { ListingCard as ListingCardType } from "@/api/types";
+import { colors, radius, spacing } from "@/theme/tokens";
 
 type Props = {
   listing: ListingCardType;
@@ -9,10 +9,10 @@ type Props = {
 };
 
 function formatPrice(cents: number | null) {
-  if (cents === null) return 'Preço a confirmar';
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'EUR',
+  if (cents === null) return "Preço a confirmar";
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "EUR",
     maximumFractionDigits: 0,
   }).format(cents / 100);
 }
@@ -20,7 +20,7 @@ function formatPrice(cents: number | null) {
 export function ListingCard({ listing, onPress }: Props) {
   const location = [listing.location.area, listing.location.city]
     .filter(Boolean)
-    .join(' · ');
+    .join(" · ");
 
   return (
     <Pressable
@@ -45,8 +45,12 @@ export function ListingCard({ listing, onPress }: Props) {
         <Text numberOfLines={2} style={styles.title}>
           {listing.title}
         </Text>
-        <Text style={styles.location}>{location || 'Localização aproximada'}</Text>
-        <Text style={styles.price}>{formatPrice(listing.pricing.monthlyPriceCents)}/mês</Text>
+        <Text style={styles.location}>
+          {location || "Localização aproximada"}
+        </Text>
+        <Text style={styles.price}>
+          {formatPrice(listing.pricing.monthlyPriceCents)}/mês
+        </Text>
 
         <View style={styles.metaRow}>
           {listing.accommodation.furnished === true ? (
@@ -66,7 +70,7 @@ export function ListingCard({ listing, onPress }: Props) {
 
 const styles = StyleSheet.create({
   card: {
-    overflow: 'hidden',
+    overflow: "hidden",
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.lg,
@@ -76,13 +80,13 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   image: {
-    width: '100%',
+    width: "100%",
     aspectRatio: 1.55,
     backgroundColor: colors.surfaceMuted,
   },
   imagePlaceholder: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   placeholderText: {
     color: colors.textMuted,
@@ -94,7 +98,7 @@ const styles = StyleSheet.create({
   title: {
     color: colors.text,
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: "800",
   },
   location: {
     color: colors.textMuted,
@@ -104,11 +108,11 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
     color: colors.text,
     fontSize: 17,
-    fontWeight: '800',
+    fontWeight: "800",
   },
   metaRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: spacing.xs,
     marginTop: spacing.sm,
   },
@@ -119,6 +123,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: "700",
   },
 });

@@ -1,4 +1,4 @@
-import type { ListingCard } from '@/api/types';
+import type { ListingCard } from "@/api/types";
 
 const DEFAULT_DUBLIN_BOUNDS = {
   north: 53.5,
