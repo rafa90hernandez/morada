@@ -1,0 +1,46 @@
+name: Format mobile temp
+
+on:
+  push:
+    branches:
+      - sprint5/mobile-contact-flow
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: sprint5/mobile-contact-flow
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.10.0
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Format Sprint 5 mobile files
+        run: |
+          pnpm --filter @morada/mobile exec prettier --write \
+            'src/app/conversations/[id].tsx' \
+            'src/app/conversations/index.tsx' \
+            'src/app/notifications.tsx' \
+            'src/features/communication/communication-utils.ts' \
+            'src/features/communication/communication-utils.test.ts'
+      - name: Commit formatting
+        run: |
+          if git diff --quiet; then
+            echo 'No formatting changes needed.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add apps/mobile/src
+          git commit -m 'style(mobile): apply Prettier formatting'
+          git push origin HEAD:sprint5/mobile-contact-flow
