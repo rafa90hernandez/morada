@@ -19,6 +19,7 @@ import { ListingPhotosModule } from './listing-photos/listing-photos.module';
 import { ListingsModule } from './listings/listings.module';
 import { ReportsModule } from './reports/reports.module';
 import { UsersModule } from './users/users.module';
+import { VisitsModule } from './visits/visits.module';
 
 @Module({
   imports: [
@@ -70,6 +71,7 @@ import { UsersModule } from './users/users.module';
     ListingPhotosModule,
     ConversationsModule,
     ReportsModule,
+    VisitsModule,
   ],
   controllers: [AppController],
   providers: [
