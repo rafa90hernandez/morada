@@ -68,7 +68,9 @@ export class MessageAttachmentProcessor {
     }
   }
 
-  private processPdf(input: MessageAttachmentInput): ProcessedMessageAttachment {
+  private processPdf(
+    input: MessageAttachmentInput,
+  ): ProcessedMessageAttachment {
     const header = input.buffer.subarray(0, 5).toString('ascii');
     const tail = input.buffer
       .subarray(Math.max(0, input.buffer.length - 2048))
