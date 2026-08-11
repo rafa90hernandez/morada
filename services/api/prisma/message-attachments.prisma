@@ -1,0 +1,19 @@
+enum MessageAttachmentType {
+  IMAGE
+  PDF
+}
+
+model MessageAttachment {
+  id        String                @id @default(cuid())
+  messageId String
+  type      MessageAttachmentType
+  objectKey String                @unique
+  mimeType  String
+  sizeBytes Int
+  sha256    String?
+  deletedAt DateTime?
+  createdAt DateTime              @default(now())
+
+  @@index([messageId])
+  @@index([deletedAt])
+}
