@@ -1,0 +1,33 @@
+name: Release readiness
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dry-run:
+    name: Validate release contract without deployment
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      TARGET_ENV: staging
+      DATABASE_URL: postgresql://dry-run:dry-run@localhost:5432/morada
+      JWT_ACCESS_SECRET: dry-run-access-secret-00000000000000000000000000000000
+      JWT_REFRESH_SECRET: dry-run-refresh-secret-0000000000000000000000000000000
+      CORS_ORIGINS: https://staging.invalid
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate release configuration contract
+        run: bash scripts/release/validate-release-readiness.sh dry-run
+
+      - name: Confirm enforce mode remains blocked without explicit approvals
+        run: |
+          if bash scripts/release/validate-release-readiness.sh enforce; then
+            echo "Enforce mode unexpectedly passed without approvals" >&2
+            exit 1
+          fi
