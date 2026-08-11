@@ -5,10 +5,7 @@ import {
 } from '@nestjs/common';
 
 import { DatabaseService } from '../database/database.service';
-import {
-  ListingStatus,
-  ReportStatus,
-} from '../generated/prisma/enums';
+import { ListingStatus, ReportStatus } from '../generated/prisma/enums';
 
 const reportAdminSelect = {
   id: true,
@@ -365,8 +362,13 @@ export class ReportAdminService {
     currentStatus: ReportStatus,
     nextStatus: ReportStatus,
   ): void {
-    if (currentStatus === ReportStatus.RESOLVED || currentStatus === ReportStatus.DISMISSED) {
-      throw new BadRequestException('This report already has a final decision.');
+    if (
+      currentStatus === ReportStatus.RESOLVED ||
+      currentStatus === ReportStatus.DISMISSED
+    ) {
+      throw new BadRequestException(
+        'This report already has a final decision.',
+      );
     }
 
     if (
@@ -393,7 +395,9 @@ export class ReportAdminService {
     }
 
     if (normalized.length > 2000) {
-      throw new BadRequestException('Admin notes cannot exceed 2000 characters.');
+      throw new BadRequestException(
+        'Admin notes cannot exceed 2000 characters.',
+      );
     }
 
     return normalized;
