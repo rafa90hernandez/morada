@@ -1,19 +1,15 @@
 import { Injectable } from '@nestjs/common';
 
 import { DatabaseService } from '../database/database.service';
-import { ProductEventType } from '../generated/prisma/enums';
-
-const EVENT_TYPES: ProductEventType[] = [
-  ProductEventType.SEARCH_PERFORMED,
-  ProductEventType.LISTING_PUBLISHED,
-  ProductEventType.CONVERSATION_STARTED,
-  ProductEventType.VISIT_ACCEPTED,
-  ProductEventType.VISIT_COMPLETED,
-  ProductEventType.VISIT_NO_SHOW,
-  ProductEventType.LISTING_CLOSED,
-];
+import { ProductEventType, VisitStatus } from '../generated/prisma/enums';
 
 const REVIEW_SAMPLE_LIMIT = 500;
+const SCHEDULED_VISIT_STATUSES: VisitStatus[] = [
+  VisitStatus.ACCEPTED,
+  VisitStatus.CANCELLED,
+  VisitStatus.COMPLETED,
+  VisitStatus.NO_SHOW,
+];
 
 @Injectable()
 export class AdminAnalyticsService {
@@ -25,9 +21,9 @@ export class AdminAnalyticsService {
 
     const [allTime, last30Days, last7Days, identityReviews, authorizationReviews] =
       await Promise.all([
-        this.groupCounts(),
-        this.groupCounts(thirtyDaysAgo),
-        this.groupCounts(sevenDaysAgo),
+        this.countSignals(),
+        this.countSignals(thirtyDaysAgo),
+        this.countSignals(sevenDaysAgo),
         this.database.identityVerificationSubmission.findMany({
           where: {
             submittedAt: { gte: thirtyDaysAgo },
@@ -58,7 +54,7 @@ export class AdminAnalyticsService {
 
     return {
       generatedAt: now,
-      events: {
+      signals: {
         allTime,
         last30Days,
         last7Days,
@@ -72,23 +68,69 @@ export class AdminAnalyticsService {
     };
   }
 
-  private async groupCounts(since?: Date) {
-    const rows = await this.database.productEvent.groupBy({
-      by: ['type'],
-      where: since ? { occurredAt: { gte: since } } : undefined,
-      _count: { _all: true },
-    });
+  private async countSignals(since?: Date) {
+    const occurredAt = since ? { gte: since } : undefined;
 
-    const counts = Object.fromEntries(EVENT_TYPES.map((type) => [type, 0])) as Record<
-      ProductEventType,
-      number
-    >;
+    const [
+      searches,
+      listingsPublished,
+      conversationsStarted,
+      visitsScheduled,
+      visitsCompleted,
+      visitsNoShow,
+      listingsClosed,
+    ] = await Promise.all([
+      this.database.productEvent.count({
+        where: {
+          type: ProductEventType.SEARCH_PERFORMED,
+          occurredAt,
+        },
+      }),
+      this.database.adminActionLog.count({
+        where: {
+          action: 'LISTING_APPROVED',
+          createdAt: occurredAt,
+        },
+      }),
+      this.database.conversation.count({
+        where: {
+          createdAt: occurredAt,
+        },
+      }),
+      this.database.visit.count({
+        where: {
+          status: { in: SCHEDULED_VISIT_STATUSES },
+          respondedAt: occurredAt ? { ...occurredAt, not: null } : { not: null },
+        },
+      }),
+      this.database.visit.count({
+        where: {
+          status: VisitStatus.COMPLETED,
+          outcomeAt: occurredAt ? { ...occurredAt, not: null } : { not: null },
+        },
+      }),
+      this.database.visit.count({
+        where: {
+          status: VisitStatus.NO_SHOW,
+          outcomeAt: occurredAt ? { ...occurredAt, not: null } : { not: null },
+        },
+      }),
+      this.database.listing.count({
+        where: {
+          closedAt: occurredAt ? { ...occurredAt, not: null } : { not: null },
+        },
+      }),
+    ]);
 
-    for (const row of rows) {
-      counts[row.type] = row._count._all;
-    }
-
-    return counts;
+    return {
+      searches,
+      listingsPublished,
+      conversationsStarted,
+      visitsScheduled,
+      visitsCompleted,
+      visitsNoShow,
+      listingsClosed,
+    };
   }
 
   private averageTurnaroundMinutes(
