@@ -105,32 +105,24 @@ export class AdminAnalyticsService {
       this.database.visit.count({
         where: {
           status: { in: SCHEDULED_VISIT_STATUSES },
-          respondedAt: occurredAt
-            ? { ...occurredAt, not: null }
-            : { not: null },
+          respondedAt: occurredAt ? { ...occurredAt, not: null } : { not: null },
         },
       }),
       this.database.visit.count({
         where: {
           status: VisitStatus.COMPLETED,
-          outcomeAt: occurredAt
-            ? { ...occurredAt, not: null }
-            : { not: null },
+          outcomeAt: occurredAt ? { ...occurredAt, not: null } : { not: null },
         },
       }),
       this.database.visit.count({
         where: {
           status: VisitStatus.NO_SHOW,
-          outcomeAt: occurredAt
-            ? { ...occurredAt, not: null }
-            : { not: null },
+          outcomeAt: occurredAt ? { ...occurredAt, not: null } : { not: null },
         },
       }),
       this.database.listing.count({
         where: {
-          closedAt: occurredAt
-            ? { ...occurredAt, not: null }
-            : { not: null },
+          closedAt: occurredAt ? { ...occurredAt, not: null } : { not: null },
         },
       }),
     ]);
