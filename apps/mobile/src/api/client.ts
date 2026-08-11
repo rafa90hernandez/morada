@@ -8,6 +8,7 @@ import type {
   ListingSearchResponse,
   MapResponse,
   Message,
+  MessageAttachment,
   MessagePage,
   NotificationPage,
   Visit,
@@ -166,8 +167,25 @@ export function sendTextMessage(
   );
 }
 
+export function listMessageAttachments(
+  conversationId: string,
+  messageId: string,
+  accessToken: string,
+) {
+  return request<MessageAttachment[]>(
+    `/conversations/${encodeURIComponent(conversationId)}/messages/${encodeURIComponent(messageId)}/attachments`,
+    { headers: authHeaders(accessToken) },
+  );
+}
+
 export function listVisits(accessToken: string) {
   return request<Visit[]>("/visits", {
+    headers: authHeaders(accessToken),
+  });
+}
+
+export function getVisit(visitId: string, accessToken: string) {
+  return request<Visit>(`/visits/${encodeURIComponent(visitId)}`, {
     headers: authHeaders(accessToken),
   });
 }
