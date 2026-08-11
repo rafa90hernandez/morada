@@ -38,7 +38,9 @@ describe('recordProductEventSafely', () => {
   });
 
   it('does not break the product flow when analytics storage is unavailable', async () => {
-    const create = jest.fn().mockRejectedValue(new Error('analytics unavailable'));
+    const create = jest
+      .fn()
+      .mockRejectedValue(new Error('analytics unavailable'));
     const database = { productEvent: { create } };
 
     await expect(
