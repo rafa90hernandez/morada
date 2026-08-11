@@ -8,4 +8,6 @@ export interface StorageService {
   upload(input: UploadObjectInput): Promise<StoredObject>;
 
   delete(input: DeleteObjectInput): Promise<void>;
+
+  healthCheck(): Promise<void>;
 }
