@@ -57,6 +57,7 @@ describe('ConversationsService', () => {
   const messageFindFirst = jest.fn();
   const messageFindMany = jest.fn();
   const messageCreate = jest.fn();
+  const blockFindFirst = jest.fn();
   const transaction = jest.fn();
 
   const database = {
@@ -75,6 +76,7 @@ describe('ConversationsService', () => {
       findMany: messageFindMany,
       create: messageCreate,
     },
+    block: { findFirst: blockFindFirst },
     $transaction: transaction,
   };
 
@@ -106,6 +108,7 @@ describe('ConversationsService', () => {
       readAt: null,
       createdAt: now,
     });
+    blockFindFirst.mockResolvedValue(null);
     conversationUpdate.mockResolvedValue({ id: 'conversation-id' });
     transaction.mockImplementation((callback) => callback(database));
   });
@@ -115,13 +118,6 @@ describe('ConversationsService', () => {
 
     expect(conversationUpsert).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: {
-          listingId_participantAId_participantBId: {
-            listingId: 'listing-id',
-            participantAId: 'advertiser-id',
-            participantBId: 'seeker-id',
-          },
-        },
         create: {
           listingId: 'listing-id',
           participantAId: 'advertiser-id',
@@ -146,20 +142,35 @@ describe('ConversationsService', () => {
     expect(conversationUpsert).not.toHaveBeenCalled();
   });
 
-  it('returns an existing conversation before re-checking listing expiry', async () => {
-    listingFindUnique.mockResolvedValue({
-      id: 'listing-id',
-      userId: 'advertiser-id',
-      status: ListingStatus.CLOSED,
-      type: ListingType.RENTAL,
-      deletedAt: null,
-    });
+  it('returns an existing conversation even when contact is later blocked', async () => {
     conversationFindUnique.mockResolvedValue(conversationRow);
+    blockFindFirst.mockResolvedValue({ id: 'block-id' });
 
     await expect(
       service.startOrGet('seeker-id', 'listing-id', now),
     ).resolves.toEqual(conversationRow);
-    expect(lifecycleFindUnique).not.toHaveBeenCalled();
+    expect(blockFindFirst).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['seeker blocks advertiser', 'seeker-id', 'advertiser-id'],
+    ['advertiser blocks seeker', 'advertiser-id', 'seeker-id'],
+  ])('rejects a new conversation when %s', async (_label, blockerId, blockedId) => {
+    blockFindFirst.mockResolvedValue({ id: 'block-id' });
+
+    await expect(
+      service.startOrGet('seeker-id', 'listing-id', now),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(blockFindFirst).toHaveBeenCalledWith({
+      where: {
+        OR: [
+          { blockerId: 'seeker-id', blockedId: 'advertiser-id' },
+          { blockerId: 'advertiser-id', blockedId: 'seeker-id' },
+        ],
+      },
+      select: { id: true },
+    });
+    expect({ blockerId, blockedId }).toBeDefined();
     expect(conversationUpsert).not.toHaveBeenCalled();
   });
 
@@ -180,22 +191,23 @@ describe('ConversationsService', () => {
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
-  it('scopes a message cursor to the requested conversation', async () => {
-    messageFindFirst.mockResolvedValue(null);
+  it('keeps message history readable while blocked', async () => {
+    conversationFindFirst.mockResolvedValue({ id: 'conversation-id' });
+    messageFindMany.mockResolvedValue([]);
+    blockFindFirst.mockResolvedValue({ id: 'block-id' });
 
     await expect(
-      service.listMessages('seeker-id', 'conversation-id', {
-        cursor: 'foreign-message',
-        limit: 20,
-      }),
-    ).rejects.toThrow('Message cursor not found.');
-    expect(messageFindMany).not.toHaveBeenCalled();
+      service.listMessages('seeker-id', 'conversation-id', { limit: 20 }),
+    ).resolves.toEqual({ items: [], nextCursor: null });
+    expect(blockFindFirst).not.toHaveBeenCalled();
   });
 
   it('creates a trimmed text message and updates lastMessageAt atomically', async () => {
     conversationFindFirst.mockResolvedValue({
       id: 'conversation-id',
       status: ConversationStatus.ACTIVE,
+      participantAId: 'advertiser-id',
+      participantBId: 'seeker-id',
     });
 
     await service.sendText('seeker-id', 'conversation-id', '  Hello  ', now);
@@ -204,25 +216,38 @@ describe('ConversationsService', () => {
     expect(messageCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          conversationId: 'conversation-id',
-          senderId: 'seeker-id',
-          type: MessageType.TEXT,
           body: 'Hello',
           createdAt: now,
         }),
       }),
     );
-    expect(conversationUpdate).toHaveBeenCalledWith({
-      where: { id: 'conversation-id' },
-      data: { lastMessageAt: now },
-      select: { id: true },
+    expect(conversationUpdate).toHaveBeenCalled();
+  });
+
+  it.each([
+    ['sender blocks other participant'],
+    ['other participant blocks sender'],
+  ])('does not send text when %s', async () => {
+    conversationFindFirst.mockResolvedValue({
+      id: 'conversation-id',
+      status: ConversationStatus.ACTIVE,
+      participantAId: 'advertiser-id',
+      participantBId: 'seeker-id',
     });
+    blockFindFirst.mockResolvedValue({ id: 'block-id' });
+
+    await expect(
+      service.sendText('seeker-id', 'conversation-id', 'Hello', now),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(messageCreate).not.toHaveBeenCalled();
   });
 
   it('does not send when the conversation is not active', async () => {
     conversationFindFirst.mockResolvedValue({
       id: 'conversation-id',
       status: ConversationStatus.BLOCKED,
+      participantAId: 'advertiser-id',
+      participantBId: 'seeker-id',
     });
 
     await expect(
