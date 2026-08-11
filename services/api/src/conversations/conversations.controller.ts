@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -107,8 +108,12 @@ export class ConversationsController {
   uploadAttachment(
     @CurrentUser('id') userId: string,
     @Param('conversationId') conversationId: string,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: Express.Multer.File | undefined,
   ) {
+    if (!file) {
+      throw new BadRequestException('Message attachment file is required.');
+    }
+
     return this.messageAttachmentService.upload(userId, conversationId, {
       buffer: file.buffer,
       mimeType: file.mimetype,
