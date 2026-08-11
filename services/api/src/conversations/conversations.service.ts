@@ -127,7 +127,11 @@ export class ConversationsService {
       where: {
         OR: [{ participantAId: userId }, { participantBId: userId }],
       },
-      orderBy: [{ lastMessageAt: 'desc' }, { createdAt: 'desc' }, { id: 'desc' }],
+      orderBy: [
+        { lastMessageAt: 'desc' },
+        { createdAt: 'desc' },
+        { id: 'desc' },
+      ],
       take: query.limit + 1,
       ...(query.cursor
         ? {
@@ -143,7 +147,7 @@ export class ConversationsService {
 
     return {
       items,
-      nextCursor: hasMore ? items.at(-1)?.id ?? null : null,
+      nextCursor: hasMore ? (items.at(-1)?.id ?? null) : null,
     };
   }
 
@@ -212,7 +216,7 @@ export class ConversationsService {
 
     return {
       items,
-      nextCursor: hasMore ? items.at(-1)?.id ?? null : null,
+      nextCursor: hasMore ? (items.at(-1)?.id ?? null) : null,
     };
   }
 
