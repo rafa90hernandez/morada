@@ -140,7 +140,9 @@ describe('VisitsService', () => {
         'conversation-id',
         {
           startsAt: startsAt.toISOString(),
-          endsAt: new Date(startsAt.getTime() + 5 * 60 * 60 * 1000).toISOString(),
+          endsAt: new Date(
+            startsAt.getTime() + 5 * 60 * 60 * 1000,
+          ).toISOString(),
         },
         now,
       ),
@@ -275,13 +277,12 @@ describe('VisitsService', () => {
   });
 
   it('returns exact location only after accepted visit authorization succeeds', async () => {
-    visitFindFirst.mockResolvedValue({ id: 'visit-id', listingId: 'listing-id' });
+    visitFindFirst.mockResolvedValue({
+      id: 'visit-id',
+      listingId: 'listing-id',
+    });
 
-    const result = await service.getExactLocation(
-      'seeker-id',
-      'visit-id',
-      now,
-    );
+    const result = await service.getExactLocation('seeker-id', 'visit-id', now);
 
     expect(result.addressLine1).toBe('1 Private Street');
     expect(visitFindFirst).toHaveBeenCalledWith({
