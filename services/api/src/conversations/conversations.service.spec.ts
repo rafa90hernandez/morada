@@ -107,7 +107,7 @@ describe('ConversationsService', () => {
       createdAt: now,
     });
     conversationUpdate.mockResolvedValue({ id: 'conversation-id' });
-    transaction.mockImplementation(async (callback) => callback(database));
+    transaction.mockImplementation((callback) => callback(database));
   });
 
   it('derives the advertiser from listing ownership when creating a conversation', async () => {
