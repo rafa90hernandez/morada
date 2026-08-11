@@ -49,9 +49,9 @@ describe('UserBlockingService', () => {
   });
 
   it('prevents self-blocking', async () => {
-    await expect(service.block('same-user', 'same-user')).rejects.toBeInstanceOf(
-      BadRequestException,
-    );
+    await expect(
+      service.block('same-user', 'same-user'),
+    ).rejects.toBeInstanceOf(BadRequestException);
     expect(blockUpsert).not.toHaveBeenCalled();
   });
 
@@ -121,10 +121,7 @@ describe('UserBlockingService', () => {
     );
   });
 
-  it.each([
-    ['blocker -> blocked', 'user-a', 'user-b'],
-    ['blocked -> blocker', 'user-b', 'user-a'],
-  ])('rejects direct contact for either block direction: %s', async () => {
+  it('checks both directions before allowing direct contact', async () => {
     blockFindFirst.mockResolvedValue({ id: 'block-id' });
 
     await expect(
