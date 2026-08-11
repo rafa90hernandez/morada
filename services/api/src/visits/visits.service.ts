@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 
 import { DatabaseService } from '../database/database.service';
+import type { Prisma } from '../generated/prisma/client';
 import {
   ConversationStatus,
   ListingStatus,
@@ -49,7 +50,10 @@ export class VisitsService {
   ) {
     await this.assertActiveUser(userId);
     const window = this.parseWindow(dto, now);
-    const conversation = await this.getSendableConversation(userId, conversationId);
+    const conversation = await this.getSendableConversation(
+      userId,
+      conversationId,
+    );
     const responderId =
       conversation.participantAId === userId
         ? conversation.participantBId
@@ -164,7 +168,9 @@ export class VisitsService {
         }
 
         if (current.startsAt.getTime() <= now.getTime()) {
-          throw new BadRequestException('A past visit proposal cannot be accepted.');
+          throw new BadRequestException(
+            'A past visit proposal cannot be accepted.',
+          );
         }
 
         await this.assertTransactionVisitIsContactable(
@@ -430,7 +436,10 @@ export class VisitsService {
     });
   }
 
-  private async getSendableConversation(userId: string, conversationId: string) {
+  private async getSendableConversation(
+    userId: string,
+    conversationId: string,
+  ) {
     const conversation = await this.database.conversation.findFirst({
       where: {
         id: conversationId,
@@ -491,7 +500,7 @@ export class VisitsService {
   }
 
   private async assertTransactionVisitIsContactable(
-    transaction: DatabaseService,
+    transaction: Prisma.TransactionClient,
     conversationId: string,
     requesterId: string,
     responderId: string,
