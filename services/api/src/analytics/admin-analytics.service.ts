@@ -105,7 +105,9 @@ export class AdminAnalyticsService {
       this.database.visit.count({
         where: {
           status: { in: SCHEDULED_VISIT_STATUSES },
-          respondedAt: occurredAt ? { ...occurredAt, not: null } : { not: null },
+          respondedAt: occurredAt
+            ? { ...occurredAt, not: null }
+            : { not: null },
         },
       }),
       this.database.visit.count({
