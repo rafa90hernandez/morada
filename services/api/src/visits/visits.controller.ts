@@ -38,28 +38,19 @@ export class VisitsController {
 
   @Get('visits/:visitId')
   @ApiOperation({ summary: 'Read participant-safe visit detail' })
-  getMine(
-    @CurrentUser('id') userId: string,
-    @Param('visitId') visitId: string,
-  ) {
+  getMine(@CurrentUser('id') userId: string, @Param('visitId') visitId: string) {
     return this.visitsService.getMine(userId, visitId);
   }
 
   @Post('visits/:visitId/accept')
   @ApiOperation({ summary: 'Accept a visit proposal and surface overlaps' })
-  accept(
-    @CurrentUser('id') userId: string,
-    @Param('visitId') visitId: string,
-  ) {
+  accept(@CurrentUser('id') userId: string, @Param('visitId') visitId: string) {
     return this.visitsService.accept(userId, visitId);
   }
 
   @Post('visits/:visitId/decline')
   @ApiOperation({ summary: 'Decline a visit proposal' })
-  decline(
-    @CurrentUser('id') userId: string,
-    @Param('visitId') visitId: string,
-  ) {
+  decline(@CurrentUser('id') userId: string, @Param('visitId') visitId: string) {
     return this.visitsService.decline(userId, visitId);
   }
 
@@ -75,10 +66,7 @@ export class VisitsController {
 
   @Post('visits/:visitId/cancel')
   @ApiOperation({ summary: 'Cancel a proposed or accepted visit' })
-  cancel(
-    @CurrentUser('id') userId: string,
-    @Param('visitId') visitId: string,
-  ) {
+  cancel(@CurrentUser('id') userId: string, @Param('visitId') visitId: string) {
     return this.visitsService.cancel(userId, visitId);
   }
 
