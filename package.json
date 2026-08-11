@@ -11,7 +11,8 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "build": "turbo run build",
-    "quality": "pnpm generate && pnpm lint && pnpm typecheck && pnpm test && pnpm build"
+    "backup:validate": "bash scripts/backup/validate-backup-scripts.sh",
+    "quality": "pnpm generate && pnpm lint && pnpm typecheck && pnpm test && pnpm backup:validate && pnpm build"
   },
   "keywords": [],
   "author": "",
