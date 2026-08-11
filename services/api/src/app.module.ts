@@ -13,11 +13,11 @@ import { AuthModule } from './auth/auth.module';
 import { LoggerMiddleware } from './common/middlewares/logger.middleware';
 import { RequestIdMiddleware } from './common/middlewares/request-id.middleware';
 import { StorageModule } from './common/storage/storage.module';
+import { ConversationsModule } from './conversations/conversations.module';
 import { DatabaseModule } from './database/database.module';
+import { ListingPhotosModule } from './listing-photos/listing-photos.module';
 import { ListingsModule } from './listings/listings.module';
 import { UsersModule } from './users/users.module';
-
-import { ListingPhotosModule } from './listing-photos/listing-photos.module';
 
 @Module({
   imports: [
@@ -67,6 +67,7 @@ import { ListingPhotosModule } from './listing-photos/listing-photos.module';
     UsersModule,
     ListingsModule,
     ListingPhotosModule,
+    ConversationsModule,
   ],
   controllers: [AppController],
   providers: [
