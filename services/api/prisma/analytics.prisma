@@ -1,0 +1,26 @@
+enum ProductEventType {
+  SEARCH_PERFORMED
+  LISTING_PUBLISHED
+  CONVERSATION_STARTED
+  VISIT_ACCEPTED
+  VISIT_COMPLETED
+  VISIT_NO_SHOW
+  LISTING_CLOSED
+}
+
+model ProductEvent {
+  id             String           @id @default(cuid())
+  type           ProductEventType
+  listingId      String?
+  conversationId String?
+  visitId        String?
+  dedupeKey      String?          @unique
+  schemaVersion  Int              @default(1)
+  occurredAt     DateTime         @default(now())
+
+  @@index([type, occurredAt])
+  @@index([occurredAt])
+  @@index([listingId, occurredAt])
+  @@index([conversationId, occurredAt])
+  @@index([visitId, occurredAt])
+}
