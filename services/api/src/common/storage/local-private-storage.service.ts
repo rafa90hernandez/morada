@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { constants } from 'node:fs';
+import { access, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, resolve, sep } from 'node:path';
 
 import type {
@@ -50,6 +51,11 @@ export class LocalPrivateStorageService implements PrivateStorageService {
     await rm(this.resolveSafePath(normalizedKey), {
       force: true,
     });
+  }
+
+  async healthCheck(): Promise<void> {
+    await mkdir(this.storageRoot, { recursive: true });
+    await access(this.storageRoot, constants.R_OK | constants.W_OK);
   }
 
   private normalizeKey(key: string): string {
