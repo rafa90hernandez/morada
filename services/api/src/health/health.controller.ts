@@ -1,5 +1,10 @@
 import { Controller, Get, HttpCode, Res } from '@nestjs/common';
-import { ApiOkResponse, ApiOperation, ApiServiceUnavailableResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiOkResponse,
+  ApiOperation,
+  ApiServiceUnavailableResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import type { Response } from 'express';
 
 import { HealthService } from './health.service';
@@ -10,7 +15,9 @@ export class HealthController {
   constructor(private readonly healthService: HealthService) {}
 
   @Get('live')
-  @ApiOperation({ summary: 'Return process liveness without dependency checks' })
+  @ApiOperation({
+    summary: 'Return process liveness without dependency checks',
+  })
   @ApiOkResponse({ description: 'Application process is alive.' })
   live() {
     return this.healthService.live();
@@ -20,7 +27,9 @@ export class HealthController {
   @HttpCode(200)
   @ApiOperation({ summary: 'Return minimal critical-dependency readiness' })
   @ApiOkResponse({ description: 'Critical dependencies are ready.' })
-  @ApiServiceUnavailableResponse({ description: 'A critical dependency is unavailable.' })
+  @ApiServiceUnavailableResponse({
+    description: 'A critical dependency is unavailable.',
+  })
   async ready(@Res({ passthrough: true }) response: Response) {
     const result = await this.healthService.ready();
 
