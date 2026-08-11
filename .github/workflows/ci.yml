@@ -37,18 +37,21 @@ jobs:
           node-version: 24
           cache: pnpm
 
-      - name: Refresh dependencies and lockfile
-        run: pnpm install --no-frozen-lockfile
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
-      - name: Commit refreshed lockfile
+      - name: Format mobile sources
+        run: pnpm --filter @morada/mobile exec prettier --write "src/**/*.{ts,tsx}"
+
+      - name: Commit formatting when changed
         run: |
-          if git diff --quiet -- pnpm-lock.yaml; then
-            echo "Lockfile already current."
+          if git diff --quiet -- apps/mobile/src; then
+            echo "Mobile sources already formatted."
           else
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add pnpm-lock.yaml
-            git commit -m "chore(mobile): sync workspace lockfile"
+            git add apps/mobile/src
+            git commit -m "style(mobile): format discovery sources"
             git push origin HEAD:${{ github.event.pull_request.head.ref }}
           fi
 
