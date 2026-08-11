@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common';
 
+import { recordProductEventSafely } from '../analytics/product-analytics';
 import { DatabaseService } from '../database/database.service';
-import { ListingStatus, ListingType } from '../generated/prisma/enums';
+import {
+  ListingStatus,
+  ListingType,
+  ProductEventType,
+} from '../generated/prisma/enums';
 import {
   PublicListingSearchQueryDto,
   PublicListingSort,
@@ -29,6 +34,7 @@ export class PublicListingSearchService {
     });
 
     if (eligibleLifecycle.length === 0) {
+      await this.recordSearch(now);
       return this.emptyResult(query);
     }
 
@@ -129,7 +135,7 @@ export class PublicListingSearchService {
       }),
     ]);
 
-    return {
+    const result = {
       items: listings.flatMap((listing) => {
         const expiresAt = expiryByListingId.get(listing.id);
         return expiresAt ? [toPublicListingCard(listing, expiresAt)] : [];
@@ -140,6 +146,16 @@ export class PublicListingSearchService {
       totalPages: total === 0 ? 0 : Math.ceil(total / query.limit),
       sort: query.sort,
     };
+
+    await this.recordSearch(now);
+    return result;
+  }
+
+  private recordSearch(occurredAt: Date) {
+    return recordProductEventSafely(this.database, {
+      type: ProductEventType.SEARCH_PERFORMED,
+      occurredAt,
+    });
   }
 
   private emptyResult(query: PublicListingSearchQueryDto) {
