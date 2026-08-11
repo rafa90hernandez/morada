@@ -17,6 +17,7 @@ import { RequestIdMiddleware } from './common/middlewares/request-id.middleware'
 import { StorageModule } from './common/storage/storage.module';
 import { ConversationsModule } from './conversations/conversations.module';
 import { DatabaseModule } from './database/database.module';
+import { HealthModule } from './health/health.module';
 import { ListingPhotosModule } from './listing-photos/listing-photos.module';
 import { ListingsModule } from './listings/listings.module';
 import { NotificationsModule } from './notifications/notifications.module';
@@ -71,6 +72,7 @@ import { VisitsModule } from './visits/visits.module';
     AuthModule,
     AdminModule,
     AnalyticsModule,
+    HealthModule,
     UsersModule,
     ListingsModule,
     ListingPhotosModule,
