@@ -280,6 +280,8 @@ describe('VisitsService', () => {
     visitFindFirst.mockResolvedValue({
       id: 'visit-id',
       listingId: 'listing-id',
+      requesterId: 'seeker-id',
+      responderId: 'advertiser-id',
     });
 
     const result = await service.getExactLocation('seeker-id', 'visit-id', now);
@@ -295,8 +297,34 @@ describe('VisitsService', () => {
       select: {
         id: true,
         listingId: true,
+        requesterId: true,
+        responderId: true,
       },
     });
+    expect(blockFindFirst).toHaveBeenCalledWith({
+      where: {
+        OR: [
+          { blockerId: 'seeker-id', blockedId: 'advertiser-id' },
+          { blockerId: 'advertiser-id', blockedId: 'seeker-id' },
+        ],
+      },
+      select: { id: true },
+    });
+  });
+
+  it('revokes exact location access when either visit participant blocks the other', async () => {
+    visitFindFirst.mockResolvedValue({
+      id: 'visit-id',
+      listingId: 'listing-id',
+      requesterId: 'seeker-id',
+      responderId: 'advertiser-id',
+    });
+    blockFindFirst.mockResolvedValue({ id: 'block-id' });
+
+    await expect(
+      service.getExactLocation('seeker-id', 'visit-id', now),
+    ).rejects.toBeInstanceOf(NotFoundException);
+    expect(privateLocationFindUnique).not.toHaveBeenCalled();
   });
 
   it('hides exact location for declined, cancelled, completed or unauthorized visits', async () => {
