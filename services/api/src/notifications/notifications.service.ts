@@ -162,15 +162,7 @@ export class NotificationsService {
           }),
         );
       case 'LISTING':
-        return Boolean(
-          await this.database.listing.findFirst({
-            where: {
-              id: targetId,
-              OR: [{ userId }, { status: 'ACTIVE', deletedAt: null }],
-            },
-            select: { id: true },
-          }),
-        );
+        return this.canAccessListingTarget(userId, targetId);
       case 'REPORT':
         return Boolean(
           await this.database.report.findFirst({
@@ -181,5 +173,42 @@ export class NotificationsService {
       default:
         return false;
     }
+  }
+
+  private async canAccessListingTarget(
+    userId: string,
+    listingId: string,
+    now = new Date(),
+  ): Promise<boolean> {
+    const listing = await this.database.listing.findFirst({
+      where: { id: listingId },
+      select: {
+        id: true,
+        userId: true,
+        status: true,
+        deletedAt: true,
+      },
+    });
+
+    if (!listing) {
+      return false;
+    }
+
+    if (listing.userId === userId) {
+      return true;
+    }
+
+    if (listing.status !== 'ACTIVE' || listing.deletedAt) {
+      return false;
+    }
+
+    const lifecycle = await this.database.listingLifecycle.findUnique({
+      where: { listingId },
+      select: { expiresAt: true },
+    });
+
+    return Boolean(
+      lifecycle?.expiresAt && lifecycle.expiresAt.getTime() > now.getTime(),
+    );
   }
 }
