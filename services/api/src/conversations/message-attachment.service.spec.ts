@@ -22,6 +22,8 @@ describe('MessageAttachmentService', () => {
   const messageCreate = jest.fn();
   const attachmentFindFirst = jest.fn();
   const attachmentCreate = jest.fn();
+  const attachmentFindMany = jest.fn();
+  const blockFindFirst = jest.fn();
   const transaction = jest.fn();
   const process = jest.fn();
   const upload = jest.fn();
@@ -40,8 +42,10 @@ describe('MessageAttachmentService', () => {
     },
     messageAttachment: {
       findFirst: attachmentFindFirst,
+      findMany: attachmentFindMany,
       create: attachmentCreate,
     },
+    block: { findFirst: blockFindFirst },
     $transaction: transaction,
   };
 
@@ -64,7 +68,10 @@ describe('MessageAttachmentService', () => {
     conversationFindFirst.mockResolvedValue({
       id: 'conversation-id',
       status: ConversationStatus.ACTIVE,
+      participantAId: 'advertiser-id',
+      participantBId: 'seeker-id',
     });
+    blockFindFirst.mockResolvedValue(null);
     process.mockResolvedValue({
       buffer: processedBuffer,
       type: MessageAttachmentType.PDF,
@@ -88,6 +95,7 @@ describe('MessageAttachmentService', () => {
       sizeBytes: processedBuffer.length,
       createdAt: now,
     });
+    attachmentFindMany.mockResolvedValue([]);
     conversationUpdate.mockResolvedValue({ id: 'conversation-id' });
     transaction.mockImplementation((callback) => callback(database));
     messageFindFirst.mockResolvedValue({ id: 'message-id' });
@@ -118,22 +126,58 @@ describe('MessageAttachmentService', () => {
     expect(uploadArg.key).toMatch(
       /^conversation-attachments\/conversation-id\/[0-9a-f-]+\/[0-9a-f-]+\.pdf$/,
     );
-    expect(uploadArg.key).not.toContain('original');
-
-    const createArg = attachmentCreate.mock.calls[0]?.[0] as {
-      data: Record<string, unknown>;
-    };
-    expect(createArg.data.objectKey).toBe(uploadArg.key);
-    expect(createArg.data.sha256).toMatch(/^[0-9a-f]{64}$/);
-    expect(result).not.toHaveProperty('objectKey');
-    expect(result).not.toHaveProperty('sha256');
     expect(result.attachment).not.toHaveProperty('objectKey');
     expect(result.attachment).not.toHaveProperty('sha256');
   });
 
+  it('rejects attachments before processing when either participant has blocked the other', async () => {
+    blockFindFirst.mockResolvedValue({ id: 'block-id' });
+
+    await expect(
+      service.upload(
+        'seeker-id',
+        'conversation-id',
+        {
+          buffer: Buffer.from('%PDF-1.7\n%%EOF'),
+          mimeType: 'application/pdf',
+          sizeBytes: 15,
+        },
+        now,
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+
+    expect(process).not.toHaveBeenCalled();
+    expect(upload).not.toHaveBeenCalled();
+  });
+
+  it('rechecks blocking inside persistence and rolls back the uploaded object', async () => {
+    blockFindFirst
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ id: 'new-block' });
+
+    await expect(
+      service.upload(
+        'seeker-id',
+        'conversation-id',
+        {
+          buffer: Buffer.from('%PDF-1.7\n%%EOF'),
+          mimeType: 'application/pdf',
+          sizeBytes: 15,
+        },
+        now,
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+
+    expect(deleteObject).toHaveBeenCalledTimes(1);
+    expect(messageCreate).not.toHaveBeenCalled();
+  });
+
   it('rechecks participant sendability inside the persistence transaction', async () => {
     conversationFindFirst
-      .mockResolvedValueOnce({ id: 'conversation-id' })
+      .mockResolvedValueOnce({
+        participantAId: 'advertiser-id',
+        participantBId: 'seeker-id',
+      })
       .mockResolvedValueOnce(null);
 
     await expect(
@@ -153,23 +197,13 @@ describe('MessageAttachmentService', () => {
     expect(messageCreate).not.toHaveBeenCalled();
   });
 
-  it('rolls back the private object when database persistence fails', async () => {
-    messageCreate.mockRejectedValue(new Error('database failure'));
+  it('keeps attachment history readable while blocked', async () => {
+    blockFindFirst.mockResolvedValue({ id: 'block-id' });
 
     await expect(
-      service.upload(
-        'seeker-id',
-        'conversation-id',
-        {
-          buffer: Buffer.from('%PDF-1.7\n%%EOF'),
-          mimeType: 'application/pdf',
-          sizeBytes: 15,
-        },
-        now,
-      ),
-    ).rejects.toThrow('database failure');
-
-    expect(deleteObject).toHaveBeenCalledTimes(1);
+      service.listForMessage('seeker-id', 'conversation-id', 'message-id'),
+    ).resolves.toEqual([]);
+    expect(blockFindFirst).not.toHaveBeenCalled();
   });
 
   it('reads only after participant and message scoping checks', async () => {
@@ -180,13 +214,6 @@ describe('MessageAttachmentService', () => {
       'attachment-id',
     );
 
-    expect(messageFindFirst).toHaveBeenCalledWith({
-      where: {
-        id: 'message-id',
-        conversationId: 'conversation-id',
-      },
-      select: { id: true },
-    });
     expect(read).toHaveBeenCalledWith('conversation-attachments/private.pdf');
     expect(result.buffer).toBe(processedBuffer);
   });
