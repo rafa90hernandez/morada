@@ -170,6 +170,14 @@ export type MessagePage = {
   nextCursor: string | null;
 };
 
+export type MessageAttachment = {
+  id: string;
+  type: "IMAGE" | "PDF";
+  mimeType: string;
+  sizeBytes: number;
+  createdAt: string;
+};
+
 export type VisitStatus =
   | "PROPOSED"
   | "ACCEPTED"
