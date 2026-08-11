@@ -58,4 +58,4 @@ jobs:
         run: pnpm --filter api exec prisma migrate deploy
 
       - name: Run critical Beta 1 journey
-        run: pnpm --filter api test:e2e -- --runInBand
+        run: pnpm --filter api exec jest --config ./test/jest-e2e.json --runInBand
