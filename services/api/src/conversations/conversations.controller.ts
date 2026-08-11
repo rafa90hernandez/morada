@@ -24,11 +24,11 @@ import type { Response } from 'express';
 
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { MessageAttachmentService } from './message-attachment.service';
-import { MessageAttachmentProcessor } from './message-attachment.processor';
 import { ConversationsService } from './conversations.service';
 import { ConversationPageQueryDto } from './dto/conversation-page-query.dto';
 import { SendTextMessageDto } from './dto/send-text-message.dto';
+import { MessageAttachmentProcessor } from './message-attachment.processor';
+import { MessageAttachmentService } from './message-attachment.service';
 
 @ApiTags('Conversations')
 @ApiBearerAuth('access-token')
@@ -114,6 +114,20 @@ export class ConversationsController {
       mimeType: file.mimetype,
       sizeBytes: file.size,
     });
+  }
+
+  @Get(':conversationId/messages/:messageId/attachments')
+  @ApiOperation({ summary: 'List private attachment metadata for one message' })
+  listAttachments(
+    @CurrentUser('id') userId: string,
+    @Param('conversationId') conversationId: string,
+    @Param('messageId') messageId: string,
+  ) {
+    return this.messageAttachmentService.listForMessage(
+      userId,
+      conversationId,
+      messageId,
+    );
   }
 
   @Get(':conversationId/messages/:messageId/attachments/:attachmentId')
