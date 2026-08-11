@@ -142,10 +142,10 @@ describe('ReportAdminService', () => {
     expect(reportUpdate).not.toHaveBeenCalled();
   });
 
-  it('requires normalized non-empty admin notes', async () => {
-    await expect(
+  it('requires normalized non-empty admin notes', () => {
+    expect(() =>
       service.markUnderReview('admin-id', 'report-id', '   '),
-    ).rejects.toBeInstanceOf(BadRequestException);
+    ).toThrow(BadRequestException);
     expect(transaction).not.toHaveBeenCalled();
   });
 
