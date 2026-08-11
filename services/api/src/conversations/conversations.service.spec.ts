@@ -152,15 +152,13 @@ describe('ConversationsService', () => {
     expect(blockFindFirst).not.toHaveBeenCalled();
   });
 
-  it.each([
-    ['seeker blocks advertiser', 'seeker-id', 'advertiser-id'],
-    ['advertiser blocks seeker', 'advertiser-id', 'seeker-id'],
-  ])('rejects a new conversation when %s', async (_label, blockerId, blockedId) => {
+  it('rejects a new conversation when either user has blocked the other', async () => {
     blockFindFirst.mockResolvedValue({ id: 'block-id' });
 
     await expect(
       service.startOrGet('seeker-id', 'listing-id', now),
     ).rejects.toBeInstanceOf(ForbiddenException);
+
     expect(blockFindFirst).toHaveBeenCalledWith({
       where: {
         OR: [
@@ -170,7 +168,6 @@ describe('ConversationsService', () => {
       },
       select: { id: true },
     });
-    expect({ blockerId, blockedId }).toBeDefined();
     expect(conversationUpsert).not.toHaveBeenCalled();
   });
 
@@ -193,7 +190,6 @@ describe('ConversationsService', () => {
 
   it('keeps message history readable while blocked', async () => {
     conversationFindFirst.mockResolvedValue({ id: 'conversation-id' });
-    messageFindMany.mockResolvedValue([]);
     blockFindFirst.mockResolvedValue({ id: 'block-id' });
 
     await expect(
@@ -224,10 +220,7 @@ describe('ConversationsService', () => {
     expect(conversationUpdate).toHaveBeenCalled();
   });
 
-  it.each([
-    ['sender blocks other participant'],
-    ['other participant blocks sender'],
-  ])('does not send text when %s', async () => {
+  it('does not send text when either participant has blocked the other', async () => {
     conversationFindFirst.mockResolvedValue({
       id: 'conversation-id',
       status: ConversationStatus.ACTIVE,
