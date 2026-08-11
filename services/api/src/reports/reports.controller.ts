@@ -25,10 +25,7 @@ export class ReportsController {
   @ApiCreatedResponse({
     description: 'Report accepted without exposing administrative review data.',
   })
-  submit(
-    @CurrentUser('id') reporterId: string,
-    @Body() dto: CreateReportDto,
-  ) {
+  submit(@CurrentUser('id') reporterId: string, @Body() dto: CreateReportDto) {
     return this.reportsService.submit(reporterId, dto);
   }
 }
