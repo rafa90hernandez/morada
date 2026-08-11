@@ -14,4 +14,6 @@ export interface PrivateStorageService {
   read(key: string): Promise<Buffer>;
 
   delete(key: string): Promise<void>;
+
+  healthCheck(): Promise<void>;
 }
