@@ -74,9 +74,12 @@ Exact location is returned only when all of the following are true:
 - the account is ACTIVE;
 - the visit status is `ACCEPTED`;
 - the visit has not yet ended;
+- neither participant has blocked the other since the visit was accepted;
 - a private location exists for the associated listing.
 
-`PROPOSED`, `DECLINED`, `REPLACED`, `CANCELLED`, `COMPLETED`, `NO_SHOW`, past or non-participant requests receive a not-found style response and no private location data.
+A later block immediately revokes this visit-specific exact-location access even if the visit record remains `ACCEPTED`. The visit history itself is preserved.
+
+`PROPOSED`, `DECLINED`, `REPLACED`, `CANCELLED`, `COMPLETED`, `NO_SHOW`, past, blocked-relationship or non-participant requests receive a not-found style response and no private location data.
 
 This endpoint is the only visit-specific access path for `addressLine1`, `addressLine2`, `eircode`, `exactLatitude` and `exactLongitude`.
 
