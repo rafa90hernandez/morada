@@ -1,8 +1,18 @@
 import type {
+  AuthSession,
+  Conversation,
+  ConversationPage,
+  ExactVisitLocation,
   ListingDetail,
   ListingSearchFilters,
   ListingSearchResponse,
   MapResponse,
+  Message,
+  MessageAttachment,
+  MessagePage,
+  NotificationPage,
+  Visit,
+  VisitAcceptance,
 } from "./types";
 
 type ApiEnvelope<T> = {
@@ -41,9 +51,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
-    throw new Error(
+    const error = new Error(
       `Morada API request failed with status ${response.status}.`,
-    );
+    ) as Error & { status?: number };
+    error.status = response.status;
+    throw error;
   }
 
   const envelope = (await response.json()) as ApiEnvelope<T>;
@@ -52,6 +64,12 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
 
   return envelope.data;
+}
+
+function authHeaders(accessToken: string) {
+  return {
+    Authorization: `Bearer ${accessToken}`,
+  };
 }
 
 export function searchListings(filters: ListingSearchFilters = {}) {
@@ -88,12 +106,204 @@ export function getMapMarkers(bounds: {
   );
 }
 
+export function login(email: string, password: string) {
+  return request<AuthSession>("/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+}
+
+export function startConversation(listingId: string, accessToken: string) {
+  return request<Conversation>(
+    `/conversations/listings/${encodeURIComponent(listingId)}`,
+    {
+      method: "POST",
+      headers: authHeaders(accessToken),
+    },
+  );
+}
+
+export function listConversations(accessToken: string, cursor?: string) {
+  return request<ConversationPage>(
+    `/conversations${buildQuery({ cursor, limit: 30 })}`,
+    { headers: authHeaders(accessToken) },
+  );
+}
+
+export function getConversation(conversationId: string, accessToken: string) {
+  return request<Conversation>(
+    `/conversations/${encodeURIComponent(conversationId)}`,
+    { headers: authHeaders(accessToken) },
+  );
+}
+
+export function listMessages(
+  conversationId: string,
+  accessToken: string,
+  cursor?: string,
+) {
+  return request<MessagePage>(
+    `/conversations/${encodeURIComponent(conversationId)}/messages${buildQuery({ cursor, limit: 50 })}`,
+    { headers: authHeaders(accessToken) },
+  );
+}
+
+export function sendTextMessage(
+  conversationId: string,
+  body: string,
+  accessToken: string,
+) {
+  return request<Message>(
+    `/conversations/${encodeURIComponent(conversationId)}/messages`,
+    {
+      method: "POST",
+      headers: {
+        ...authHeaders(accessToken),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ body }),
+    },
+  );
+}
+
+export function listMessageAttachments(
+  conversationId: string,
+  messageId: string,
+  accessToken: string,
+) {
+  return request<MessageAttachment[]>(
+    `/conversations/${encodeURIComponent(conversationId)}/messages/${encodeURIComponent(messageId)}/attachments`,
+    { headers: authHeaders(accessToken) },
+  );
+}
+
+export function listVisits(accessToken: string) {
+  return request<Visit[]>("/visits", {
+    headers: authHeaders(accessToken),
+  });
+}
+
+export function getVisit(visitId: string, accessToken: string) {
+  return request<Visit>(`/visits/${encodeURIComponent(visitId)}`, {
+    headers: authHeaders(accessToken),
+  });
+}
+
+export function proposeVisit(
+  conversationId: string,
+  startsAt: string,
+  endsAt: string,
+  accessToken: string,
+) {
+  return request<Visit>(
+    `/conversations/${encodeURIComponent(conversationId)}/visits`,
+    {
+      method: "POST",
+      headers: {
+        ...authHeaders(accessToken),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ startsAt, endsAt }),
+    },
+  );
+}
+
+export function acceptVisit(visitId: string, accessToken: string) {
+  return request<VisitAcceptance>(
+    `/visits/${encodeURIComponent(visitId)}/accept`,
+    { method: "POST", headers: authHeaders(accessToken) },
+  );
+}
+
+export function declineVisit(visitId: string, accessToken: string) {
+  return request<Visit>(`/visits/${encodeURIComponent(visitId)}/decline`, {
+    method: "POST",
+    headers: authHeaders(accessToken),
+  });
+}
+
+export function cancelVisit(visitId: string, accessToken: string) {
+  return request<Visit>(`/visits/${encodeURIComponent(visitId)}/cancel`, {
+    method: "POST",
+    headers: authHeaders(accessToken),
+  });
+}
+
+export function replaceVisit(
+  visitId: string,
+  startsAt: string,
+  endsAt: string,
+  accessToken: string,
+) {
+  return request<Visit>(`/visits/${encodeURIComponent(visitId)}/replacement`, {
+    method: "POST",
+    headers: {
+      ...authHeaders(accessToken),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ startsAt, endsAt }),
+  });
+}
+
+export function recordVisitOutcome(
+  visitId: string,
+  outcome: "COMPLETED" | "NO_SHOW",
+  accessToken: string,
+) {
+  return request<Visit>(`/visits/${encodeURIComponent(visitId)}/outcome`, {
+    method: "POST",
+    headers: {
+      ...authHeaders(accessToken),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ outcome }),
+  });
+}
+
+export function getVisitLocation(visitId: string, accessToken: string) {
+  return request<ExactVisitLocation>(
+    `/visits/${encodeURIComponent(visitId)}/location`,
+    { headers: authHeaders(accessToken) },
+  );
+}
+
+export function listNotifications(accessToken: string, cursor?: string) {
+  return request<NotificationPage>(
+    `/notifications${buildQuery({ cursor, limit: 30 })}`,
+    { headers: authHeaders(accessToken) },
+  );
+}
+
+export function getUnreadNotificationCount(accessToken: string) {
+  return request<{ count: number }>("/notifications/unread-count", {
+    headers: authHeaders(accessToken),
+  });
+}
+
+export function markNotificationRead(
+  notificationId: string,
+  accessToken: string,
+) {
+  return request<unknown>(
+    `/notifications/${encodeURIComponent(notificationId)}/read`,
+    { method: "PATCH", headers: authHeaders(accessToken) },
+  );
+}
+
+export function markAllNotificationsRead(accessToken: string) {
+  return request<{ updated: number }>("/notifications/read-all", {
+    method: "PATCH",
+    headers: authHeaders(accessToken),
+  });
+}
+
 export async function addFavorite(listingId: string, accessToken: string) {
   return request<{ id: string; listingId: string; createdAt: string }>(
     `/favorites/${encodeURIComponent(listingId)}`,
     {
       method: "POST",
-      headers: { Authorization: `Bearer ${accessToken}` },
+      headers: authHeaders(accessToken),
     },
   );
 }
@@ -103,7 +313,7 @@ export async function removeFavorite(listingId: string, accessToken: string) {
     `/favorites/${encodeURIComponent(listingId)}`,
     {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${accessToken}` },
+      headers: authHeaders(accessToken),
     },
   );
 }

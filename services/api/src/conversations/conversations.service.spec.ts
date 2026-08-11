@@ -142,14 +142,39 @@ describe('ConversationsService', () => {
     expect(conversationUpsert).not.toHaveBeenCalled();
   });
 
-  it('returns an existing conversation even when contact is later blocked', async () => {
+  it('returns existing history with an effective blocked status when contact is blocked', async () => {
     conversationFindUnique.mockResolvedValue(conversationRow);
     blockFindFirst.mockResolvedValue({ id: 'block-id' });
 
     await expect(
       service.startOrGet('seeker-id', 'listing-id', now),
-    ).resolves.toEqual(conversationRow);
-    expect(blockFindFirst).not.toHaveBeenCalled();
+    ).resolves.toEqual({
+      ...conversationRow,
+      status: ConversationStatus.BLOCKED,
+    });
+    expect(blockFindFirst).toHaveBeenCalledWith({
+      where: {
+        OR: [
+          { blockerId: 'advertiser-id', blockedId: 'seeker-id' },
+          { blockerId: 'seeker-id', blockedId: 'advertiser-id' },
+        ],
+      },
+      select: { id: true },
+    });
+  });
+
+  it('returns effective blocked status in the conversation list without exposing block direction', async () => {
+    blockFindFirst.mockResolvedValue({ id: 'block-id' });
+
+    await expect(service.list('seeker-id', { limit: 20 })).resolves.toEqual({
+      items: [
+        {
+          ...conversationRow,
+          status: ConversationStatus.BLOCKED,
+        },
+      ],
+      nextCursor: null,
+    });
   });
 
   it('rejects a new conversation when either user has blocked the other', async () => {

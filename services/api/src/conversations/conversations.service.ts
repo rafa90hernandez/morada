@@ -52,6 +52,33 @@ const conversationSelect = {
   },
 } as const;
 
+type ConversationReadModel = {
+  id: string;
+  status: ConversationStatus;
+  lastMessageAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  listing: {
+    id: string;
+    title: string;
+    status: ListingStatus;
+  };
+  participantA: {
+    id: string;
+    profile: {
+      displayName: string;
+      profilePhotoUrl: string | null;
+    } | null;
+  };
+  participantB: {
+    id: string;
+    profile: {
+      displayName: string;
+      profilePhotoUrl: string | null;
+    } | null;
+  };
+};
+
 @Injectable()
 export class ConversationsService {
   constructor(private readonly database: DatabaseService) {}
@@ -92,7 +119,7 @@ export class ConversationsService {
     });
 
     if (existing) {
-      return existing;
+      return this.withEffectiveStatus(existing);
     }
 
     await this.assertListingContactEligible(listing, now);
@@ -144,11 +171,14 @@ export class ConversationsService {
     });
 
     const hasMore = rows.length > query.limit;
-    const items = rows.slice(0, query.limit);
+    const page = rows.slice(0, query.limit);
+    const items = await Promise.all(
+      page.map((conversation) => this.withEffectiveStatus(conversation)),
+    );
 
     return {
       items,
-      nextCursor: hasMore ? (items.at(-1)?.id ?? null) : null,
+      nextCursor: hasMore ? (page.at(-1)?.id ?? null) : null,
     };
   }
 
@@ -167,7 +197,7 @@ export class ConversationsService {
       throw new NotFoundException('Conversation not found.');
     }
 
-    return conversation;
+    return this.withEffectiveStatus(conversation);
   }
 
   async listMessages(
@@ -296,6 +326,34 @@ export class ConversationsService {
 
       return message;
     });
+  }
+
+  private async withEffectiveStatus(
+    conversation: ConversationReadModel,
+  ): Promise<ConversationReadModel> {
+    if (conversation.status !== ConversationStatus.ACTIVE) {
+      return conversation;
+    }
+
+    const block = await this.database.block.findFirst({
+      where: {
+        OR: [
+          {
+            blockerId: conversation.participantA.id,
+            blockedId: conversation.participantB.id,
+          },
+          {
+            blockerId: conversation.participantB.id,
+            blockedId: conversation.participantA.id,
+          },
+        ],
+      },
+      select: { id: true },
+    });
+
+    return block
+      ? { ...conversation, status: ConversationStatus.BLOCKED }
+      : conversation;
   }
 
   private async assertActiveUser(userId: string): Promise<void> {
