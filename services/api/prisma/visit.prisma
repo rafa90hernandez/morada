@@ -1,0 +1,38 @@
+enum VisitStatus {
+  PROPOSED
+  ACCEPTED
+  DECLINED
+  REPLACED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+model Visit {
+  id             String      @id @default(cuid())
+  listingId      String
+  conversationId String
+  requesterId    String
+  responderId    String
+  replacementForId String?
+  status         VisitStatus @default(PROPOSED)
+
+  startsAt DateTime
+  endsAt   DateTime
+
+  proposedAt  DateTime @default(now())
+  respondedAt DateTime?
+  cancelledAt DateTime?
+  outcomeAt   DateTime?
+  outcomeById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([listingId, startsAt])
+  @@index([conversationId, createdAt])
+  @@index([requesterId, startsAt])
+  @@index([responderId, startsAt])
+  @@index([status, startsAt])
+  @@index([replacementForId])
+}
