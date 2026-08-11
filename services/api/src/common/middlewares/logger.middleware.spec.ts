@@ -4,7 +4,9 @@ import { LoggerMiddleware } from './logger.middleware';
 
 describe('LoggerMiddleware', () => {
   it('logs only the path without query strings or client fingerprint fields', () => {
-    const log = jest.spyOn(Logger.prototype, 'log').mockImplementation(() => undefined);
+    const log = jest
+      .spyOn(Logger.prototype, 'log')
+      .mockImplementation(() => undefined);
     let finish: (() => void) | undefined;
     const response = {
       statusCode: 200,
