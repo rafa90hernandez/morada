@@ -149,6 +149,31 @@ export class MessageAttachmentService {
     }
   }
 
+  async listForMessage(
+    userId: string,
+    conversationId: string,
+    messageId: string,
+  ) {
+    await this.assertActiveUser(userId);
+    await this.assertParticipant(userId, conversationId);
+    await this.assertMessageInConversation(messageId, conversationId);
+
+    return this.database.messageAttachment.findMany({
+      where: {
+        messageId,
+        deletedAt: null,
+      },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+      select: {
+        id: true,
+        type: true,
+        mimeType: true,
+        sizeBytes: true,
+        createdAt: true,
+      },
+    });
+  }
+
   async read(
     userId: string,
     conversationId: string,
@@ -157,18 +182,7 @@ export class MessageAttachmentService {
   ) {
     await this.assertActiveUser(userId);
     await this.assertParticipant(userId, conversationId);
-
-    const message = await this.database.message.findFirst({
-      where: {
-        id: messageId,
-        conversationId,
-      },
-      select: { id: true },
-    });
-
-    if (!message) {
-      throw new NotFoundException('Message attachment not found.');
-    }
+    await this.assertMessageInConversation(messageId, conversationId);
 
     const attachment = await this.database.messageAttachment.findFirst({
       where: {
@@ -211,6 +225,23 @@ export class MessageAttachmentService {
 
     if (!user) {
       throw new ForbiddenException('Active account required.');
+    }
+  }
+
+  private async assertMessageInConversation(
+    messageId: string,
+    conversationId: string,
+  ): Promise<void> {
+    const message = await this.database.message.findFirst({
+      where: {
+        id: messageId,
+        conversationId,
+      },
+      select: { id: true },
+    });
+
+    if (!message) {
+      throw new NotFoundException('Message attachment not found.');
     }
   }
 
