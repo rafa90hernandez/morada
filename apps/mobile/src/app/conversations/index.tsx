@@ -53,7 +53,10 @@ export default function ConversationsScreen() {
 
   useEffect(() => {
     if (!session) {
-      router.replace({ pathname: "/login", params: { returnTo: "/conversations" } });
+      router.replace({
+        pathname: "/login",
+        params: { returnTo: "/conversations" },
+      });
       return;
     }
 
@@ -106,7 +109,10 @@ export default function ConversationsScreen() {
             <Text style={styles.muted}>
               Abra um anúncio elegível e toque em “Falar com anunciante”.
             </Text>
-            <AppButton label="Explorar moradias" onPress={() => router.push("/")} />
+            <AppButton
+              label="Explorar moradias"
+              onPress={() => router.push("/")}
+            />
           </View>
         }
         refreshControl={
@@ -120,7 +126,10 @@ export default function ConversationsScreen() {
           <Pressable
             accessibilityRole="button"
             onPress={() =>
-              router.push({ pathname: "/conversations/[id]", params: { id: item.id } })
+              router.push({
+                pathname: "/conversations/[id]",
+                params: { id: item.id },
+              })
             }
             style={({ pressed }) => [styles.card, pressed && styles.pressed]}
           >

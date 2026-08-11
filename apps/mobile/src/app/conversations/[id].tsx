@@ -80,9 +80,9 @@ export default function ConversationDetailScreen() {
   const [messageBody, setMessageBody] = useState("");
   const [visitStart, setVisitStart] = useState("");
   const [visitEnd, setVisitEnd] = useState("");
-  const [locations, setLocations] = useState<Record<string, ExactVisitLocation>>(
-    {},
-  );
+  const [locations, setLocations] = useState<
+    Record<string, ExactVisitLocation>
+  >({});
   const [overlapNotice, setOverlapNotice] = useState<string | null>(null);
   const [contactUnavailable, setContactUnavailable] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -106,7 +106,9 @@ export default function ConversationDetailScreen() {
       setContactUnavailable(conversationResult.status !== "ACTIVE");
       const orderedMessages = chronologicalMessages(messageResult.items);
       setMessages(orderedMessages);
-      setVisits(allVisits.filter((visit) => visit.conversationId === params.id));
+      setVisits(
+        allVisits.filter((visit) => visit.conversationId === params.id),
+      );
 
       const attachmentEntries = await Promise.all(
         orderedMessages
@@ -349,10 +351,7 @@ export default function ConversationDetailScreen() {
             return (
               <View
                 key={message.id}
-                style={[
-                  styles.message,
-                  mine ? styles.mine : styles.theirs,
-                ]}
+                style={[styles.message, mine ? styles.mine : styles.theirs]}
               >
                 {message.body ? (
                   <Text style={styles.messageText}>{message.body}</Text>
@@ -364,7 +363,8 @@ export default function ConversationDetailScreen() {
                       messageAttachments.map((attachment) => (
                         <Text key={attachment.id} style={styles.attachmentMeta}>
                           {attachment.type === "PDF" ? "PDF" : "Imagem"} ·{" "}
-                          {Math.max(1, Math.round(attachment.sizeBytes / 1024))} KB
+                          {Math.max(1, Math.round(attachment.sizeBytes / 1024))}{" "}
+                          KB
                         </Text>
                       ))
                     ) : (
@@ -445,7 +445,9 @@ export default function ConversationDetailScreen() {
             return (
               <View key={visit.id} style={styles.visitCard}>
                 <View style={styles.visitHeader}>
-                  <Text style={styles.visitStatus}>{visitLabel(visit.status)}</Text>
+                  <Text style={styles.visitStatus}>
+                    {visitLabel(visit.status)}
+                  </Text>
                   <Text style={styles.visitTime}>
                     {formatDate(visit.startsAt)} → {formatDate(visit.endsAt)}
                   </Text>
@@ -474,7 +476,9 @@ export default function ConversationDetailScreen() {
                 {actions.canReadExactLocation ? (
                   <AppButton
                     disabled={workingVisitId === visit.id}
-                    label={location ? "Atualizar endereço" : "Ver endereço da visita"}
+                    label={
+                      location ? "Atualizar endereço" : "Ver endereço da visita"
+                    }
                     onPress={() => void revealLocation(visit)}
                     variant="secondary"
                   />
@@ -482,10 +486,14 @@ export default function ConversationDetailScreen() {
 
                 {location ? (
                   <View style={styles.locationCard}>
-                    <Text style={styles.locationTitle}>Endereço autorizado</Text>
+                    <Text style={styles.locationTitle}>
+                      Endereço autorizado
+                    </Text>
                     <Text style={styles.locationText}>
                       {location.addressLine1}
-                      {location.addressLine2 ? `, ${location.addressLine2}` : ""}
+                      {location.addressLine2
+                        ? `, ${location.addressLine2}`
+                        : ""}
                       {location.eircode ? ` · ${location.eircode}` : ""}
                     </Text>
                     <Text style={styles.attachmentNote}>
@@ -515,7 +523,13 @@ export default function ConversationDetailScreen() {
   );
 }
 
-function ActionChip({ label, onPress }: { label: string; onPress: () => void }) {
+function ActionChip({
+  label,
+  onPress,
+}: {
+  label: string;
+  onPress: () => void;
+}) {
   return (
     <Pressable
       accessibilityRole="button"

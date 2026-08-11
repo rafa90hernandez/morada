@@ -41,8 +41,7 @@ export function visitActions(
       participant &&
       (visit.status === "PROPOSED" || visit.status === "ACCEPTED") &&
       !ended,
-    canReadExactLocation:
-      participant && visit.status === "ACCEPTED" && !ended,
+    canReadExactLocation: participant && visit.status === "ACCEPTED" && !ended,
     canRecordOutcome: participant && visit.status === "ACCEPTED" && ended,
   };
 }

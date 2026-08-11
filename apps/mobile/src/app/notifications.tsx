@@ -76,7 +76,9 @@ export default function NotificationsScreen() {
           item.id === notification.id ? { ...item, isRead: true } : item,
         ),
       );
-      setUnreadCount((current) => Math.max(0, current - (notification.isRead ? 0 : 1)));
+      setUnreadCount((current) =>
+        Math.max(0, current - (notification.isRead ? 0 : 1)),
+      );
 
       if (!notification.targetId || !notification.targetType) return;
       if (notification.targetType === "CONVERSATION") {

@@ -42,7 +42,10 @@ test("sorts API message history into chronological display order", () => {
     message("new", "2026-08-11T10:01:00.000Z"),
     message("old", "2026-08-11T10:00:00.000Z"),
   ]);
-  assert.deepEqual(result.map((item) => item.id), ["old", "new"]);
+  assert.deepEqual(
+    result.map((item) => item.id),
+    ["old", "new"],
+  );
 });
 
 test("derives the counterpart without trusting a client role", () => {
