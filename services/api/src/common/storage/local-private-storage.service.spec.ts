@@ -15,9 +15,12 @@ describe('LocalPrivateStorageService', () => {
     },
   );
 
-  it.each(['development', 'test'])('allows local private storage in %s', (nodeEnv) => {
-    expect(() => createService(nodeEnv)).not.toThrow();
-  });
+  it.each(['development', 'test'])(
+    'allows local private storage in %s',
+    (nodeEnv) => {
+      expect(() => createService(nodeEnv)).not.toThrow();
+    },
+  );
 
   it('rejects object keys that escape the private storage root', async () => {
     const service = createService('test');
