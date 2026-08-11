@@ -120,7 +120,4 @@ export class PublicMapDiscoveryService {
   }
 }
 
-export {
-  MAX_VIEWPORT_LATITUDE_SPAN,
-  MAX_VIEWPORT_LONGITUDE_SPAN,
-};
+export { MAX_VIEWPORT_LATITUDE_SPAN, MAX_VIEWPORT_LONGITUDE_SPAN };
