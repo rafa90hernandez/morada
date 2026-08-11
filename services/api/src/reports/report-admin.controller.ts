@@ -39,7 +39,11 @@ export class ReportAdminController {
     @Param('reportId') reportId: string,
     @Body() dto: ReportAdminDecisionDto,
   ) {
-    return this.reportAdminService.markUnderReview(adminId, reportId, dto.notes);
+    return this.reportAdminService.markUnderReview(
+      adminId,
+      reportId,
+      dto.notes,
+    );
   }
 
   @Post(':reportId/resolve')
