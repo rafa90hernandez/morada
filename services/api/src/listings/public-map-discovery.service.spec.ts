@@ -145,7 +145,10 @@ describe('PublicMapDiscoveryService', () => {
       },
     ]);
 
-    const result = await service.searchVisibleArea(makeQuery({ limit: 1 }), now);
+    const result = await service.searchVisibleArea(
+      makeQuery({ limit: 1 }),
+      now,
+    );
     expect(result.markers).toHaveLength(1);
     expect(result.truncated).toBe(true);
   });
