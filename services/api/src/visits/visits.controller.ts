@@ -38,7 +38,10 @@ export class VisitsController {
 
   @Get('visits/:visitId')
   @ApiOperation({ summary: 'Read participant-safe visit detail' })
-  getMine(@CurrentUser('id') userId: string, @Param('visitId') visitId: string) {
+  getMine(
+    @CurrentUser('id') userId: string,
+    @Param('visitId') visitId: string,
+  ) {
     return this.visitsService.getMine(userId, visitId);
   }
 
@@ -50,7 +53,10 @@ export class VisitsController {
 
   @Post('visits/:visitId/decline')
   @ApiOperation({ summary: 'Decline a visit proposal' })
-  decline(@CurrentUser('id') userId: string, @Param('visitId') visitId: string) {
+  decline(
+    @CurrentUser('id') userId: string,
+    @Param('visitId') visitId: string,
+  ) {
     return this.visitsService.decline(userId, visitId);
   }
 
