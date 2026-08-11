@@ -8,6 +8,7 @@ import { seconds, ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import * as Joi from 'joi';
 
 import { AdminModule } from './admin/admin.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -69,6 +70,7 @@ import { VisitsModule } from './visits/visits.module';
     DatabaseModule,
     AuthModule,
     AdminModule,
+    AnalyticsModule,
     UsersModule,
     ListingsModule,
     ListingPhotosModule,
