@@ -216,7 +216,7 @@ export class VisitsService {
   }
 
   decline(userId: string, visitId: string, now = new Date()) {
-    return this.respondToProposal(userId, visitId, VisitStatus.DECLINED, now);
+    return this.respondToProposal(userId, visitId, now);
   }
 
   async proposeReplacement(
@@ -404,7 +404,6 @@ export class VisitsService {
   private async respondToProposal(
     userId: string,
     visitId: string,
-    status: VisitStatus.DECLINED,
     now: Date,
   ) {
     await this.assertActiveUser(userId);
@@ -428,7 +427,7 @@ export class VisitsService {
       return transaction.visit.update({
         where: { id: visitId },
         data: {
-          status,
+          status: VisitStatus.DECLINED,
           respondedAt: now,
         },
         select: visitSelect,
