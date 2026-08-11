@@ -19,38 +19,43 @@ export class AdminAnalyticsService {
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-    const [allTime, last30Days, last7Days, identityReviews, authorizationReviews] =
-      await Promise.all([
-        this.countSignals(),
-        this.countSignals(thirtyDaysAgo),
-        this.countSignals(sevenDaysAgo),
-        this.database.identityVerificationSubmission.findMany({
-          where: {
-            submittedAt: { gte: thirtyDaysAgo },
-            reviewedAt: { not: null },
-            deletedAt: null,
-          },
-          orderBy: { reviewedAt: 'desc' },
-          take: REVIEW_SAMPLE_LIMIT,
-          select: {
-            submittedAt: true,
-            reviewedAt: true,
-          },
-        }),
-        this.database.listingAuthorizationSubmission.findMany({
-          where: {
-            submittedAt: { gte: thirtyDaysAgo },
-            reviewedAt: { not: null },
-            deletedAt: null,
-          },
-          orderBy: { reviewedAt: 'desc' },
-          take: REVIEW_SAMPLE_LIMIT,
-          select: {
-            submittedAt: true,
-            reviewedAt: true,
-          },
-        }),
-      ]);
+    const [
+      allTime,
+      last30Days,
+      last7Days,
+      identityReviews,
+      authorizationReviews,
+    ] = await Promise.all([
+      this.countSignals(),
+      this.countSignals(thirtyDaysAgo),
+      this.countSignals(sevenDaysAgo),
+      this.database.identityVerificationSubmission.findMany({
+        where: {
+          submittedAt: { gte: thirtyDaysAgo },
+          reviewedAt: { not: null },
+          deletedAt: null,
+        },
+        orderBy: { reviewedAt: 'desc' },
+        take: REVIEW_SAMPLE_LIMIT,
+        select: {
+          submittedAt: true,
+          reviewedAt: true,
+        },
+      }),
+      this.database.listingAuthorizationSubmission.findMany({
+        where: {
+          submittedAt: { gte: thirtyDaysAgo },
+          reviewedAt: { not: null },
+          deletedAt: null,
+        },
+        orderBy: { reviewedAt: 'desc' },
+        take: REVIEW_SAMPLE_LIMIT,
+        select: {
+          submittedAt: true,
+          reviewedAt: true,
+        },
+      }),
+    ]);
 
     return {
       generatedAt: now,
@@ -100,24 +105,32 @@ export class AdminAnalyticsService {
       this.database.visit.count({
         where: {
           status: { in: SCHEDULED_VISIT_STATUSES },
-          respondedAt: occurredAt ? { ...occurredAt, not: null } : { not: null },
+          respondedAt: occurredAt
+            ? { ...occurredAt, not: null }
+            : { not: null },
         },
       }),
       this.database.visit.count({
         where: {
           status: VisitStatus.COMPLETED,
-          outcomeAt: occurredAt ? { ...occurredAt, not: null } : { not: null },
+          outcomeAt: occurredAt
+            ? { ...occurredAt, not: null }
+            : { not: null },
         },
       }),
       this.database.visit.count({
         where: {
           status: VisitStatus.NO_SHOW,
-          outcomeAt: occurredAt ? { ...occurredAt, not: null } : { not: null },
+          outcomeAt: occurredAt
+            ? { ...occurredAt, not: null }
+            : { not: null },
         },
       }),
       this.database.listing.count({
         where: {
-          closedAt: occurredAt ? { ...occurredAt, not: null } : { not: null },
+          closedAt: occurredAt
+            ? { ...occurredAt, not: null }
+            : { not: null },
         },
       }),
     ]);
