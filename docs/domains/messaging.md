@@ -14,9 +14,10 @@ A new conversation can be created only when:
 - the requester is not the listing owner;
 - the listing is ACTIVE, non-deleted and non-expired;
 - the listing type is RENTAL or TRANSFER;
-- the advertiser account is ACTIVE.
+- the advertiser account is ACTIVE;
+- neither user has blocked the other.
 
-The operation is idempotent through the existing compound conversation key. If the same listing/seeker conversation already exists, it is returned even if the listing later expired or closed. This preserves the interaction record without manufacturing a new conversation against unavailable inventory.
+The operation is idempotent through the existing compound conversation key. If the same listing/seeker conversation already exists, it is returned even if the listing later expired, closed or the relationship later became blocked. This preserves the interaction record without manufacturing new contact against unavailable inventory.
 
 ## Participant-only reads
 
@@ -30,6 +31,22 @@ Conversation and message pagination are cursor-based and bounded to 50 records p
 
 Conversation summaries expose only the listing id/title/status and limited participant profile presentation fields (`displayName`, `profilePhotoUrl`). Emails, phone numbers, private location, evidence and administrative data are not part of the messaging read model.
 
+## User blocking
+
+Authenticated users manage only their own outbound block relationships:
+
+- `GET /api/v1/users/me/blocks`
+- `POST /api/v1/users/me/blocks/:blockedUserId`
+- `DELETE /api/v1/users/me/blocks/:blockedUserId`
+
+Self-blocking is rejected. Block creation uses the `(blockerId, blockedId)` unique key and is idempotent. Unblock removes only the relationship created by the authenticated blocker; a user cannot remove a block created by the other participant. The block list is filtered only by the authenticated blocker and returns limited presentation data for blocked users.
+
+Blocking is enforced bilaterally for direct contact: if A blocks B **or** B blocks A, a new listing-bound conversation cannot be created and an existing conversation cannot send text or attachments. The client is not trusted to provide block state.
+
+Blocked conversation history remains readable by its existing participants, including previously sent private attachment metadata/files. This preserves evidence and interaction context. Blocking therefore does not delete messages or mutate historical content.
+
+The implementation intentionally does not toggle `Conversation.status` when a `Block` row is created. Sendability is derived from the current bilateral block relationship on each send attempt. This avoids incorrect automatic reactivation when two independent block relationships exist and one side later unblocks.
+
 ## Sending text
 
 `POST /api/v1/conversations/:conversationId/messages`
@@ -39,10 +56,11 @@ Text messages:
 - require an ACTIVE sender account;
 - require sender participation in the conversation;
 - require conversation status ACTIVE;
+- require no block in either direction between participants;
 - are trimmed, non-empty and limited to 2,000 characters;
 - are persisted together with the conversation `lastMessageAt` update in one database transaction.
 
-Existing conversation history remains readable after a listing expires/closes. Blocking enforcement is a separate Sprint 5 boundary (#63) and will make conversations non-sendable when either participant blocks the other.
+The bilateral block condition is checked in the persistence transaction immediately before the message write.
 
 ## Private image and PDF attachments
 
@@ -53,6 +71,8 @@ The endpoint accepts one JPEG, PNG, WebP or PDF with a maximum input size of 10 
 Images are decoded, rotated, bounded to 4096 pixels, and re-encoded as JPEG. The original image metadata is not carried into the stored output. PDFs receive basic structural validation: declared MIME type, `%PDF-` signature and an `%%EOF` marker near the end. This structural check is **not malware scanning** and must not be represented as antivirus protection.
 
 Processed bytes are stored through `PRIVATE_STORAGE_SERVICE` under an unpredictable server-generated key. The database stores only the private object key, MIME type, size and SHA-256 checksum. API responses do not expose the object key or checksum.
+
+Before attachment processing/upload, the service checks current bilateral block state. It checks again inside the persistence transaction. If a block appears after private upload but before persistence, the message is rejected and the uploaded object is rolled back.
 
 The current schema keeps the legacy `Message.imageUrl` and `Message.imagePublicId` columns for compatibility, but this flow does not populate them. Attachment kind is authoritative in `MessageAttachment.type` (`IMAGE` or `PDF`). The legacy `Message.type = IMAGE` remains the envelope value for attachment-bearing messages during this compatibility period.
 

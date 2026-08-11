@@ -57,7 +57,11 @@ export class MessageAttachmentService {
     now = new Date(),
   ): Promise<MessageAttachmentUploadResult> {
     await this.assertActiveUser(userId);
-    await this.assertSendableParticipant(userId, conversationId);
+    const otherUserId = await this.assertSendableParticipant(
+      userId,
+      conversationId,
+    );
+    await this.assertNoBlockBetween(userId, otherUserId);
 
     const processed = await this.processor.process(file);
     const messageId = randomUUID();
@@ -84,13 +88,35 @@ export class MessageAttachmentService {
             status: ConversationStatus.ACTIVE,
             OR: [{ participantAId: userId }, { participantBId: userId }],
           },
-          select: { id: true },
+          select: {
+            id: true,
+            participantAId: true,
+            participantBId: true,
+          },
         });
 
         if (!conversation) {
           throw new ForbiddenException(
             'Conversation is not currently sendable.',
           );
+        }
+
+        const transactionOtherUserId =
+          conversation.participantAId === userId
+            ? conversation.participantBId
+            : conversation.participantAId;
+        const block = await transaction.block.findFirst({
+          where: {
+            OR: [
+              { blockerId: userId, blockedId: transactionOtherUserId },
+              { blockerId: transactionOtherUserId, blockedId: userId },
+            ],
+          },
+          select: { id: true },
+        });
+
+        if (block) {
+          throw new ForbiddenException('Direct contact is not available.');
         }
 
         const message = await transaction.message.create({
@@ -265,18 +291,44 @@ export class MessageAttachmentService {
   private async assertSendableParticipant(
     userId: string,
     conversationId: string,
-  ): Promise<void> {
+  ): Promise<string> {
     const conversation = await this.database.conversation.findFirst({
       where: {
         id: conversationId,
         status: ConversationStatus.ACTIVE,
         OR: [{ participantAId: userId }, { participantBId: userId }],
       },
-      select: { id: true },
+      select: {
+        participantAId: true,
+        participantBId: true,
+      },
     });
 
     if (!conversation) {
       throw new ForbiddenException('Conversation is not currently sendable.');
+    }
+
+    return conversation.participantAId === userId
+      ? conversation.participantBId
+      : conversation.participantAId;
+  }
+
+  private async assertNoBlockBetween(
+    userAId: string,
+    userBId: string,
+  ): Promise<void> {
+    const block = await this.database.block.findFirst({
+      where: {
+        OR: [
+          { blockerId: userAId, blockedId: userBId },
+          { blockerId: userBId, blockedId: userAId },
+        ],
+      },
+      select: { id: true },
+    });
+
+    if (block) {
+      throw new ForbiddenException('Direct contact is not available.');
     }
   }
 

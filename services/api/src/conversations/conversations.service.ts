@@ -97,6 +97,7 @@ export class ConversationsService {
 
     await this.assertListingContactEligible(listing, now);
     await this.assertActiveAdvertiser(listing.userId);
+    await this.assertNoBlockBetween(userId, listing.userId);
 
     return this.database.conversation.upsert({
       where: {
@@ -238,6 +239,8 @@ export class ConversationsService {
         select: {
           id: true,
           status: true,
+          participantAId: true,
+          participantBId: true,
         },
       });
 
@@ -247,6 +250,24 @@ export class ConversationsService {
 
       if (conversation.status !== ConversationStatus.ACTIVE) {
         throw new ForbiddenException('Conversation is not currently sendable.');
+      }
+
+      const otherUserId =
+        conversation.participantAId === userId
+          ? conversation.participantBId
+          : conversation.participantAId;
+      const block = await transaction.block.findFirst({
+        where: {
+          OR: [
+            { blockerId: userId, blockedId: otherUserId },
+            { blockerId: otherUserId, blockedId: userId },
+          ],
+        },
+        select: { id: true },
+      });
+
+      if (block) {
+        throw new ForbiddenException('Direct contact is not available.');
       }
 
       const message = await transaction.message.create({
@@ -302,6 +323,25 @@ export class ConversationsService {
 
     if (!advertiser) {
       throw new NotFoundException('Listing not found.');
+    }
+  }
+
+  private async assertNoBlockBetween(
+    userAId: string,
+    userBId: string,
+  ): Promise<void> {
+    const block = await this.database.block.findFirst({
+      where: {
+        OR: [
+          { blockerId: userAId, blockedId: userBId },
+          { blockerId: userBId, blockedId: userAId },
+        ],
+      },
+      select: { id: true },
+    });
+
+    if (block) {
+      throw new ForbiddenException('Direct contact is not available.');
     }
   }
 
