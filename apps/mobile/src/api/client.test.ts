@@ -1,12 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import {
-  buildQuery,
-  listConversations,
-  login,
-  setUnauthorizedHandler,
-} from "./client";
+import { buildQuery, listConversations, login, setUnauthorizedHandler } from "./client";
 
 test("buildQuery omits undefined values and encodes filters", () => {
   assert.equal(
