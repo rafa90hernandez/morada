@@ -132,6 +132,24 @@ export class PublicListingSearchQueryDto {
   @IsOptional()
   @Type(() => Number)
   @IsInt()
+  @Min(0)
+  currentResidentCount?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  peopleSharingSpace?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  peopleSharingBathroom?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
   @Min(1)
   maxMinimumStayDays?: number;
 
