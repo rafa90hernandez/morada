@@ -74,12 +74,18 @@ export function DiscoveryScreen() {
   const [peopleSharingSpace, setPeopleSharingSpace] = useState("");
   const [peopleSharingBathroom, setPeopleSharingBathroom] = useState("");
   const [minimumStayDays, setMinimumStayDays] = useState("");
-  const [listingType, setListingType] = useState<ListingSearchFilters["listingType"]>();
-  const [propertyType, setPropertyType] = useState<ListingSearchFilters["propertyType"]>();
-  const [occupancyType, setOccupancyType] = useState<ListingSearchFilters["propertyOccupancyType"]>();
-  const [spaceType, setSpaceType] = useState<ListingSearchFilters["advertisedSpaceType"]>();
-  const [bathroomType, setBathroomType] = useState<ListingSearchFilters["bathroomType"]>();
-  const [billsIncluded, setBillsIncluded] = useState<ListingSearchFilters["billsIncludedType"]>();
+  const [listingType, setListingType] =
+    useState<ListingSearchFilters["listingType"]>();
+  const [propertyType, setPropertyType] =
+    useState<ListingSearchFilters["propertyType"]>();
+  const [occupancyType, setOccupancyType] =
+    useState<ListingSearchFilters["propertyOccupancyType"]>();
+  const [spaceType, setSpaceType] =
+    useState<ListingSearchFilters["advertisedSpaceType"]>();
+  const [bathroomType, setBathroomType] =
+    useState<ListingSearchFilters["bathroomType"]>();
+  const [billsIncluded, setBillsIncluded] =
+    useState<ListingSearchFilters["billsIncludedType"]>();
   const [furnished, setFurnished] = useState(false);
   const [couples, setCouples] = useState(false);
   const [pets, setPets] = useState(false);
@@ -119,33 +125,70 @@ export function DiscoveryScreen() {
       studentsAllowed: students ? true : undefined,
       sort,
     };
-  }, [area, availableOn, bathroomType, bathrooms, bedrooms, billsIncluded, city, county, couples, currentResidents, families, furnished, listingType, maxPrice, minimumStayDays, occupancyType, peopleSharingBathroom, peopleSharingSpace, pets, propertyType, smoking, sort, spaceType, students]);
+  }, [
+    area,
+    availableOn,
+    bathroomType,
+    bathrooms,
+    bedrooms,
+    billsIncluded,
+    city,
+    county,
+    couples,
+    currentResidents,
+    families,
+    furnished,
+    listingType,
+    maxPrice,
+    minimumStayDays,
+    occupancyType,
+    peopleSharingBathroom,
+    peopleSharingSpace,
+    pets,
+    propertyType,
+    smoking,
+    sort,
+    spaceType,
+    students,
+  ]);
 
-  const load = useCallback(async (refresh = false) => {
-    if (refresh) setRefreshing(true);
-    else setLoading(true);
-    setError(null);
+  const load = useCallback(
+    async (refresh = false) => {
+      if (refresh) setRefreshing(true);
+      else setLoading(true);
+      setError(null);
 
-    try {
-      const result = await search(filters);
-      setListings(result.items);
-      const allowedIds = new Set(result.items.map((item) => item.id));
-      const bounds = boundsFromCards(result.items);
-      const mapResult = await getMapMarkers(bounds);
-      setMarkers(session ? mapResult.markers.filter((marker) => allowedIds.has(marker.listingId)) : mapResult.markers);
-    } catch {
-      setError("Não foi possível carregar as moradias agora. Confira os filtros e tente novamente.");
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [filters, search, session]);
+      try {
+        const result = await search(filters);
+        setListings(result.items);
+        const allowedIds = new Set(result.items.map((item) => item.id));
+        const bounds = boundsFromCards(result.items);
+        const mapResult = await getMapMarkers(bounds);
+        setMarkers(
+          session
+            ? mapResult.markers.filter((marker) =>
+                allowedIds.has(marker.listingId),
+              )
+            : mapResult.markers,
+        );
+      } catch {
+        setError(
+          "Não foi possível carregar as moradias agora. Confira os filtros e tente novamente.",
+        );
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [filters, search, session],
+  );
 
   useEffect(() => {
     void load();
   }, [load]);
 
-  const openListing = (listingId: string) => router.push({ pathname: "/listing/[id]", params: { id: listingId } });
+  const openListing = (listingId: string) =>
+    router.push({ pathname: "/listing/[id]", params: { id: listingId } });
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -153,57 +196,216 @@ export function DiscoveryScreen() {
         <View style={styles.brandRow}>
           <Text style={styles.brand}>MORADA</Text>
           <View style={styles.headerActions}>
-            {session ? <HeaderButton label="Favoritos" onPress={() => router.push("/favorites")} /> : null}
-            <HeaderButton label={session ? "Conta" : "Entrar"} onPress={() => router.push(session ? "/account" : "/login")} />
+            {session ? (
+              <HeaderButton
+                label="Favoritos"
+                onPress={() => router.push("/favorites")}
+              />
+            ) : null}
+            <HeaderButton
+              label={session ? "Conta" : "Entrar"}
+              onPress={() => router.push(session ? "/account" : "/login")}
+            />
           </View>
         </View>
-        <Text accessibilityRole="header" style={styles.title}>Encontre sua próxima moradia</Text>
+        <Text accessibilityRole="header" style={styles.title}>
+          Encontre sua próxima moradia
+        </Text>
       </View>
 
       <View style={styles.filters}>
         <View style={styles.inlineInputs}>
-          <TextInput accessibilityLabel="Cidade" autoCapitalize="words" onChangeText={setCity} placeholder="Cidade" placeholderTextColor={colors.textMuted} style={[styles.input, styles.flexInput]} value={city} />
-          <NumericInput label="Preço máximo mensal em euros" placeholder="Máx. €/mês" value={maxPrice} onChangeText={setMaxPrice} />
+          <TextInput
+            accessibilityLabel="Cidade"
+            autoCapitalize="words"
+            onChangeText={setCity}
+            placeholder="Cidade"
+            placeholderTextColor={colors.textMuted}
+            style={[styles.input, styles.flexInput]}
+            value={city}
+          />
+          <NumericInput
+            label="Preço máximo mensal em euros"
+            placeholder="Máx. €/mês"
+            value={maxPrice}
+            onChangeText={setMaxPrice}
+          />
         </View>
         <View style={styles.filterActions}>
           <AppButton label="Buscar" onPress={() => void load()} />
-          <AppButton label={showAdvanced ? "Menos filtros" : "Mais filtros"} onPress={() => setShowAdvanced((value) => !value)} variant="secondary" />
+          <AppButton
+            label={showAdvanced ? "Menos filtros" : "Mais filtros"}
+            onPress={() => setShowAdvanced((value) => !value)}
+            variant="secondary"
+          />
         </View>
 
         {showAdvanced ? (
           <ScrollView style={styles.advancedScroll}>
             <View style={styles.advancedFilters}>
-              <Text style={styles.filterTitle}>Localização e disponibilidade</Text>
-              <TextInput accessibilityLabel="Condado" onChangeText={setCounty} placeholder="Condado" placeholderTextColor={colors.textMuted} style={styles.input} value={county} />
-              <TextInput accessibilityLabel="Área ou bairro" onChangeText={setArea} placeholder="Área ou bairro" placeholderTextColor={colors.textMuted} style={styles.input} value={area} />
-              <TextInput accessibilityLabel="Disponível em" autoCapitalize="none" onChangeText={setAvailableOn} placeholder="Disponível em AAAA-MM-DD" placeholderTextColor={colors.textMuted} style={styles.input} value={availableOn} />
-              <ChoiceRow label="Tipo de anúncio" options={[{ value: "RENTAL", label: "Aluguel" }, { value: "TRANSFER", label: "Transferência" }]} selected={listingType} setSelected={setListingType} />
-              <ChoiceRow label="Tipo de imóvel" options={propertyTypes} selected={propertyType} setSelected={setPropertyType} />
-              <ChoiceRow label="Imóvel" options={[{ value: "ENTIRE_PROPERTY", label: "Inteiro" }, { value: "SHARED_PROPERTY", label: "Compartilhado" }]} selected={occupancyType} setSelected={setOccupancyType} />
-              <ChoiceRow label="Espaço anunciado" options={[{ value: "PRIVATE", label: "Privado" }, { value: "SHARED", label: "Compartilhado" }]} selected={spaceType} setSelected={setSpaceType} />
-              <ChoiceRow label="Banheiro" options={[{ value: "PRIVATE", label: "Privado" }, { value: "SHARED", label: "Compartilhado" }]} selected={bathroomType} setSelected={setBathroomType} />
-              <ChoiceRow label="Contas incluídas" options={[{ value: "YES", label: "Sim" }, { value: "NO", label: "Não" }, { value: "PARTIAL", label: "Parcial" }]} selected={billsIncluded} setSelected={setBillsIncluded} />
+              <Text style={styles.filterTitle}>
+                Localização e disponibilidade
+              </Text>
+              <TextInput
+                accessibilityLabel="Condado"
+                onChangeText={setCounty}
+                placeholder="Condado"
+                placeholderTextColor={colors.textMuted}
+                style={styles.input}
+                value={county}
+              />
+              <TextInput
+                accessibilityLabel="Área ou bairro"
+                onChangeText={setArea}
+                placeholder="Área ou bairro"
+                placeholderTextColor={colors.textMuted}
+                style={styles.input}
+                value={area}
+              />
+              <TextInput
+                accessibilityLabel="Disponível em"
+                autoCapitalize="none"
+                onChangeText={setAvailableOn}
+                placeholder="Disponível em AAAA-MM-DD"
+                placeholderTextColor={colors.textMuted}
+                style={styles.input}
+                value={availableOn}
+              />
+              <ChoiceRow
+                label="Tipo de anúncio"
+                options={[
+                  { value: "RENTAL", label: "Aluguel" },
+                  { value: "TRANSFER", label: "Transferência" },
+                ]}
+                selected={listingType}
+                setSelected={setListingType}
+              />
+              <ChoiceRow
+                label="Tipo de imóvel"
+                options={propertyTypes}
+                selected={propertyType}
+                setSelected={setPropertyType}
+              />
+              <ChoiceRow
+                label="Imóvel"
+                options={[
+                  { value: "ENTIRE_PROPERTY", label: "Inteiro" },
+                  { value: "SHARED_PROPERTY", label: "Compartilhado" },
+                ]}
+                selected={occupancyType}
+                setSelected={setOccupancyType}
+              />
+              <ChoiceRow
+                label="Espaço anunciado"
+                options={[
+                  { value: "PRIVATE", label: "Privado" },
+                  { value: "SHARED", label: "Compartilhado" },
+                ]}
+                selected={spaceType}
+                setSelected={setSpaceType}
+              />
+              <ChoiceRow
+                label="Banheiro"
+                options={[
+                  { value: "PRIVATE", label: "Privado" },
+                  { value: "SHARED", label: "Compartilhado" },
+                ]}
+                selected={bathroomType}
+                setSelected={setBathroomType}
+              />
+              <ChoiceRow
+                label="Contas incluídas"
+                options={[
+                  { value: "YES", label: "Sim" },
+                  { value: "NO", label: "Não" },
+                  { value: "PARTIAL", label: "Parcial" },
+                ]}
+                selected={billsIncluded}
+                setSelected={setBillsIncluded}
+              />
 
               <Text style={styles.filterTitle}>Configuração da casa</Text>
               <View style={styles.inlineInputs}>
-                <NumericInput label="Mínimo de quartos" placeholder="Quartos mín." value={bedrooms} onChangeText={setBedrooms} />
-                <NumericInput label="Mínimo de banheiros" placeholder="Banheiros mín." value={bathrooms} onChangeText={setBathrooms} />
+                <NumericInput
+                  label="Mínimo de quartos"
+                  placeholder="Quartos mín."
+                  value={bedrooms}
+                  onChangeText={setBedrooms}
+                />
+                <NumericInput
+                  label="Mínimo de banheiros"
+                  placeholder="Banheiros mín."
+                  value={bathrooms}
+                  onChangeText={setBathrooms}
+                />
               </View>
-              <NumericInput label="Moradores atuais" placeholder="Moradores atuais" value={currentResidents} onChangeText={setCurrentResidents} />
-              <NumericInput label="Pessoas compartilhando o quarto ou espaço" placeholder="Compartilhando espaço" value={peopleSharingSpace} onChangeText={setPeopleSharingSpace} />
-              <NumericInput label="Pessoas compartilhando o banheiro" placeholder="Compartilhando banheiro" value={peopleSharingBathroom} onChangeText={setPeopleSharingBathroom} />
-              <NumericInput label="Estadia mínima máxima em dias" placeholder="Aceitar estadia mínima de até X dias" value={minimumStayDays} onChangeText={setMinimumStayDays} />
+              <NumericInput
+                label="Moradores atuais"
+                placeholder="Moradores atuais"
+                value={currentResidents}
+                onChangeText={setCurrentResidents}
+              />
+              <NumericInput
+                label="Pessoas compartilhando o quarto ou espaço"
+                placeholder="Compartilhando espaço"
+                value={peopleSharingSpace}
+                onChangeText={setPeopleSharingSpace}
+              />
+              <NumericInput
+                label="Pessoas compartilhando o banheiro"
+                placeholder="Compartilhando banheiro"
+                value={peopleSharingBathroom}
+                onChangeText={setPeopleSharingBathroom}
+              />
+              <NumericInput
+                label="Estadia mínima máxima em dias"
+                placeholder="Aceitar estadia mínima de até X dias"
+                value={minimumStayDays}
+                onChangeText={setMinimumStayDays}
+              />
 
               <Text style={styles.filterTitle}>Preferências objetivas</Text>
               <View style={styles.chipWrap}>
-                <ToggleChip label="Mobilado" selected={furnished} setSelected={setFurnished} />
-                <ToggleChip label="Casais" selected={couples} setSelected={setCouples} />
-                <ToggleChip label="Pets" selected={pets} setSelected={setPets} />
-                <ToggleChip label="Fumar" selected={smoking} setSelected={setSmoking} />
-                <ToggleChip label="Famílias" selected={families} setSelected={setFamilies} />
-                <ToggleChip label="Estudantes" selected={students} setSelected={setStudents} />
+                <ToggleChip
+                  label="Mobilado"
+                  selected={furnished}
+                  setSelected={setFurnished}
+                />
+                <ToggleChip
+                  label="Casais"
+                  selected={couples}
+                  setSelected={setCouples}
+                />
+                <ToggleChip
+                  label="Pets"
+                  selected={pets}
+                  setSelected={setPets}
+                />
+                <ToggleChip
+                  label="Fumar"
+                  selected={smoking}
+                  setSelected={setSmoking}
+                />
+                <ToggleChip
+                  label="Famílias"
+                  selected={families}
+                  setSelected={setFamilies}
+                />
+                <ToggleChip
+                  label="Estudantes"
+                  selected={students}
+                  setSelected={setStudents}
+                />
               </View>
-              <ChoiceRow label="Ordenar" options={sortModes} selected={sort} setSelected={(value) => { if (value) setSort(value); }} allowClear={false} />
+              <ChoiceRow
+                label="Ordenar"
+                options={sortModes}
+                selected={sort}
+                setSelected={(value) => {
+                  if (value) setSort(value);
+                }}
+                allowClear={false}
+              />
               <AppButton label="Aplicar filtros" onPress={() => void load()} />
             </View>
           </ScrollView>
@@ -211,71 +413,321 @@ export function DiscoveryScreen() {
       </View>
 
       <View style={styles.modeSwitch}>
-        {(["list", "map"] as const).map((value) => <Pressable accessibilityRole="button" key={value} onPress={() => setMode(value)} style={[styles.modeButton, mode === value && styles.modeButtonActive]}><Text style={[styles.modeText, mode === value && styles.modeTextActive]}>{value === "list" ? "Lista" : "Mapa"}</Text></Pressable>)}
+        {(["list", "map"] as const).map((value) => (
+          <Pressable
+            accessibilityRole="button"
+            key={value}
+            onPress={() => setMode(value)}
+            style={[
+              styles.modeButton,
+              mode === value && styles.modeButtonActive,
+            ]}
+          >
+            <Text
+              style={[styles.modeText, mode === value && styles.modeTextActive]}
+            >
+              {value === "list" ? "Lista" : "Mapa"}
+            </Text>
+          </Pressable>
+        ))}
       </View>
 
-      {loading ? <StateMessage loading text="Buscando moradias..." /> : error ? <StateMessage error text={error} retry={() => void load()} /> : mode === "map" ? (
-        <View style={styles.mapContainer}><ApproximateMap markers={markers} onMarkerPress={openListing} /><Text style={styles.mapFootnote}>Os pontos mostram áreas aproximadas. Para usuários autenticados, o mapa respeita os resultados filtrados por bloqueios.</Text></View>
+      {loading ? (
+        <StateMessage loading text="Buscando moradias..." />
+      ) : error ? (
+        <StateMessage error text={error} retry={() => void load()} />
+      ) : mode === "map" ? (
+        <View style={styles.mapContainer}>
+          <ApproximateMap markers={markers} onMarkerPress={openListing} />
+          <Text style={styles.mapFootnote}>
+            Os pontos mostram áreas aproximadas. Para usuários autenticados, o
+            mapa respeita os resultados filtrados por bloqueios.
+          </Text>
+        </View>
       ) : (
-        <FlatList contentContainerStyle={styles.listContent} data={listings} keyExtractor={(item) => item.id} ListEmptyComponent={<StateMessage text="Nenhuma moradia encontrada. Tente remover alguns filtros ou ampliar a localização." />} refreshControl={<RefreshControl onRefresh={() => void load(true)} refreshing={refreshing} tintColor={colors.primary} />} renderItem={({ item }) => <ListingCard listing={item} onPress={() => openListing(item.id)} />} />
+        <FlatList
+          contentContainerStyle={styles.listContent}
+          data={listings}
+          keyExtractor={(item) => item.id}
+          ListEmptyComponent={
+            <StateMessage text="Nenhuma moradia encontrada. Tente remover alguns filtros ou ampliar a localização." />
+          }
+          refreshControl={
+            <RefreshControl
+              onRefresh={() => void load(true)}
+              refreshing={refreshing}
+              tintColor={colors.primary}
+            />
+          }
+          renderItem={({ item }) => (
+            <ListingCard listing={item} onPress={() => openListing(item.id)} />
+          )}
+        />
       )}
     </SafeAreaView>
   );
 }
 
-function HeaderButton({ label, onPress }: { label: string; onPress: () => void }) {
-  return <Pressable accessibilityRole="button" onPress={onPress} style={styles.accountButton}><Text style={styles.accountButtonText}>{label}</Text></Pressable>;
+function HeaderButton({
+  label,
+  onPress,
+}: {
+  label: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={styles.accountButton}
+    >
+      <Text style={styles.accountButtonText}>{label}</Text>
+    </Pressable>
+  );
 }
 
-function NumericInput({ label, placeholder, value, onChangeText }: { label: string; placeholder: string; value: string; onChangeText: (value: string) => void }) {
-  return <TextInput accessibilityLabel={label} inputMode="numeric" onChangeText={onChangeText} placeholder={placeholder} placeholderTextColor={colors.textMuted} style={[styles.input, styles.flexInput]} value={value} />;
+function NumericInput({
+  label,
+  placeholder,
+  value,
+  onChangeText,
+}: {
+  label: string;
+  placeholder: string;
+  value: string;
+  onChangeText: (value: string) => void;
+}) {
+  return (
+    <TextInput
+      accessibilityLabel={label}
+      inputMode="numeric"
+      onChangeText={onChangeText}
+      placeholder={placeholder}
+      placeholderTextColor={colors.textMuted}
+      style={[styles.input, styles.flexInput]}
+      value={value}
+    />
+  );
 }
 
-function ToggleChip({ label, selected, setSelected }: { label: string; selected: boolean; setSelected: (value: boolean) => void }) {
-  return <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: selected }} onPress={() => setSelected(!selected)} style={[styles.chip, selected && styles.chipSelected]}><Text style={[styles.chipText, selected && styles.chipTextSelected]}>{label}</Text></Pressable>;
+function ToggleChip({
+  label,
+  selected,
+  setSelected,
+}: {
+  label: string;
+  selected: boolean;
+  setSelected: (value: boolean) => void;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked: selected }}
+      onPress={() => setSelected(!selected)}
+      style={[styles.chip, selected && styles.chipSelected]}
+    >
+      <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
+        {label}
+      </Text>
+    </Pressable>
+  );
 }
 
-function ChoiceRow<T extends string>({ label, options, selected, setSelected, allowClear = true }: { label: string; options: Array<{ value: T; label: string }>; selected: T | undefined; setSelected: (value: T | undefined) => void; allowClear?: boolean }) {
-  return <View style={styles.choiceSection}><Text style={styles.filterLabel}>{label}</Text><View style={styles.chipWrap}>{options.map((option) => <Pressable accessibilityRole="radio" accessibilityState={{ checked: selected === option.value }} key={option.value} onPress={() => setSelected(allowClear && selected === option.value ? undefined : option.value)} style={[styles.chip, selected === option.value && styles.chipSelected]}><Text style={[styles.chipText, selected === option.value && styles.chipTextSelected]}>{option.label}</Text></Pressable>)}</View></View>;
+function ChoiceRow<T extends string>({
+  label,
+  options,
+  selected,
+  setSelected,
+  allowClear = true,
+}: {
+  label: string;
+  options: Array<{ value: T; label: string }>;
+  selected: T | undefined;
+  setSelected: (value: T | undefined) => void;
+  allowClear?: boolean;
+}) {
+  return (
+    <View style={styles.choiceSection}>
+      <Text style={styles.filterLabel}>{label}</Text>
+      <View style={styles.chipWrap}>
+        {options.map((option) => (
+          <Pressable
+            accessibilityRole="radio"
+            accessibilityState={{ checked: selected === option.value }}
+            key={option.value}
+            onPress={() =>
+              setSelected(
+                allowClear && selected === option.value
+                  ? undefined
+                  : option.value,
+              )
+            }
+            style={[
+              styles.chip,
+              selected === option.value && styles.chipSelected,
+            ]}
+          >
+            <Text
+              style={[
+                styles.chipText,
+                selected === option.value && styles.chipTextSelected,
+              ]}
+            >
+              {option.label}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+    </View>
+  );
 }
 
-function StateMessage({ text, loading, error, retry }: { text: string; loading?: boolean; error?: boolean; retry?: () => void }) {
-  return <View style={styles.centerState}>{loading ? <ActivityIndicator color={colors.primary} size="large" /> : null}{error ? <Text style={styles.errorTitle}>Algo deu errado</Text> : null}<Text style={styles.stateText}>{text}</Text>{retry ? <AppButton label="Tentar novamente" onPress={retry} /> : null}</View>;
+function StateMessage({
+  text,
+  loading,
+  error,
+  retry,
+}: {
+  text: string;
+  loading?: boolean;
+  error?: boolean;
+  retry?: () => void;
+}) {
+  return (
+    <View style={styles.centerState}>
+      {loading ? (
+        <ActivityIndicator color={colors.primary} size="large" />
+      ) : null}
+      {error ? <Text style={styles.errorTitle}>Algo deu errado</Text> : null}
+      <Text style={styles.stateText}>{text}</Text>
+      {retry ? <AppButton label="Tentar novamente" onPress={retry} /> : null}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.background },
-  header: { gap: spacing.sm, paddingHorizontal: spacing.lg, paddingTop: spacing.lg },
-  brandRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.md },
+  header: {
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+  },
+  brandRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.md,
+  },
   headerActions: { flexDirection: "row", gap: spacing.sm },
-  brand: { color: colors.primary, fontSize: 13, fontWeight: "900", letterSpacing: 2 },
-  accountButton: { minHeight: 44, justifyContent: "center", borderWidth: 1, borderColor: colors.border, borderRadius: radius.pill, backgroundColor: colors.surface, paddingHorizontal: spacing.md },
+  brand: {
+    color: colors.primary,
+    fontSize: 13,
+    fontWeight: "900",
+    letterSpacing: 2,
+  },
+  accountButton: {
+    minHeight: 44,
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing.md,
+  },
   accountButtonText: { color: colors.text, fontWeight: "700" },
-  title: { color: colors.text, fontSize: 30, fontWeight: "900", letterSpacing: -0.8 },
+  title: {
+    color: colors.text,
+    fontSize: 30,
+    fontWeight: "900",
+    letterSpacing: -0.8,
+  },
   filters: { gap: spacing.sm, padding: spacing.lg },
-  advancedScroll: { maxHeight: 310, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, backgroundColor: colors.surface },
+  advancedScroll: {
+    maxHeight: 310,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
+  },
   advancedFilters: { gap: spacing.md, padding: spacing.md },
   filterTitle: { color: colors.text, fontSize: 16, fontWeight: "800" },
   filterLabel: { color: colors.text, fontWeight: "700" },
   choiceSection: { gap: spacing.sm },
   inlineInputs: { flexDirection: "row", gap: spacing.sm },
   flexInput: { flex: 1 },
-  input: { minHeight: 48, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, backgroundColor: colors.surface, color: colors.text, paddingHorizontal: spacing.md, fontSize: 16 },
-  filterActions: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.sm },
+  input: {
+    minHeight: 48,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
+    color: colors.text,
+    paddingHorizontal: spacing.md,
+    fontSize: 16,
+  },
+  filterActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.sm,
+  },
   chipWrap: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
-  chip: { minHeight: 44, justifyContent: "center", borderWidth: 1, borderColor: colors.border, borderRadius: radius.pill, backgroundColor: colors.surface, paddingHorizontal: spacing.md },
-  chipSelected: { borderColor: colors.primary, backgroundColor: colors.primarySoft },
+  chip: {
+    minHeight: 44,
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing.md,
+  },
+  chipSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primarySoft,
+  },
   chipText: { color: colors.text, fontWeight: "700" },
   chipTextSelected: { color: colors.primary },
-  modeSwitch: { flexDirection: "row", marginHorizontal: spacing.lg, marginBottom: spacing.md, borderRadius: radius.pill, backgroundColor: colors.surfaceMuted, padding: spacing.xs },
-  modeButton: { flex: 1, alignItems: "center", borderRadius: radius.pill, paddingVertical: spacing.sm },
+  modeSwitch: {
+    flexDirection: "row",
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surfaceMuted,
+    padding: spacing.xs,
+  },
+  modeButton: {
+    flex: 1,
+    alignItems: "center",
+    borderRadius: radius.pill,
+    paddingVertical: spacing.sm,
+  },
   modeButtonActive: { backgroundColor: colors.surface },
   modeText: { color: colors.textMuted, fontWeight: "700" },
   modeTextActive: { color: colors.text },
-  listContent: { gap: spacing.md, paddingHorizontal: spacing.lg, paddingBottom: spacing.xxl },
-  mapContainer: { flex: 1, gap: spacing.sm, paddingHorizontal: spacing.lg, paddingBottom: spacing.lg },
+  listContent: {
+    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xxl,
+  },
+  mapContainer: {
+    flex: 1,
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.lg,
+  },
   mapFootnote: { color: colors.textMuted, fontSize: 12, lineHeight: 18 },
-  centerState: { flex: 1, alignItems: "center", justifyContent: "center", gap: spacing.md, padding: spacing.xl },
-  stateText: { maxWidth: 320, color: colors.textMuted, textAlign: "center", lineHeight: 22 },
+  centerState: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.md,
+    padding: spacing.xl,
+  },
+  stateText: {
+    maxWidth: 320,
+    color: colors.textMuted,
+    textAlign: "center",
+    lineHeight: 22,
+  },
   errorTitle: { color: colors.text, fontSize: 20, fontWeight: "800" },
 });
