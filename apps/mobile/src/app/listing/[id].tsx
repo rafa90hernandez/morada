@@ -77,7 +77,8 @@ export default function ListingDetailScreen() {
         }
       })
       .catch(() => {
-        if (active) setFavoriteError("Não foi possível consultar seus favoritos.");
+        if (active)
+          setFavoriteError("Não foi possível consultar seus favoritos.");
       });
 
     return () => {
