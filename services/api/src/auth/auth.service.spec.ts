@@ -2,7 +2,10 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 
-import { DatabaseService } from '../database/database.service';
+jest.mock('../database/database.service', () => ({
+  DatabaseService: class DatabaseService {},
+}));
+
 import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
 
@@ -33,7 +36,7 @@ function createHarness(options?: { exposeDevelopmentToken?: boolean }) {
         return Promise.resolve(user);
       }),
     },
-  } as unknown as DatabaseService;
+  };
 
   const usersService = {
     findByEmail: jest.fn((email: string) =>
@@ -54,9 +57,14 @@ function createHarness(options?: { exposeDevelopmentToken?: boolean }) {
       : 'false',
   });
 
-  const service = new AuthService(database, usersService, jwtService, config);
+  const service = new AuthService(
+    database as never,
+    usersService,
+    jwtService,
+    config,
+  );
 
-  return { service, user, usersService, database, jwtService };
+  return { service, user, jwtService };
 }
 
 describe('AuthService password recovery', () => {
