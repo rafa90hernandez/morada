@@ -39,7 +39,9 @@ export default function PasswordRecoveryScreen() {
         });
       }
     } catch {
-      setError("Não foi possível solicitar a recuperação agora. Tente novamente.");
+      setError(
+        "Não foi possível solicitar a recuperação agora. Tente novamente.",
+      );
     } finally {
       setSubmitting(false);
     }
