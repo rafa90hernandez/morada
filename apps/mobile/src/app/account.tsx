@@ -1,4 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+  type ComponentProps,
+} from "react";
 import { router } from "expo-router";
 import {
   ActivityIndicator,
@@ -228,12 +233,7 @@ export default function AccountScreen() {
           onChangeText={setOccupation}
           value={occupation}
         />
-        <Field
-          label="Sobre você"
-          multiline
-          onChangeText={setBio}
-          value={bio}
-        />
+        <Field label="Sobre você" multiline onChangeText={setBio} value={bio} />
 
         <View style={styles.switchRow}>
           <Text style={styles.label}>Sou estudante</Text>
@@ -284,7 +284,7 @@ export default function AccountScreen() {
 function Field({
   label,
   ...props
-}: { label: string } & React.ComponentProps<typeof TextInput>) {
+}: { label: string } & ComponentProps<typeof TextInput>) {
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
