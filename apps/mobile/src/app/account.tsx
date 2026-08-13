@@ -1,9 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useState,
-  type ComponentProps,
-} from "react";
+import { useCallback, useEffect, useState, type ComponentProps } from "react";
 import { router } from "expo-router";
 import {
   ActivityIndicator,
