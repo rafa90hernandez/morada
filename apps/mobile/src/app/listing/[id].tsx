@@ -9,7 +9,13 @@ import {
   View,
 } from "react-native";
 
-import { getListingDetail, startConversation } from "@/api/client";
+import {
+  addFavorite,
+  getListingDetail,
+  listFavorites,
+  removeFavorite,
+  startConversation,
+} from "@/api/client";
 import type { ListingDetail } from "@/api/types";
 import { AppButton } from "@/components/ui/AppButton";
 import { useSession } from "@/session/SessionContext";
@@ -30,8 +36,11 @@ export default function ListingDetailScreen() {
   const [listing, setListing] = useState<ListingDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [contacting, setContacting] = useState(false);
+  const [favorite, setFavorite] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
   const [error, setError] = useState(false);
   const [contactError, setContactError] = useState<string | null>(null);
+  const [favoriteError, setFavoriteError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -53,6 +62,54 @@ export default function ListingDetailScreen() {
       active = false;
     };
   }, [params.id]);
+
+  useEffect(() => {
+    if (!session) {
+      setFavorite(false);
+      return;
+    }
+
+    let active = true;
+    void listFavorites(session.accessToken)
+      .then((items) => {
+        if (active) {
+          setFavorite(items.some((item) => item.listing.id === params.id));
+        }
+      })
+      .catch(() => {
+        if (active) setFavoriteError("Não foi possível consultar seus favoritos.");
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [params.id, session]);
+
+  const toggleFavorite = async () => {
+    if (!session) {
+      router.push({
+        pathname: "/login",
+        params: { returnTo: `/listing/${params.id}` },
+      });
+      return;
+    }
+
+    setFavoriteLoading(true);
+    setFavoriteError(null);
+    try {
+      if (favorite) {
+        await removeFavorite(params.id, session.accessToken);
+        setFavorite(false);
+      } else {
+        await addFavorite(params.id, session.accessToken);
+        setFavorite(true);
+      }
+    } catch {
+      setFavoriteError("Não foi possível atualizar este favorito.");
+    } finally {
+      setFavoriteLoading(false);
+    }
+  };
 
   const contactAdvertiser = async () => {
     if (!session) {
@@ -129,6 +186,25 @@ export default function ListingDetailScreen() {
           {price(listing.pricing.monthlyPriceCents)}/mês
         </Text>
         <Text style={styles.description}>{listing.description}</Text>
+        {favoriteError ? (
+          <Text accessibilityLiveRegion="polite" style={styles.error}>
+            {favoriteError}
+          </Text>
+        ) : null}
+        <AppButton
+          disabled={favoriteLoading}
+          label={
+            favoriteLoading
+              ? "Atualizando favorito..."
+              : favorite
+                ? "Remover dos favoritos"
+                : session
+                  ? "Salvar nos favoritos"
+                  : "Entrar para favoritar"
+          }
+          onPress={() => void toggleFavorite()}
+          variant="secondary"
+        />
       </View>
 
       <View style={styles.trustCard}>
@@ -204,11 +280,18 @@ export default function ListingDetailScreen() {
           onPress={() => void contactAdvertiser()}
         />
         {session ? (
-          <AppButton
-            label="Ver minhas conversas"
-            onPress={() => router.push("/conversations")}
-            variant="secondary"
-          />
+          <>
+            <AppButton
+              label="Meus favoritos"
+              onPress={() => router.push("/favorites")}
+              variant="secondary"
+            />
+            <AppButton
+              label="Ver minhas conversas"
+              onPress={() => router.push("/conversations")}
+              variant="secondary"
+            />
+          </>
         ) : null}
       </View>
     </ScrollView>
