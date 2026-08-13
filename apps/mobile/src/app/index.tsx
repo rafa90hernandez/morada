@@ -18,11 +18,13 @@ import { ApproximateMap } from "@/components/ApproximateMap";
 import { ListingCard } from "@/components/ListingCard";
 import { AppButton } from "@/components/ui/AppButton";
 import { boundsFromCards } from "@/features/discovery/discovery-utils";
+import { useSession } from "@/session/SessionContext";
 import { colors, radius, spacing } from "@/theme/tokens";
 
 type ViewMode = "list" | "map";
 
 export default function DiscoveryScreen() {
+  const { session } = useSession();
   const [listings, setListings] = useState<ListingCardType[]>([]);
   const [markers, setMarkers] = useState<MapMarker[]>([]);
   const [mode, setMode] = useState<ViewMode>("list");
@@ -79,7 +81,19 @@ export default function DiscoveryScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <Text style={styles.brand}>MORADA</Text>
+        <View style={styles.brandRow}>
+          <Text style={styles.brand}>MORADA</Text>
+          <Pressable
+            accessibilityLabel={session ? "Abrir minha conta" : "Entrar ou criar conta"}
+            accessibilityRole="button"
+            onPress={() => router.push(session ? "/account" : "/login")}
+            style={styles.accountButton}
+          >
+            <Text style={styles.accountButtonText}>
+              {session ? "Minha conta" : "Entrar"}
+            </Text>
+          </Pressable>
+        </View>
         <Text accessibilityRole="header" style={styles.title}>
           Encontre sua próxima moradia
         </Text>
@@ -203,11 +217,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
   },
+  brandRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.md,
+  },
   brand: {
     color: colors.primary,
     fontSize: 13,
     fontWeight: "900",
     letterSpacing: 2,
+  },
+  accountButton: {
+    minHeight: 44,
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing.md,
+  },
+  accountButtonText: {
+    color: colors.text,
+    fontWeight: "700",
   },
   title: {
     color: colors.text,
