@@ -102,6 +102,11 @@ export default function LoginScreen() {
           label={signingIn ? "Entrando..." : "Entrar"}
           onPress={() => void submit()}
         />
+        <AppButton
+          label="Criar uma conta"
+          onPress={() => router.push("/signup")}
+          variant="secondary"
+        />
       </View>
     </KeyboardAvoidingView>
   );
