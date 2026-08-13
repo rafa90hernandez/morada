@@ -19,12 +19,14 @@ describe('JwtStrategy password rotation', () => {
 
     const database = {
       user: {
-        findUnique: jest.fn(async () => ({
-          id: 'user-1',
-          email: 'rafael@morada.test',
-          passwordHash: currentPasswordHash,
-          status: 'ACTIVE',
-        })),
+        findUnique: jest.fn(() =>
+          Promise.resolve({
+            id: 'user-1',
+            email: 'rafael@morada.test',
+            passwordHash: currentPasswordHash,
+            status: 'ACTIVE',
+          }),
+        ),
       },
     } as unknown as DatabaseService;
 
