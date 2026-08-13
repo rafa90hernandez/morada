@@ -1,4 +1,5 @@
 import { API_BASE_URL } from "./client";
+import type { AuthSession } from "./types";
 
 export type AdultEligibility = {
   isEligible: boolean;
@@ -62,11 +63,35 @@ export type UpdatePrivateProfile = {
   isStudent?: boolean;
 };
 
+export type RegisterAccountInput = {
+  email: string;
+  password: string;
+  displayName: string;
+  phone?: string;
+};
+
 type ApiEnvelope<T> = {
   success: boolean;
   data: T;
   timestamp: string;
 };
+
+async function parseResponse<T>(response: Response): Promise<T> {
+  if (!response.ok) {
+    const error = new Error(
+      `Morada API request failed with status ${response.status}.`,
+    ) as Error & { status?: number };
+    error.status = response.status;
+    throw error;
+  }
+
+  const envelope = (await response.json()) as ApiEnvelope<T>;
+  if (!envelope.success) {
+    throw new Error("Morada API returned an unsuccessful response.");
+  }
+
+  return envelope.data;
+}
 
 async function accountRequest<T>(
   path: string,
@@ -82,20 +107,20 @@ async function accountRequest<T>(
     },
   });
 
-  if (!response.ok) {
-    const error = new Error(
-      `Morada API request failed with status ${response.status}.`,
-    ) as Error & { status?: number };
-    error.status = response.status;
-    throw error;
-  }
+  return parseResponse<T>(response);
+}
 
-  const envelope = (await response.json()) as ApiEnvelope<T>;
-  if (!envelope.success) {
-    throw new Error("Morada API returned an unsuccessful response.");
-  }
+export async function registerAccount(input: RegisterAccountInput) {
+  const response = await fetch(`${API_BASE_URL}/auth/register`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
 
-  return envelope.data;
+  return parseResponse<AuthSession>(response);
 }
 
 export function getMyProfile(accessToken: string) {
