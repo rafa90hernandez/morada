@@ -243,7 +243,9 @@ export default function DiscoveryScreen() {
         {showAdvanced ? (
           <ScrollView style={styles.advancedScroll}>
             <View style={styles.advancedFilters}>
-              <Text style={styles.filterTitle}>Localização e disponibilidade</Text>
+              <Text style={styles.filterTitle}>
+                Localização e disponibilidade
+              </Text>
               <TextInput
                 accessibilityLabel="Condado"
                 onChangeText={setCounty}
@@ -355,12 +357,36 @@ export default function DiscoveryScreen() {
 
               <Text style={styles.filterTitle}>Preferências objetivas</Text>
               <View style={styles.chipWrap}>
-                <ToggleChip label="Mobilado" selected={furnished} setSelected={setFurnished} />
-                <ToggleChip label="Casais" selected={couples} setSelected={setCouples} />
-                <ToggleChip label="Pets" selected={pets} setSelected={setPets} />
-                <ToggleChip label="Fumar" selected={smoking} setSelected={setSmoking} />
-                <ToggleChip label="Famílias" selected={families} setSelected={setFamilies} />
-                <ToggleChip label="Estudantes" selected={students} setSelected={setStudents} />
+                <ToggleChip
+                  label="Mobilado"
+                  selected={furnished}
+                  setSelected={setFurnished}
+                />
+                <ToggleChip
+                  label="Casais"
+                  selected={couples}
+                  setSelected={setCouples}
+                />
+                <ToggleChip
+                  label="Pets"
+                  selected={pets}
+                  setSelected={setPets}
+                />
+                <ToggleChip
+                  label="Fumar"
+                  selected={smoking}
+                  setSelected={setSmoking}
+                />
+                <ToggleChip
+                  label="Famílias"
+                  selected={families}
+                  setSelected={setFamilies}
+                />
+                <ToggleChip
+                  label="Estudantes"
+                  selected={students}
+                  setSelected={setStudents}
+                />
               </View>
 
               <ChoiceRow
@@ -491,7 +517,9 @@ function ChoiceRow<T extends string>({
             key={option.value}
             onPress={() =>
               setSelected(
-                allowClear && selected === option.value ? undefined : option.value,
+                allowClear && selected === option.value
+                  ? undefined
+                  : option.value,
               )
             }
             style={[
