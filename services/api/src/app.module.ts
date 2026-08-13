@@ -41,6 +41,9 @@ import { VisitsModule } from './visits/visits.module';
         DATABASE_URL: Joi.string().required(),
         JWT_ACCESS_SECRET: Joi.string().min(32).required(),
         JWT_REFRESH_SECRET: Joi.string().min(32).required(),
+        PASSWORD_RECOVERY_DEV_TOKEN: Joi.string()
+          .valid('true', 'false')
+          .default('false'),
         CORS_ORIGINS: Joi.string()
           .trim()
           .when('NODE_ENV', {
