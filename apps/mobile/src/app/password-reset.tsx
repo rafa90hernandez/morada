@@ -14,7 +14,10 @@ import { AppButton } from "@/components/ui/AppButton";
 import { colors, radius, spacing } from "@/theme/tokens";
 
 export default function PasswordResetScreen() {
-  const params = useLocalSearchParams<{ token?: string; development?: string }>();
+  const params = useLocalSearchParams<{
+    token?: string;
+    development?: string;
+  }>();
   const [token, setToken] = useState(
     typeof params.token === "string" ? params.token : "",
   );
@@ -67,8 +70,8 @@ export default function PasswordResetScreen() {
 
         {params.development === "true" ? (
           <Text style={styles.notice}>
-            Ambiente de desenvolvimento: o código foi fornecido diretamente
-            pelo backend de teste. Esse comportamento não é habilitado em produção.
+            Ambiente de desenvolvimento: o código foi fornecido diretamente pelo
+            backend de teste. Esse comportamento não é habilitado em produção.
           </Text>
         ) : null}
 
