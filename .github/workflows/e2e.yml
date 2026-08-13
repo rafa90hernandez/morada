@@ -28,6 +28,7 @@ jobs:
           --health-retries 10
     env:
       NODE_ENV: test
+      NODE_OPTIONS: --experimental-vm-modules
       DATABASE_URL: postgresql://morada:morada@localhost:5432/morada_e2e
       JWT_ACCESS_SECRET: e2e-access-secret-00000000000000000000000000000000
       JWT_REFRESH_SECRET: e2e-refresh-secret-0000000000000000000000000000000
