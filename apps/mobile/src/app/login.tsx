@@ -15,7 +15,8 @@ import { colors, radius, spacing } from "@/theme/tokens";
 
 export default function LoginScreen() {
   const params = useLocalSearchParams<{ returnTo?: string }>();
-  const { clearSessionExpired, sessionExpired, signIn, signingIn } = useSession();
+  const { clearSessionExpired, sessionExpired, signIn, signingIn } =
+    useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
