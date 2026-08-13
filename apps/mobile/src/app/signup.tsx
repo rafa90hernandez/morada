@@ -66,8 +66,8 @@ export default function SignupScreen() {
             Criar conta
           </Text>
           <Text style={styles.subtitle}>
-            Comece com seus dados básicos. A confirmação de elegibilidade 18+
-            e os dados privados do perfil são concluídos na sua conta.
+            Comece com seus dados básicos. A confirmação de elegibilidade 18+ e
+            os dados privados do perfil são concluídos na sua conta.
           </Text>
 
           <TextInput
