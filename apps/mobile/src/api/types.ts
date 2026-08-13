@@ -49,6 +49,12 @@ export type ListingCard = {
   expiresAt: string;
 };
 
+export type FavoriteListItem = {
+  favoriteId: string;
+  favoritedAt: string;
+  listing: ListingCard;
+};
+
 export type ListingSearchResponse = {
   items: ListingCard[];
   page: number;
