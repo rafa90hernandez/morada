@@ -20,7 +20,11 @@ import {
 export class PublicListingSearchService {
   constructor(private readonly database: DatabaseService) {}
 
-  async search(query: PublicListingSearchQueryDto, now = new Date()) {
+  async search(
+    query: PublicListingSearchQueryDto,
+    now = new Date(),
+    requesterId?: string,
+  ) {
     const eligibleLifecycle = await this.database.listingLifecycle.findMany({
       where: {
         expiresAt: {
@@ -38,6 +42,14 @@ export class PublicListingSearchService {
       return this.emptyResult(query);
     }
 
+    const blockedOwnerIds = requesterId
+      ? (
+          await this.database.block.findMany({
+            where: { blockerId: requesterId },
+            select: { blockedId: true },
+          })
+        ).map((row) => row.blockedId)
+      : [];
     const eligibleIds = eligibleLifecycle.map((row) => row.listingId);
     const expiryByListingId = new Map(
       eligibleLifecycle.map((row) => [row.listingId, row.expiresAt]),
@@ -48,6 +60,12 @@ export class PublicListingSearchService {
       id: {
         in: eligibleIds,
       },
+      userId:
+        blockedOwnerIds.length > 0
+          ? {
+              notIn: blockedOwnerIds,
+            }
+          : undefined,
       status: ListingStatus.ACTIVE,
       deletedAt: null,
       type: query.listingType ?? {
@@ -100,6 +118,9 @@ export class PublicListingSearchService {
               gte: query.bathroomCountMin,
             }
           : undefined,
+      currentResidentCount: query.currentResidentCount,
+      peopleSharingSpace: query.peopleSharingSpace,
+      peopleSharingBathroom: query.peopleSharingBathroom,
       minimumStayDays:
         query.maxMinimumStayDays !== undefined
           ? {
