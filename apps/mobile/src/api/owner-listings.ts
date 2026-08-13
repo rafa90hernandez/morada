@@ -120,6 +120,27 @@ export type OwnerListingLocationInput = {
   exactLongitude: number;
 };
 
+export type OwnerListingLocation = {
+  listingId: string;
+  city: string | null;
+  area: string | null;
+  county: string | null;
+  postalDistrict: string | null;
+  private: {
+    addressLine1: string;
+    addressLine2: string | null;
+    eircode: string | null;
+    exactLatitude: number;
+    exactLongitude: number;
+  } | null;
+  approximate: {
+    latitude: number;
+    longitude: number;
+    radiusMeters: number;
+    approximationVersion: string;
+  } | null;
+};
+
 export type LocalImageFile = { uri: string; name: string; type: string };
 
 type ApiEnvelope<T> = { success: boolean; data: T; timestamp: string };
@@ -134,14 +155,18 @@ async function request<T>(path: string, accessToken: string, init?: RequestInit)
     },
   });
   if (!response.ok) {
-    const error = new Error(`Morada API request failed with status ${response.status}.`) as Error & {
+    const error = new Error(
+      `Morada API request failed with status ${response.status}.`,
+    ) as Error & {
       status?: number;
     };
     error.status = response.status;
     throw error;
   }
   const envelope = (await response.json()) as ApiEnvelope<T>;
-  if (!envelope.success) throw new Error("Morada API returned an unsuccessful response.");
+  if (!envelope.success) {
+    throw new Error("Morada API returned an unsuccessful response.");
+  }
   return envelope.data;
 }
 
@@ -150,7 +175,10 @@ export function listMyListings(accessToken: string) {
 }
 
 export function getMyListing(id: string, accessToken: string) {
-  return request<OwnerListing>(`/listings/me/${encodeURIComponent(id)}`, accessToken);
+  return request<OwnerListing>(
+    `/listings/me/${encodeURIComponent(id)}`,
+    accessToken,
+  );
 }
 
 export function createListing(input: OwnerListingInput, accessToken: string) {
@@ -161,28 +189,52 @@ export function createListing(input: OwnerListingInput, accessToken: string) {
   });
 }
 
-export function updateListing(id: string, input: Partial<OwnerListingInput>, accessToken: string) {
-  return request<OwnerListing>(`/listings/${encodeURIComponent(id)}`, accessToken, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
-  });
+export function updateListing(
+  id: string,
+  input: Partial<OwnerListingInput>,
+  accessToken: string,
+) {
+  return request<OwnerListing>(
+    `/listings/${encodeURIComponent(id)}`,
+    accessToken,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    },
+  );
 }
 
 export function pauseListing(id: string, accessToken: string) {
-  return request<OwnerListing>(`/listings/${encodeURIComponent(id)}/pause`, accessToken, { method: "POST" });
+  return request<OwnerListing>(
+    `/listings/${encodeURIComponent(id)}/pause`,
+    accessToken,
+    { method: "POST" },
+  );
 }
 
 export function reactivateListing(id: string, accessToken: string) {
-  return request<OwnerListing>(`/listings/${encodeURIComponent(id)}/reactivate`, accessToken, { method: "POST" });
+  return request<OwnerListing>(
+    `/listings/${encodeURIComponent(id)}/reactivate`,
+    accessToken,
+    { method: "POST" },
+  );
 }
 
 export function resubmitListing(id: string, accessToken: string) {
-  return request<OwnerListing>(`/listings/${encodeURIComponent(id)}/resubmit`, accessToken, { method: "POST" });
+  return request<OwnerListing>(
+    `/listings/${encodeURIComponent(id)}/resubmit`,
+    accessToken,
+    { method: "POST" },
+  );
 }
 
 export function renewListing(id: string, accessToken: string) {
-  return request<OwnerListing>(`/listings/${encodeURIComponent(id)}/renew`, accessToken, { method: "POST" });
+  return request<OwnerListing>(
+    `/listings/${encodeURIComponent(id)}/renew`,
+    accessToken,
+    { method: "POST" },
+  );
 }
 
 export function closeListing(
@@ -190,11 +242,15 @@ export function closeListing(
   input: { reason: string; detail?: string },
   accessToken: string,
 ) {
-  return request<OwnerListing>(`/listings/${encodeURIComponent(id)}/close`, accessToken, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
-  });
+  return request<OwnerListing>(
+    `/listings/${encodeURIComponent(id)}/close`,
+    accessToken,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    },
+  );
 }
 
 export function setListingPrivateLocation(
@@ -202,21 +258,29 @@ export function setListingPrivateLocation(
   input: OwnerListingLocationInput,
   accessToken: string,
 ) {
-  return request<unknown>(`/listings/me/${encodeURIComponent(id)}/location`, accessToken, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
-  });
+  return request<OwnerListingLocation>(
+    `/listings/me/${encodeURIComponent(id)}/location`,
+    accessToken,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    },
+  );
 }
 
 export function getListingOwnerLocation(id: string, accessToken: string) {
-  return request<{
-    private: OwnerListingLocationInput | null;
-    public: { latitude: number; longitude: number; radiusMeters: number } | null;
-  }>(`/listings/me/${encodeURIComponent(id)}/location`, accessToken);
+  return request<OwnerListingLocation>(
+    `/listings/me/${encodeURIComponent(id)}/location`,
+    accessToken,
+  );
 }
 
-export function uploadListingPhoto(id: string, file: LocalImageFile, accessToken: string) {
+export function uploadListingPhoto(
+  id: string,
+  file: LocalImageFile,
+  accessToken: string,
+) {
   const form = new FormData();
   form.append("file", file as unknown as Blob);
   return request<{ id: string; url: string; position: number }>(
