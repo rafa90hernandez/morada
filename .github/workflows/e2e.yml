@@ -1,0 +1,74 @@
+name: Critical E2E
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  beta1-journey:
+    name: Beta 1 critical journey
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: morada
+          POSTGRES_PASSWORD: morada
+          POSTGRES_DB: morada_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U morada -d morada_e2e"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      NODE_ENV: test
+      NODE_OPTIONS: --experimental-vm-modules
+      DATABASE_URL: postgresql://morada:morada@localhost:5432/morada_e2e
+      JWT_ACCESS_SECRET: e2e-access-secret-00000000000000000000000000000000
+      JWT_REFRESH_SECRET: e2e-refresh-secret-0000000000000000000000000000000
+      CORS_ORIGINS: http://localhost:19006
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.10.0
+          run_install: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter api generate
+
+      - name: Apply committed migrations to disposable database
+        run: pnpm --filter api exec prisma migrate deploy
+
+      - name: Run critical Beta 1 journey
+        shell: bash
+        run: |
+          set +e
+          output="$(pnpm --filter api exec jest --config ./test/jest-e2e.json --runInBand 2>&1)"
+          status=$?
+          printf '%s\n' "$output"
+          if [ "$status" -ne 0 ]; then
+            message="${output//'%'/'%25'}"
+            message="${message//$'\r'/'%0D'}"
+            message="${message//$'\n'/'%0A'}"
+            echo "::error title=Critical E2E failure::$message"
+            exit "$status"
+          fi
