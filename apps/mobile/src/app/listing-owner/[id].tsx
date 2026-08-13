@@ -1,10 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
 import * as ImagePicker from "expo-image-picker";
 import { router, useLocalSearchParams } from "expo-router";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 import {
-  closeListing,
   getMyListing,
   pauseListing,
   reactivateListing,
@@ -38,7 +43,10 @@ export default function ListingOwnerScreen() {
 
   const load = useCallback(async () => {
     if (!session) {
-      router.replace({ pathname: "/login", params: { returnTo: `/listing-owner/${id}` } });
+      router.replace({
+        pathname: "/login",
+        params: { returnTo: `/listing-owner/${id}` },
+      });
       return;
     }
     setLoading(true);
@@ -61,7 +69,10 @@ export default function ListingOwnerScreen() {
     void load();
   }, [load]);
 
-  const runAction = async (label: string, action: () => Promise<OwnerListing>) => {
+  const runAction = async (
+    label: string,
+    action: () => Promise<OwnerListing>,
+  ) => {
     setBusy(true);
     setError(null);
     setSuccess(null);
@@ -113,7 +124,9 @@ export default function ListingOwnerScreen() {
         router.replace("/login");
         return;
       }
-      setError("Não foi possível enviar a foto. Use uma imagem válida de até 10 MB.");
+      setError(
+        "Não foi possível enviar a foto. Use uma imagem válida de até 10 MB.",
+      );
     } finally {
       setBusy(false);
     }
@@ -141,33 +154,60 @@ export default function ListingOwnerScreen() {
   return (
     <ScrollView contentContainerStyle={styles.content}>
       <View style={styles.card}>
-        <Text accessibilityRole="header" style={styles.title}>{item.title}</Text>
-        <View style={styles.badge}><Text style={styles.badgeText}>{statusLabels[item.status]}</Text></View>
-        <Text style={styles.muted}>{[item.location.area, item.location.city].filter(Boolean).join(" · ") || "Localização ainda não informada"}</Text>
-        {item.moderation.rejectionReason ? <Text style={styles.error}>Correção: {item.moderation.rejectionReason}</Text> : null}
-        {item.moderation.pausedReason ? <Text style={styles.warning}>Pausa: {item.moderation.pausedReason}</Text> : null}
+        <Text accessibilityRole="header" style={styles.title}>
+          {item.title}
+        </Text>
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>{statusLabels[item.status]}</Text>
+        </View>
+        <Text style={styles.muted}>
+          {[item.location.area, item.location.city].filter(Boolean).join(" · ") ||
+            "Localização ainda não informada"}
+        </Text>
+        {item.moderation.rejectionReason ? (
+          <Text style={styles.error}>
+            Correção: {item.moderation.rejectionReason}
+          </Text>
+        ) : null}
+        {item.moderation.pausedReason ? (
+          <Text style={styles.warning}>Pausa: {item.moderation.pausedReason}</Text>
+        ) : null}
       </View>
 
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Conteúdo</Text>
-        <Text style={styles.muted}>{item.photos.length} foto{item.photos.length === 1 ? "" : "s"} cadastrada{item.photos.length === 1 ? "" : "s"}.</Text>
-        <AppButton disabled={busy || item.status === "CLOSED"} label="Adicionar foto" onPress={() => void addPhoto()} variant="secondary" />
+        <Text style={styles.muted}>
+          {item.photos.length} foto{item.photos.length === 1 ? "" : "s"} cadastrada
+          {item.photos.length === 1 ? "" : "s"}.
+        </Text>
+        <AppButton
+          disabled={busy || item.status === "CLOSED"}
+          label="Adicionar foto"
+          onPress={() => void addPhoto()}
+          variant="secondary"
+        />
         <AppButton
           disabled={busy || item.status === "CLOSED"}
           label="Editar informações"
-          onPress={() => router.push({ pathname: "/listing-editor", params: { id } })}
+          onPress={() =>
+            router.push({ pathname: "/listing-editor", params: { id } })
+          }
           variant="secondary"
         />
         <AppButton
           disabled={busy || item.status === "CLOSED"}
           label="Localização privada"
-          onPress={() => router.push({ pathname: "/listing-location", params: { id } })}
+          onPress={() =>
+            router.push({ pathname: "/listing-location", params: { id } })
+          }
           variant="secondary"
         />
         <AppButton
           disabled={busy || item.status === "CLOSED"}
           label="Comprovar autorização"
-          onPress={() => router.push({ pathname: "/listing-authorization", params: { id } })}
+          onPress={() =>
+            router.push({ pathname: "/listing-authorization", params: { id } })
+          }
           variant="secondary"
         />
       </View>
@@ -175,43 +215,111 @@ export default function ListingOwnerScreen() {
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Status do anúncio</Text>
         <Text style={styles.muted}>
-          Moderação, reenvio e renovação são decididos pelo servidor. O app não publica nem aprova anúncios por conta própria.
+          Moderação, reenvio e renovação são decididos pelo servidor. O app não
+          publica nem aprova anúncios por conta própria.
         </Text>
         {item.status === "ACTIVE" ? (
           <>
-            <AppButton disabled={busy} label="Pausar anúncio" onPress={() => void runAction("Anúncio pausado.", () => pauseListing(id, session!.accessToken))} variant="secondary" />
-            <AppButton disabled={busy} label="Renovar anúncio" onPress={() => void runAction("Renovação solicitada.", () => renewListing(id, session!.accessToken))} variant="secondary" />
+            <AppButton
+              disabled={busy}
+              label="Pausar anúncio"
+              onPress={() =>
+                void runAction("Anúncio pausado.", () =>
+                  pauseListing(id, session!.accessToken),
+                )
+              }
+              variant="secondary"
+            />
+            <AppButton
+              disabled={busy}
+              label="Renovar anúncio"
+              onPress={() =>
+                void runAction("Renovação solicitada.", () =>
+                  renewListing(id, session!.accessToken),
+                )
+              }
+              variant="secondary"
+            />
           </>
         ) : null}
         {item.status === "PAUSED" ? (
-          <AppButton disabled={busy} label="Reativar anúncio" onPress={() => void runAction("Anúncio reativado.", () => reactivateListing(id, session!.accessToken))} />
+          <AppButton
+            disabled={busy}
+            label="Reativar anúncio"
+            onPress={() =>
+              void runAction("Anúncio reativado.", () =>
+                reactivateListing(id, session!.accessToken),
+              )
+            }
+          />
         ) : null}
         {item.status === "REJECTED" ? (
-          <AppButton disabled={busy} label="Reenviar para análise" onPress={() => void runAction("Anúncio reenviado para análise.", () => resubmitListing(id, session!.accessToken))} />
+          <AppButton
+            disabled={busy}
+            label="Reenviar para análise"
+            onPress={() =>
+              void runAction("Anúncio reenviado para análise.", () =>
+                resubmitListing(id, session!.accessToken),
+              )
+            }
+          />
         ) : null}
         {item.status !== "CLOSED" ? (
           <AppButton
             disabled={busy}
             label="Encerrar anúncio"
-            onPress={() => void runAction("Anúncio encerrado.", () => closeListing(id, { reason: "STOPPED_ADVERTISING" }, session!.accessToken))}
+            onPress={() =>
+              router.push({ pathname: "/listing-close", params: { id } })
+            }
             variant="secondary"
           />
         ) : null}
-        {error ? <Text accessibilityLiveRegion="polite" style={styles.error}>{error}</Text> : null}
-        {success ? <Text accessibilityLiveRegion="polite" style={styles.success}>{success}</Text> : null}
+        {error ? (
+          <Text accessibilityLiveRegion="polite" style={styles.error}>
+            {error}
+          </Text>
+        ) : null}
+        {success ? (
+          <Text accessibilityLiveRegion="polite" style={styles.success}>
+            {success}
+          </Text>
+        ) : null}
       </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { gap: spacing.md, padding: spacing.lg, paddingBottom: spacing.xxl },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", gap: spacing.md, padding: spacing.xl },
-  card: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.xl, borderWidth: 1, gap: spacing.md, padding: spacing.lg },
+  content: {
+    gap: spacing.md,
+    padding: spacing.lg,
+    paddingBottom: spacing.xxl,
+  },
+  center: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.md,
+    padding: spacing.xl,
+  },
+  card: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    gap: spacing.md,
+    padding: spacing.lg,
+  },
   title: { color: colors.text, fontSize: 25, fontWeight: "900" },
   sectionTitle: { color: colors.text, fontSize: 18, fontWeight: "800" },
   muted: { color: colors.textMuted, lineHeight: 21 },
-  badge: { alignSelf: "flex-start", backgroundColor: colors.primarySoft, borderRadius: radius.pill, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs },
+  badge: {
+    alignSelf: "flex-start",
+    backgroundColor: colors.primarySoft,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
   badgeText: { color: colors.primary, fontWeight: "800" },
   error: { color: colors.danger, lineHeight: 20 },
   warning: { color: colors.warning, lineHeight: 20 },
