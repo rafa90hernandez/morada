@@ -25,6 +25,27 @@ export default function RootLayout() {
           options={{ title: "Verificação de identidade" }}
         />
         <Stack.Screen name="favorites" options={{ title: "Favoritos" }} />
+        <Stack.Screen name="my-listings" options={{ title: "Meus anúncios" }} />
+        <Stack.Screen
+          name="listing-editor"
+          options={{ title: "Editar anúncio" }}
+        />
+        <Stack.Screen
+          name="listing-owner/[id]"
+          options={{ title: "Gerenciar anúncio" }}
+        />
+        <Stack.Screen
+          name="listing-location"
+          options={{ title: "Localização privada" }}
+        />
+        <Stack.Screen
+          name="listing-authorization"
+          options={{ title: "Direito de anunciar" }}
+        />
+        <Stack.Screen
+          name="listing-close"
+          options={{ title: "Encerrar anúncio" }}
+        />
         <Stack.Screen
           name="listing/[id]"
           options={{ title: "Detalhes da moradia" }}
