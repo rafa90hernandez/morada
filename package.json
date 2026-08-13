@@ -7,7 +7,7 @@
     "dev:mobile": "pnpm --filter @morada/mobile start",
     "typecheck:mobile": "pnpm --filter @morada/mobile typecheck",
     "generate": "turbo run generate",
-    "format:diagnose": "prettier --write \"apps/mobile/src/features/listings/**/*.{ts,tsx}\" && git diff -- apps/mobile/src/features/listings",
+    "format:diagnose": "prettier --write \"apps/mobile/src/features/listings/**/*.{ts,tsx}\" && echo __FORMAT_START__ && cat apps/mobile/src/features/listings/ListingTransportFields.tsx && echo __FORMAT_END__",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
