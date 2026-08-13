@@ -14,7 +14,10 @@ import { useSession } from "@/session/SessionContext";
 import { colors, radius, spacing } from "@/theme/tokens";
 
 export default function LoginScreen() {
-  const params = useLocalSearchParams<{ returnTo?: string }>();
+  const params = useLocalSearchParams<{
+    returnTo?: string;
+    passwordReset?: string;
+  }>();
   const { clearSessionExpired, sessionExpired, signIn, signingIn } =
     useSession();
   const [email, setEmail] = useState("");
@@ -68,6 +71,11 @@ export default function LoginScreen() {
             Sua sessão expirou. Entre novamente para continuar com segurança.
           </Text>
         ) : null}
+        {params.passwordReset === "true" ? (
+          <Text accessibilityLiveRegion="polite" style={styles.notice}>
+            Senha alterada. Entre novamente com a nova senha.
+          </Text>
+        ) : null}
 
         <TextInput
           accessibilityLabel="E-mail"
@@ -101,6 +109,11 @@ export default function LoginScreen() {
           disabled={signingIn}
           label={signingIn ? "Entrando..." : "Entrar"}
           onPress={() => void submit()}
+        />
+        <AppButton
+          label="Esqueci minha senha"
+          onPress={() => router.push("/password-recovery")}
+          variant="secondary"
         />
         <AppButton
           label="Criar uma conta"
