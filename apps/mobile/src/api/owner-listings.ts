@@ -9,6 +9,29 @@ export type OwnerListingStatus =
   | "CLOSED"
   | "REJECTED";
 
+export type ListingCloseReason =
+  | "RENTED_VIA_MORADA"
+  | "CLOSED_OUTSIDE_MORADA"
+  | "STOPPED_ADVERTISING"
+  | "PROPERTY_UNAVAILABLE"
+  | "LISTING_MISTAKE"
+  | "OTHER";
+
+export type ListingAuthorizationStatus =
+  | "SUBMITTED"
+  | "UNDER_REVIEW"
+  | "CORRECTION_REQUIRED"
+  | "APPROVED"
+  | "REJECTED"
+  | "CANCELLED";
+
+export type ListingAuthorizationEvidenceField =
+  | "tenancyAgreement"
+  | "landlordAuthorization"
+  | "proofOfOwnership"
+  | "agencyMandate"
+  | "otherSupportingDocument";
+
 export type OwnerPropertyType =
   | "SINGLE_ROOM"
   | "SHARED_ROOM"
@@ -142,6 +165,25 @@ export type OwnerListingLocation = {
 };
 
 export type LocalImageFile = { uri: string; name: string; type: string };
+export type LocalEvidenceFile = LocalImageFile;
+
+export type ListingAuthorizationSubmission = {
+  id: string;
+  listingId: string;
+  status: ListingAuthorizationStatus;
+  submittedAt: string;
+  reviewedAt?: string | null;
+  reviewReason?: string | null;
+  relationshipVerified?: boolean;
+  landlordAuthorizationVerified?: boolean;
+  evidence: Array<{
+    id: string;
+    type: string;
+    mimeType: string;
+    sizeBytes: number;
+    originalFileName: string | null;
+  }>;
+};
 
 type ApiEnvelope<T> = { success: boolean; data: T; timestamp: string };
 
@@ -157,9 +199,7 @@ async function request<T>(path: string, accessToken: string, init?: RequestInit)
   if (!response.ok) {
     const error = new Error(
       `Morada API request failed with status ${response.status}.`,
-    ) as Error & {
-      status?: number;
-    };
+    ) as Error & { status?: number };
     error.status = response.status;
     throw error;
   }
@@ -239,7 +279,7 @@ export function renewListing(id: string, accessToken: string) {
 
 export function closeListing(
   id: string,
-  input: { reason: string; detail?: string },
+  input: { reason: ListingCloseReason; detail?: string },
   accessToken: string,
 ) {
   return request<OwnerListing>(
@@ -285,6 +325,35 @@ export function uploadListingPhoto(
   form.append("file", file as unknown as Blob);
   return request<{ id: string; url: string; position: number }>(
     `/listings/${encodeURIComponent(id)}/photos`,
+    accessToken,
+    { method: "POST", body: form },
+  );
+}
+
+export function getLatestListingAuthorization(
+  id: string,
+  accessToken: string,
+) {
+  return request<ListingAuthorizationSubmission | null>(
+    `/listings/me/${encodeURIComponent(id)}/authorization/latest`,
+    accessToken,
+  );
+}
+
+export function submitListingAuthorization(
+  id: string,
+  evidence: Array<{
+    field: ListingAuthorizationEvidenceField;
+    file: LocalEvidenceFile;
+  }>,
+  accessToken: string,
+) {
+  const form = new FormData();
+  for (const item of evidence) {
+    form.append(item.field, item.file as unknown as Blob);
+  }
+  return request<ListingAuthorizationSubmission>(
+    `/listings/me/${encodeURIComponent(id)}/authorization/submissions`,
     accessToken,
     { method: "POST", body: form },
   );
