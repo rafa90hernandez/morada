@@ -21,4 +21,8 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec prettier apps/mobile/src/features/discovery/DiscoveryScreen.tsx
+      - run: pnpm exec prettier --write apps/mobile/src/features/discovery/DiscoveryScreen.tsx
+      - uses: actions/upload-artifact@v4
+        with:
+          name: formatted-discovery
+          path: apps/mobile/src/features/discovery/DiscoveryScreen.tsx
