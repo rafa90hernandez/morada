@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import {
   KeyboardAvoidingView,
@@ -15,10 +15,18 @@ import { colors, radius, spacing } from "@/theme/tokens";
 
 export default function LoginScreen() {
   const params = useLocalSearchParams<{ returnTo?: string }>();
-  const { signIn, signingIn } = useSession();
+  const { clearSessionExpired, sessionExpired, signIn, signingIn } =
+    useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(
+    () => () => {
+      clearSessionExpired();
+    },
+    [clearSessionExpired],
+  );
 
   const submit = async () => {
     if (!email.trim() || !password) {
@@ -48,12 +56,19 @@ export default function LoginScreen() {
     >
       <View style={styles.card}>
         <Text accessibilityRole="header" style={styles.title}>
-          Entre para conversar com segurança
+          Entre para continuar
         </Text>
         <Text style={styles.subtitle}>
           Sua sessão é usada para acessar apenas suas conversas, visitas e
-          notificações.
+          notificações. O Morada não mostra presença online nem confirmação de
+          leitura nesta beta.
         </Text>
+
+        {sessionExpired ? (
+          <Text accessibilityLiveRegion="polite" style={styles.notice}>
+            Sua sessão expirou. Entre novamente para continuar com segurança.
+          </Text>
+        ) : null}
 
         <TextInput
           accessibilityLabel="E-mail"
@@ -77,8 +92,13 @@ export default function LoginScreen() {
           value={password}
         />
 
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+        {error ? (
+          <Text accessibilityLiveRegion="polite" style={styles.error}>
+            {error}
+          </Text>
+        ) : null}
         <AppButton
+          accessibilityLabel={signingIn ? "Entrando" : "Entrar"}
           disabled={signingIn}
           label={signingIn ? "Entrando..." : "Entrar"}
           onPress={() => void submit()}
@@ -112,6 +132,15 @@ const styles = StyleSheet.create({
   subtitle: {
     color: colors.textMuted,
     lineHeight: 21,
+  },
+  notice: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    backgroundColor: colors.background,
+    color: colors.text,
+    lineHeight: 20,
+    padding: spacing.md,
   },
   input: {
     minHeight: 50,

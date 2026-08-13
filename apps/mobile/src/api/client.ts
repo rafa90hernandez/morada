@@ -21,9 +21,23 @@ type ApiEnvelope<T> = {
   timestamp: string;
 };
 
+type UnauthorizedHandler = () => void;
+
 const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_URL?.replace(/\/$/, "") ??
   "http://localhost:3001/api/v1";
+
+let unauthorizedHandler: UnauthorizedHandler | null = null;
+
+export function setUnauthorizedHandler(handler: UnauthorizedHandler | null) {
+  unauthorizedHandler = handler;
+
+  return () => {
+    if (unauthorizedHandler === handler) {
+      unauthorizedHandler = null;
+    }
+  };
+}
 
 function buildQuery(
   params: Record<string, string | number | boolean | undefined>,
@@ -41,6 +55,11 @@ function buildQuery(
     .join("&")}`;
 }
 
+function hasAuthorizationHeader(headers?: HeadersInit): boolean {
+  if (!headers) return false;
+  return new Headers(headers).has("Authorization");
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
@@ -51,6 +70,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
+    if (response.status === 401 && hasAuthorizationHeader(init?.headers)) {
+      unauthorizedHandler?.();
+    }
+
     const error = new Error(
       `Morada API request failed with status ${response.status}.`,
     ) as Error & { status?: number };
