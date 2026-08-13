@@ -40,7 +40,7 @@ export default function LoginScreen() {
       if (params.returnTo) {
         router.replace(params.returnTo as never);
       } else {
-        router.replace("/conversations");
+        router.replace("/account");
       }
     } catch {
       setError(
@@ -59,9 +59,8 @@ export default function LoginScreen() {
           Entre para continuar
         </Text>
         <Text style={styles.subtitle}>
-          Sua sessão é usada para acessar apenas suas conversas, visitas e
-          notificações. O Morada não mostra presença online nem confirmação de
-          leitura nesta beta.
+          Sua sessão é usada para acessar sua conta e os recursos privados da
+          Beta. O Morada não mostra presença online nem confirmação de leitura.
         </Text>
 
         {sessionExpired ? (
@@ -102,6 +101,11 @@ export default function LoginScreen() {
           disabled={signingIn}
           label={signingIn ? "Entrando..." : "Entrar"}
           onPress={() => void submit()}
+        />
+        <AppButton
+          label="Criar uma conta"
+          onPress={() => router.push("/signup")}
+          variant="secondary"
         />
       </View>
     </KeyboardAvoidingView>

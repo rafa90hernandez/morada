@@ -18,6 +18,8 @@ export default function RootLayout() {
       >
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="login" options={{ title: "Entrar" }} />
+        <Stack.Screen name="signup" options={{ title: "Criar conta" }} />
+        <Stack.Screen name="account" options={{ title: "Minha conta" }} />
         <Stack.Screen
           name="listing/[id]"
           options={{ title: "Detalhes da moradia" }}
