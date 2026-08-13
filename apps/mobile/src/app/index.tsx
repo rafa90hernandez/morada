@@ -84,7 +84,9 @@ export default function DiscoveryScreen() {
         <View style={styles.brandRow}>
           <Text style={styles.brand}>MORADA</Text>
           <Pressable
-            accessibilityLabel={session ? "Abrir minha conta" : "Entrar ou criar conta"}
+            accessibilityLabel={
+              session ? "Abrir minha conta" : "Entrar ou criar conta"
+            }
             accessibilityRole="button"
             onPress={() => router.push(session ? "/account" : "/login")}
             style={styles.accountButton}
