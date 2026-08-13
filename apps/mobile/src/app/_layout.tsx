@@ -23,10 +23,7 @@ export default function RootLayout() {
           name="password-recovery"
           options={{ title: "Recuperar acesso" }}
         />
-        <Stack.Screen
-          name="password-reset"
-          options={{ title: "Nova senha" }}
-        />
+        <Stack.Screen name="password-reset" options={{ title: "Nova senha" }} />
         <Stack.Screen name="account" options={{ title: "Minha conta" }} />
         <Stack.Screen
           name="identity-verification"
