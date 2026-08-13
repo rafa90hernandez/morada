@@ -65,14 +65,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       signOut,
       clearSessionExpired,
     }),
-    [
-      clearSessionExpired,
-      session,
-      sessionExpired,
-      signIn,
-      signOut,
-      signingIn,
-    ],
+    [clearSessionExpired, session, sessionExpired, signIn, signOut, signingIn],
   );
 
   return (
