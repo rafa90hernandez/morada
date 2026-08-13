@@ -24,7 +24,10 @@ export default function FavoritesScreen() {
 
   const load = useCallback(async () => {
     if (!session) {
-      router.replace({ pathname: "/login", params: { returnTo: "/favorites" } });
+      router.replace({
+        pathname: "/login",
+        params: { returnTo: "/favorites" },
+      });
       return;
     }
 
@@ -89,7 +92,10 @@ export default function FavoritesScreen() {
           <Text style={styles.muted}>
             Salve anúncios interessantes para encontrá-los novamente aqui.
           </Text>
-          <AppButton label="Explorar moradias" onPress={() => router.push("/")} />
+          <AppButton
+            label="Explorar moradias"
+            onPress={() => router.push("/")}
+          />
         </View>
       }
       ListHeaderComponent={
