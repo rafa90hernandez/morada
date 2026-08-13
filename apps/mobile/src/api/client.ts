@@ -45,9 +45,7 @@ export function setUnauthorizedHandler(handler: UnauthorizedHandler | null) {
   unauthorizedHandler = handler;
 
   return () => {
-    if (unauthorizedHandler === handler) {
-      unauthorizedHandler = null;
-    }
+    if (unauthorizedHandler === handler) unauthorizedHandler = null;
   };
 }
 
@@ -58,13 +56,7 @@ function buildQuery(
     ([, value]) => value !== undefined,
   );
   if (entries.length === 0) return "";
-
-  return `?${entries
-    .map(
-      ([key, value]) =>
-        `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`,
-    )
-    .join("&")}`;
+  return `?${entries.map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`).join("&")}`;
 }
 
 function hasAuthorizationHeader(headers?: HeadersInit): boolean {
@@ -75,36 +67,25 @@ function hasAuthorizationHeader(headers?: HeadersInit): boolean {
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
-    headers: {
-      Accept: "application/json",
-      ...init?.headers,
-    },
+    headers: { Accept: "application/json", ...init?.headers },
   });
-
   if (!response.ok) {
-    if (response.status === 401 && hasAuthorizationHeader(init?.headers)) {
+    if (response.status === 401 && hasAuthorizationHeader(init?.headers))
       unauthorizedHandler?.();
-    }
-
     const error = new Error(
       `Morada API request failed with status ${response.status}.`,
     ) as Error & { status?: number };
     error.status = response.status;
     throw error;
   }
-
   const envelope = (await response.json()) as ApiEnvelope<T>;
-  if (!envelope.success) {
+  if (!envelope.success)
     throw new Error("Morada API returned an unsuccessful response.");
-  }
-
   return envelope.data;
 }
 
 function authHeaders(accessToken: string) {
-  return {
-    Authorization: `Bearer ${accessToken}`,
-  };
+  return { Authorization: `Bearer ${accessToken}` };
 }
 
 export function searchListings(filters: ListingSearchFilters = {}) {
@@ -142,7 +123,6 @@ export function getListingDetail(id: string) {
     `/discovery/listings/${encodeURIComponent(id)}`,
   );
 }
-
 export function getMapMarkers(bounds: {
   north: number;
   south: number;
@@ -154,7 +134,6 @@ export function getMapMarkers(bounds: {
     `/discovery/map${buildQuery({ ...bounds, limit: bounds.limit ?? 200 })}`,
   );
 }
-
 export function login(email: string, password: string) {
   return request<AuthSession>("/auth/login", {
     method: "POST",
@@ -162,31 +141,24 @@ export function login(email: string, password: string) {
     body: JSON.stringify({ email, password }),
   });
 }
-
 export function startConversation(listingId: string, accessToken: string) {
   return request<Conversation>(
     `/conversations/listings/${encodeURIComponent(listingId)}`,
-    {
-      method: "POST",
-      headers: authHeaders(accessToken),
-    },
+    { method: "POST", headers: authHeaders(accessToken) },
   );
 }
-
 export function listConversations(accessToken: string, cursor?: string) {
   return request<ConversationPage>(
     `/conversations${buildQuery({ cursor, limit: 30 })}`,
     { headers: authHeaders(accessToken) },
   );
 }
-
 export function getConversation(conversationId: string, accessToken: string) {
   return request<Conversation>(
     `/conversations/${encodeURIComponent(conversationId)}`,
     { headers: authHeaders(accessToken) },
   );
 }
-
 export function listMessages(
   conversationId: string,
   accessToken: string,
@@ -197,7 +169,6 @@ export function listMessages(
     { headers: authHeaders(accessToken) },
   );
 }
-
 export function sendTextMessage(
   conversationId: string,
   body: string,
@@ -215,7 +186,6 @@ export function sendTextMessage(
     },
   );
 }
-
 export function uploadMessageAttachment(
   conversationId: string,
   file: LocalMessageAttachmentFile,
@@ -223,17 +193,11 @@ export function uploadMessageAttachment(
 ) {
   const form = new FormData();
   form.append("file", file as unknown as Blob);
-
   return request<MessageAttachmentUploadResult>(
     `/conversations/${encodeURIComponent(conversationId)}/attachments`,
-    {
-      method: "POST",
-      headers: authHeaders(accessToken),
-      body: form,
-    },
+    { method: "POST", headers: authHeaders(accessToken), body: form },
   );
 }
-
 export function listMessageAttachments(
   conversationId: string,
   messageId: string,
@@ -244,19 +208,14 @@ export function listMessageAttachments(
     { headers: authHeaders(accessToken) },
   );
 }
-
 export function listVisits(accessToken: string) {
-  return request<Visit[]>("/visits", {
-    headers: authHeaders(accessToken),
-  });
+  return request<Visit[]>("/visits", { headers: authHeaders(accessToken) });
 }
-
 export function getVisit(visitId: string, accessToken: string) {
   return request<Visit>(`/visits/${encodeURIComponent(visitId)}`, {
     headers: authHeaders(accessToken),
   });
 }
-
 export function proposeVisit(
   conversationId: string,
   startsAt: string,
@@ -275,28 +234,24 @@ export function proposeVisit(
     },
   );
 }
-
 export function acceptVisit(visitId: string, accessToken: string) {
   return request<VisitAcceptance>(
     `/visits/${encodeURIComponent(visitId)}/accept`,
     { method: "POST", headers: authHeaders(accessToken) },
   );
 }
-
 export function declineVisit(visitId: string, accessToken: string) {
   return request<Visit>(`/visits/${encodeURIComponent(visitId)}/decline`, {
     method: "POST",
     headers: authHeaders(accessToken),
   });
 }
-
 export function cancelVisit(visitId: string, accessToken: string) {
   return request<Visit>(`/visits/${encodeURIComponent(visitId)}/cancel`, {
     method: "POST",
     headers: authHeaders(accessToken),
   });
 }
-
 export function replaceVisit(
   visitId: string,
   startsAt: string,
@@ -312,7 +267,6 @@ export function replaceVisit(
     body: JSON.stringify({ startsAt, endsAt }),
   });
 }
-
 export function recordVisitOutcome(
   visitId: string,
   outcome: "COMPLETED" | "NO_SHOW",
@@ -327,27 +281,23 @@ export function recordVisitOutcome(
     body: JSON.stringify({ outcome }),
   });
 }
-
 export function getVisitLocation(visitId: string, accessToken: string) {
   return request<ExactVisitLocation>(
     `/visits/${encodeURIComponent(visitId)}/location`,
     { headers: authHeaders(accessToken) },
   );
 }
-
 export function listNotifications(accessToken: string, cursor?: string) {
   return request<NotificationPage>(
     `/notifications${buildQuery({ cursor, limit: 30 })}`,
     { headers: authHeaders(accessToken) },
   );
 }
-
 export function getUnreadNotificationCount(accessToken: string) {
   return request<{ count: number }>("/notifications/unread-count", {
     headers: authHeaders(accessToken),
   });
 }
-
 export function markNotificationRead(
   notificationId: string,
   accessToken: string,
@@ -357,37 +307,27 @@ export function markNotificationRead(
     { method: "PATCH", headers: authHeaders(accessToken) },
   );
 }
-
 export function markAllNotificationsRead(accessToken: string) {
   return request<{ updated: number }>("/notifications/read-all", {
     method: "PATCH",
     headers: authHeaders(accessToken),
   });
 }
-
 export function listFavorites(accessToken: string) {
   return request<FavoriteListItem[]>("/favorites", {
     headers: authHeaders(accessToken),
   });
 }
-
-export async function addFavorite(listingId: string, accessToken: string) {
+export function addFavorite(listingId: string, accessToken: string) {
   return request<{ id: string; listingId: string; createdAt: string }>(
     `/favorites/${encodeURIComponent(listingId)}`,
-    {
-      method: "POST",
-      headers: authHeaders(accessToken),
-    },
+    { method: "POST", headers: authHeaders(accessToken) },
   );
 }
-
-export async function removeFavorite(listingId: string, accessToken: string) {
+export function removeFavorite(listingId: string, accessToken: string) {
   return request<{ removed: boolean }>(
     `/favorites/${encodeURIComponent(listingId)}`,
-    {
-      method: "DELETE",
-      headers: authHeaders(accessToken),
-    },
+    { method: "DELETE", headers: authHeaders(accessToken) },
   );
 }
 
