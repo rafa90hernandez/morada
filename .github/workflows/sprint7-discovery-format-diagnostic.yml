@@ -1,4 +1,4 @@
-name: Sprint 7 discovery format diagnostic
+name: Sprint 7 discovery type fix
 
 on:
   push:
@@ -6,32 +6,31 @@ on:
       - sprint7/mobile-discovery-favorites
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  prettier-diff:
+  apply-fix:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
         with:
-          version: 11.10.0
-          run_install: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - name: Surface exact Prettier diff
+          ref: sprint7/mobile-discovery-favorites
+      - name: Apply narrow TypeScript fix
         shell: bash
         run: |
-          pnpm --filter @morada/mobile exec prettier --write "src/app/favorites.tsx" "src/app/index.tsx" "src/app/listing/[id].tsx" >/dev/null
-          diff="$(git diff -- apps/mobile/src/app/favorites.tsx apps/mobile/src/app/index.tsx 'apps/mobile/src/app/listing/[id].tsx' || true)"
-          if [ -n "$diff" ]; then
-            message="${diff//'%'/'%25'}"
-            message="${message//$'\r'/'%0D'}"
-            message="${message//$'\n'/'%0A'}"
-            echo "::error title=Sprint 7 discovery Prettier diff::$message"
-            exit 1
-          fi
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('apps/mobile/src/app/index.tsx')
+          text = path.read_text()
+          old = '''                setSelected={setSort}\n                allowClear={false}'''
+          new = '''                setSelected={(value) => {\n                  if (value) setSort(value);\n                }}\n                allowClear={false}'''
+          if old not in text:
+              raise SystemExit('Expected sort selector not found')
+          path.write_text(text.replace(old, new, 1))
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/mobile/src/app/index.tsx
+          git commit -m "fix(mobile): keep sort selector non-nullable"
+          git push origin HEAD:sprint7/mobile-discovery-favorites
