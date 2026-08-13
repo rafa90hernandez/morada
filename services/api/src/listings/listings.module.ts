@@ -4,6 +4,7 @@ import { AdminGuard } from '../auth/guards/admin.guard';
 import { DatabaseModule } from '../database/database.module';
 import { AdminListingLocationController } from './admin-listing-location.controller';
 import { AdminListingRevisionController } from './admin-listing-revision.controller';
+import { AuthenticatedListingSearchController } from './authenticated-listing-search.controller';
 import { FavoritesController } from './favorites.controller';
 import { FavoritesService } from './favorites.service';
 import { ListingAuthorizationController } from './listing-authorization.controller';
@@ -32,6 +33,7 @@ import { PublicMapDiscoveryService } from './public-map-discovery.service';
   imports: [DatabaseModule],
   controllers: [
     PublicListingSearchController,
+    AuthenticatedListingSearchController,
     PublicMapDiscoveryController,
     FavoritesController,
     ListingsController,
