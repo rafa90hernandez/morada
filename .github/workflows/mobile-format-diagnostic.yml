@@ -1,0 +1,37 @@
+name: Mobile format diagnostic
+
+on:
+  push:
+    branches:
+      - sprint6/mobile-closed-beta-polish
+
+permissions:
+  contents: read
+
+jobs:
+  format-diff:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.10.0
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Surface exact Prettier diff
+        shell: bash
+        run: |
+          pnpm --filter @morada/mobile exec prettier --write "src/**/*.{ts,tsx}" >/dev/null
+          diff="$(git diff -- apps/mobile/src || true)"
+          if [ -n "$diff" ]; then
+            message="${diff//'%'/'%25'}"
+            message="${message//$'\r'/'%0D'}"
+            message="${message//$'\n'/'%0A'}"
+            echo "::error title=Mobile Prettier diff::$message"
+            exit 1
+          fi
