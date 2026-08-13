@@ -1,0 +1,28 @@
+name: Recovery format diagnostic
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/recovery-format-diagnostic.yml
+
+permissions:
+  contents: read
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.10.0
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Format changed mobile files and print diff
+        run: |
+          pnpm --filter @morada/mobile exec prettier --write src/api/password-recovery.ts src/app/_layout.tsx src/app/password-recovery.tsx src/app/password-reset.tsx
+          git diff -- apps/mobile/src/api/password-recovery.ts apps/mobile/src/app/_layout.tsx apps/mobile/src/app/password-recovery.tsx apps/mobile/src/app/password-reset.tsx
