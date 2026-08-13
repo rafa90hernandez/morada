@@ -38,6 +38,7 @@ import {
   parseLocalVisitDateTime,
   visitActions,
 } from "@/features/communication/communication-utils";
+import { MessageAttachmentComposer } from "@/features/communication/MessageAttachmentComposer";
 import { useSession } from "@/session/SessionContext";
 import { colors, radius, spacing } from "@/theme/tokens";
 
@@ -495,6 +496,14 @@ export default function ConversationDetailScreen() {
           label={sending ? "Enviando..." : "Enviar mensagem"}
           onPress={() => void send()}
         />
+        {accessToken && params.id ? (
+          <MessageAttachmentComposer
+            accessToken={accessToken}
+            conversationId={params.id}
+            disabled={contactUnavailable || sending}
+            onUploaded={load}
+          />
+        ) : null}
       </View>
 
       <View style={styles.sectionCard}>
