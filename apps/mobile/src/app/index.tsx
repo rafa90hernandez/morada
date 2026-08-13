@@ -393,7 +393,9 @@ export default function DiscoveryScreen() {
                 label="Ordenar"
                 options={sortModes}
                 selected={sort}
-                setSelected={setSort}
+                setSelected={(value) => {
+                  if (value) setSort(value);
+                }}
                 allowClear={false}
               />
               <AppButton label="Aplicar filtros" onPress={() => void load()} />
