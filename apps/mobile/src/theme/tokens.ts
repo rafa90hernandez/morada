@@ -10,6 +10,7 @@ export const colors = {
   border: "#DDE3DE",
   danger: "#B42318",
   warning: "#9A6700",
+  success: "#18794E",
   shadow: "#0B1710",
 } as const;
 
@@ -28,4 +29,5 @@ export const radius = {
   lg: 18,
   xl: 24,
   pill: 999,
+  full: 999,
 } as const;
