@@ -26,6 +26,20 @@ export type PrivateProfile = {
   isStudent: boolean;
 };
 
+export type IdentityDocumentType =
+  | "PASSPORT"
+  | "EU_EEA_NATIONAL_ID"
+  | "DRIVING_LICENCE"
+  | "IRP";
+
+export type IdentityVerificationStatus =
+  | "SUBMITTED"
+  | "UNDER_REVIEW"
+  | "CORRECTION_REQUIRED"
+  | "APPROVED"
+  | "REJECTED"
+  | "CANCELLED";
+
 export type PrivateUser = {
   id: string;
   email: string;
@@ -39,7 +53,7 @@ export type PrivateUser = {
     emailVerifiedAt: string | null;
     phoneVerifiedAt: string | null;
     phoneVerificationProvider: string | null;
-    documentStatus: string | null;
+    documentStatus: IdentityVerificationStatus | null;
     documentSubmittedAt: string | null;
     documentReviewedAt: string | null;
   } | null;
@@ -65,6 +79,22 @@ export type RegisterAccountInput = {
   password: string;
   displayName: string;
   phone?: string;
+};
+
+export type IdentityEvidenceFile = {
+  uri: string;
+  name: string;
+  type: string;
+};
+
+export type IdentitySubmissionResponse = {
+  id: string;
+  documentType: IdentityDocumentType;
+  status: IdentityVerificationStatus;
+  submittedAt: string;
+  evidence: Array<{
+    type: "DOCUMENT_FRONT" | "DOCUMENT_BACK" | "SELFIE_WITH_DOCUMENT";
+  }>;
 };
 
 type ApiEnvelope<T> = {
@@ -133,4 +163,34 @@ export function updateMyProfile(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(update),
   });
+}
+
+export function submitIdentityVerification(
+  accessToken: string,
+  input: {
+    documentType: IdentityDocumentType;
+    documentFront: IdentityEvidenceFile;
+    documentBack?: IdentityEvidenceFile;
+    selfieWithDocument: IdentityEvidenceFile;
+  },
+) {
+  const form = new FormData();
+  form.append("documentType", input.documentType);
+  form.append("documentFront", input.documentFront as unknown as Blob);
+  if (input.documentBack) {
+    form.append("documentBack", input.documentBack as unknown as Blob);
+  }
+  form.append(
+    "selfieWithDocument",
+    input.selfieWithDocument as unknown as Blob,
+  );
+
+  return accountRequest<IdentitySubmissionResponse>(
+    "/users/me/identity-verification/submissions",
+    accessToken,
+    {
+      method: "POST",
+      body: form,
+    },
+  );
 }
