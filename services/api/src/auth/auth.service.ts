@@ -78,11 +78,7 @@ export class AuthService {
       },
     });
 
-    const tokens = await this.generateTokens(
-      user.id,
-      user.email,
-      passwordHash,
-    );
+    const tokens = await this.generateTokens(user.id, user.email, passwordHash);
 
     await this.storeRefreshTokenHash(user.id, tokens.refreshToken);
 
@@ -363,15 +359,13 @@ export class AuthService {
       this.configService.getOrThrow<string>('JWT_REFRESH_SECRET');
 
     try {
-      const payload = await this.jwtService.verifyAsync<PasswordRecoveryPayload>(
-        token,
-        { secret: refreshSecret },
-      );
+      const payload =
+        await this.jwtService.verifyAsync<PasswordRecoveryPayload>(token, {
+          secret: refreshSecret,
+        });
 
       if (payload.kind !== 'password-recovery') {
-        throw new UnauthorizedException(
-          'Invalid or expired recovery token.',
-        );
+        throw new UnauthorizedException('Invalid or expired recovery token.');
       }
 
       return payload;
