@@ -22,6 +22,7 @@ describe('PublicListingSearchService', () => {
   const lifecycleFindMany = jest.fn();
   const listingCount = jest.fn();
   const listingFindMany = jest.fn();
+  const blockFindMany = jest.fn();
 
   const service = new PublicListingSearchService({
     listingLifecycle: {
@@ -30,6 +31,9 @@ describe('PublicListingSearchService', () => {
     listing: {
       count: listingCount,
       findMany: listingFindMany,
+    },
+    block: {
+      findMany: blockFindMany,
     },
   } as never);
 
@@ -41,6 +45,7 @@ describe('PublicListingSearchService', () => {
         expiresAt: new Date('2026-08-20T16:00:00.000Z'),
       },
     ]);
+    blockFindMany.mockResolvedValue([]);
     listingCount.mockResolvedValue(1);
     listingFindMany.mockResolvedValue([
       {
@@ -93,6 +98,9 @@ describe('PublicListingSearchService', () => {
       billsIncludedType: BillsIncludedType.NO,
       furnished: true,
       couplesAllowed: false,
+      currentResidentCount: 3,
+      peopleSharingSpace: 1,
+      peopleSharingBathroom: 2,
       page: 1,
       limit: 20,
     });
@@ -128,8 +136,33 @@ describe('PublicListingSearchService', () => {
         billsIncludedType: BillsIncludedType.NO,
         furnished: true,
         couplesAllowed: false,
+        currentResidentCount: 3,
+        peopleSharingSpace: 1,
+        peopleSharingBathroom: 2,
       }),
     );
+    expect(blockFindMany).not.toHaveBeenCalled();
+  });
+
+  it('suppresses listings owned by users blocked by the authenticated requester', async () => {
+    blockFindMany.mockResolvedValue([
+      { blockedId: 'blocked-owner-1' },
+      { blockedId: 'blocked-owner-2' },
+    ]);
+
+    await service.search(new PublicListingSearchQueryDto(), now, 'requester-1');
+
+    expect(blockFindMany).toHaveBeenCalledWith({
+      where: { blockerId: 'requester-1' },
+      select: { blockedId: true },
+    });
+
+    const findArgs = listingFindMany.mock.calls[0]?.[0] as {
+      where: Record<string, unknown>;
+    };
+    expect(findArgs.where.userId).toEqual({
+      notIn: ['blocked-owner-1', 'blocked-owner-2'],
+    });
   });
 
   it('uses deterministic relevance ordering without renewal metadata', async () => {
@@ -200,5 +233,6 @@ describe('PublicListingSearchService', () => {
 
     expect(listingCount).not.toHaveBeenCalled();
     expect(listingFindMany).not.toHaveBeenCalled();
+    expect(blockFindMany).not.toHaveBeenCalled();
   });
 });
