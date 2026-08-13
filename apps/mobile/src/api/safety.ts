@@ -31,7 +31,11 @@ export type OwnBlock = {
 
 type ApiEnvelope<T> = { success: boolean; data: T; timestamp: string };
 
-async function request<T>(path: string, accessToken: string, init?: RequestInit) {
+async function request<T>(
+  path: string,
+  accessToken: string,
+  init?: RequestInit,
+) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
     headers: {

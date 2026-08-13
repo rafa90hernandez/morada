@@ -193,6 +193,23 @@ export default function ListingDetailScreen() {
           </Text>
         ) : null}
         <AppButton
+          label={session ? "Denunciar anúncio" : "Entrar para denunciar"}
+          onPress={() => {
+            if (!session) {
+              router.push({
+                pathname: "/login",
+                params: { returnTo: `/listing/${params.id}` },
+              });
+              return;
+            }
+            router.push({
+              pathname: "/report",
+              params: { listingId: params.id, context: "este anúncio" },
+            });
+          }}
+          variant="secondary"
+        />
+        <AppButton
           disabled={favoriteLoading}
           label={
             favoriteLoading

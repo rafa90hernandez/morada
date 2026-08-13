@@ -33,7 +33,8 @@ export default function ReportScreen() {
   const [sent, setSent] = useState(false);
 
   const context = useMemo(
-    () => (typeof params.context === "string" ? params.context : "este conteúdo"),
+    () =>
+      typeof params.context === "string" ? params.context : "este conteúdo",
     [params.context],
   );
 
@@ -145,7 +146,10 @@ export default function ReportScreen() {
   );
 }
 
-function Field({ label, ...props }: { label: string } & ComponentProps<typeof TextInput>) {
+function Field({
+  label,
+  ...props
+}: { label: string } & ComponentProps<typeof TextInput>) {
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
@@ -193,6 +197,10 @@ const styles = StyleSheet.create({
     minHeight: 48,
     paddingHorizontal: spacing.md,
   },
-  multiline: { minHeight: 110, paddingTop: spacing.md, textAlignVertical: "top" },
+  multiline: {
+    minHeight: 110,
+    paddingTop: spacing.md,
+    textAlignVertical: "top",
+  },
   error: { color: colors.danger, lineHeight: 20 },
 });
