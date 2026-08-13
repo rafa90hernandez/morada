@@ -136,6 +136,9 @@ export type ListingSearchFilters = {
   studentsAllowed?: boolean;
   bedroomCountMin?: number;
   bathroomCountMin?: number;
+  currentResidentCount?: number;
+  peopleSharingSpace?: number;
+  peopleSharingBathroom?: number;
   maxMinimumStayDays?: number;
   sort?: ListingSearchResponse["sort"];
 };

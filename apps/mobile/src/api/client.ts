@@ -88,33 +88,50 @@ function authHeaders(accessToken: string) {
   return { Authorization: `Bearer ${accessToken}` };
 }
 
+function listingSearchQuery(filters: ListingSearchFilters) {
+  return buildQuery({
+    county: filters.county,
+    city: filters.city,
+    area: filters.area,
+    listingType: filters.listingType,
+    propertyType: filters.propertyType,
+    propertyOccupancyType: filters.propertyOccupancyType,
+    advertisedSpaceType: filters.advertisedSpaceType,
+    bathroomType: filters.bathroomType,
+    billsIncludedType: filters.billsIncludedType,
+    maxPriceCents: filters.maxPriceCents,
+    availableOn: filters.availableOn,
+    furnished: filters.furnished,
+    couplesAllowed: filters.couplesAllowed,
+    petsAllowed: filters.petsAllowed,
+    smokingAllowed: filters.smokingAllowed,
+    childrenFamiliesAllowed: filters.childrenFamiliesAllowed,
+    studentsAllowed: filters.studentsAllowed,
+    bedroomCountMin: filters.bedroomCountMin,
+    bathroomCountMin: filters.bathroomCountMin,
+    currentResidentCount: filters.currentResidentCount,
+    peopleSharingSpace: filters.peopleSharingSpace,
+    peopleSharingBathroom: filters.peopleSharingBathroom,
+    maxMinimumStayDays: filters.maxMinimumStayDays,
+    sort: filters.sort,
+    page: 1,
+    limit: 30,
+  });
+}
+
 export function searchListings(filters: ListingSearchFilters = {}) {
   return request<ListingSearchResponse>(
-    `/discovery/listings${buildQuery({
-      county: filters.county,
-      city: filters.city,
-      area: filters.area,
-      listingType: filters.listingType,
-      propertyType: filters.propertyType,
-      propertyOccupancyType: filters.propertyOccupancyType,
-      advertisedSpaceType: filters.advertisedSpaceType,
-      bathroomType: filters.bathroomType,
-      billsIncludedType: filters.billsIncludedType,
-      maxPriceCents: filters.maxPriceCents,
-      availableOn: filters.availableOn,
-      furnished: filters.furnished,
-      couplesAllowed: filters.couplesAllowed,
-      petsAllowed: filters.petsAllowed,
-      smokingAllowed: filters.smokingAllowed,
-      childrenFamiliesAllowed: filters.childrenFamiliesAllowed,
-      studentsAllowed: filters.studentsAllowed,
-      bedroomCountMin: filters.bedroomCountMin,
-      bathroomCountMin: filters.bathroomCountMin,
-      maxMinimumStayDays: filters.maxMinimumStayDays,
-      sort: filters.sort,
-      page: 1,
-      limit: 30,
-    })}`,
+    `/discovery/listings${listingSearchQuery(filters)}`,
+  );
+}
+
+export function searchListingsAuthenticated(
+  filters: ListingSearchFilters,
+  accessToken: string,
+) {
+  return request<ListingSearchResponse>(
+    `/discovery/me/listings${listingSearchQuery(filters)}`,
+    { headers: authHeaders(accessToken) },
   );
 }
 
