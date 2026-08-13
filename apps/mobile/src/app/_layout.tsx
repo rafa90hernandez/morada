@@ -20,6 +20,10 @@ export default function RootLayout() {
         <Stack.Screen name="login" options={{ title: "Entrar" }} />
         <Stack.Screen name="signup" options={{ title: "Criar conta" }} />
         <Stack.Screen name="account" options={{ title: "Minha conta" }} />
+        <Stack.Screen
+          name="identity-verification"
+          options={{ title: "Verificação de identidade" }}
+        />
         <Stack.Screen name="favorites" options={{ title: "Favoritos" }} />
         <Stack.Screen
           name="listing/[id]"

@@ -261,6 +261,11 @@ export default function AccountScreen() {
         <Text style={styles.sectionTitle}>Atalhos</Text>
         <AppButton label="Explorar moradias" onPress={() => router.push("/")} />
         <AppButton
+          label="Verificação de identidade"
+          onPress={() => router.push("/identity-verification")}
+          variant="secondary"
+        />
+        <AppButton
           label="Conversas"
           onPress={() => router.push("/conversations")}
           variant="secondary"
