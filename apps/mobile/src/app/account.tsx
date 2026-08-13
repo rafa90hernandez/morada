@@ -266,6 +266,11 @@ export default function AccountScreen() {
           variant="secondary"
         />
         <AppButton
+          label="Meus anúncios"
+          onPress={() => router.push("/my-listings")}
+          variant="secondary"
+        />
+        <AppButton
           label="Conversas"
           onPress={() => router.push("/conversations")}
           variant="secondary"

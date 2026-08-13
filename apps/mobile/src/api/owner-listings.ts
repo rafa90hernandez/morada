@@ -2,12 +2,7 @@ import { API_BASE_URL } from "./client";
 
 export type OwnerListingType = "RENTAL" | "TRANSFER";
 export type OwnerListingStatus =
-  | "DRAFT"
-  | "PENDING_REVIEW"
-  | "ACTIVE"
-  | "PAUSED"
-  | "CLOSED"
-  | "REJECTED";
+  "DRAFT" | "PENDING_REVIEW" | "ACTIVE" | "PAUSED" | "CLOSED" | "REJECTED";
 
 export type ListingCloseReason =
   | "RENTED_VIA_MORADA"
@@ -187,7 +182,11 @@ export type ListingAuthorizationSubmission = {
 
 type ApiEnvelope<T> = { success: boolean; data: T; timestamp: string };
 
-async function request<T>(path: string, accessToken: string, init?: RequestInit) {
+async function request<T>(
+  path: string,
+  accessToken: string,
+  init?: RequestInit,
+) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
     headers: {
@@ -330,10 +329,7 @@ export function uploadListingPhoto(
   );
 }
 
-export function getLatestListingAuthorization(
-  id: string,
-  accessToken: string,
-) {
+export function getLatestListingAuthorization(id: string, accessToken: string) {
   return request<ListingAuthorizationSubmission | null>(
     `/listings/me/${encodeURIComponent(id)}/authorization/latest`,
     accessToken,

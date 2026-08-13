@@ -161,8 +161,9 @@ export default function ListingOwnerScreen() {
           <Text style={styles.badgeText}>{statusLabels[item.status]}</Text>
         </View>
         <Text style={styles.muted}>
-          {[item.location.area, item.location.city].filter(Boolean).join(" · ") ||
-            "Localização ainda não informada"}
+          {[item.location.area, item.location.city]
+            .filter(Boolean)
+            .join(" · ") || "Localização ainda não informada"}
         </Text>
         {item.moderation.rejectionReason ? (
           <Text style={styles.error}>
@@ -170,14 +171,17 @@ export default function ListingOwnerScreen() {
           </Text>
         ) : null}
         {item.moderation.pausedReason ? (
-          <Text style={styles.warning}>Pausa: {item.moderation.pausedReason}</Text>
+          <Text style={styles.warning}>
+            Pausa: {item.moderation.pausedReason}
+          </Text>
         ) : null}
       </View>
 
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Conteúdo</Text>
         <Text style={styles.muted}>
-          {item.photos.length} foto{item.photos.length === 1 ? "" : "s"} cadastrada
+          {item.photos.length} foto{item.photos.length === 1 ? "" : "s"}{" "}
+          cadastrada
           {item.photos.length === 1 ? "" : "s"}.
         </Text>
         <AppButton

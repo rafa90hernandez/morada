@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import * as DocumentPicker from "expo-document-picker";
 import { router, useLocalSearchParams } from "expo-router";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 import {
   getLatestListingAuthorization,
@@ -22,10 +28,22 @@ type EvidenceSelection = {
 
 const initialEvidence: EvidenceSelection[] = [
   { field: "tenancyAgreement", label: "Contrato de aluguel", file: null },
-  { field: "landlordAuthorization", label: "Autorização do landlord", file: null },
-  { field: "proofOfOwnership", label: "Comprovante de propriedade", file: null },
+  {
+    field: "landlordAuthorization",
+    label: "Autorização do landlord",
+    file: null,
+  },
+  {
+    field: "proofOfOwnership",
+    label: "Comprovante de propriedade",
+    file: null,
+  },
   { field: "agencyMandate", label: "Mandato da agência", file: null },
-  { field: "otherSupportingDocument", label: "Outro documento de apoio", file: null },
+  {
+    field: "otherSupportingDocument",
+    label: "Outro documento de apoio",
+    file: null,
+  },
 ];
 
 function statusCopy(status: ListingAuthorizationStatus | null | undefined) {
@@ -48,14 +66,17 @@ function statusCopy(status: ListingAuthorizationStatus | null | undefined) {
 }
 
 function canSubmit(status: ListingAuthorizationStatus | null | undefined) {
-  return !status || ["CORRECTION_REQUIRED", "REJECTED", "CANCELLED"].includes(status);
+  return (
+    !status || ["CORRECTION_REQUIRED", "REJECTED", "CANCELLED"].includes(status)
+  );
 }
 
 export default function ListingAuthorizationScreen() {
   const params = useLocalSearchParams<{ id?: string }>();
   const id = typeof params.id === "string" ? params.id : "";
   const { session, signOut } = useSession();
-  const [evidence, setEvidence] = useState<EvidenceSelection[]>(initialEvidence);
+  const [evidence, setEvidence] =
+    useState<EvidenceSelection[]>(initialEvidence);
   const [status, setStatus] = useState<ListingAuthorizationStatus | null>(null);
   const [reviewReason, setReviewReason] = useState<string | null>(null);
   const [submittedFiles, setSubmittedFiles] = useState<string[]>([]);
@@ -76,11 +97,15 @@ export default function ListingAuthorizationScreen() {
     setLoading(true);
     setError(null);
     try {
-      const latest = await getLatestListingAuthorization(id, session.accessToken);
+      const latest = await getLatestListingAuthorization(
+        id,
+        session.accessToken,
+      );
       setStatus(latest?.status ?? null);
       setReviewReason(latest?.reviewReason ?? null);
       setSubmittedFiles(
-        latest?.evidence.map((item) => item.originalFileName ?? item.type) ?? [],
+        latest?.evidence.map((item) => item.originalFileName ?? item.type) ??
+          [],
       );
     } catch (caught) {
       if ((caught as Error & { status?: number }).status === 401) {
@@ -131,10 +156,14 @@ export default function ListingAuthorizationScreen() {
   const submit = async () => {
     if (!session || !id) return;
     const selected = evidence
-      .filter((item): item is EvidenceSelection & { file: LocalEvidenceFile } => Boolean(item.file))
+      .filter((item): item is EvidenceSelection & { file: LocalEvidenceFile } =>
+        Boolean(item.file),
+      )
       .map((item) => ({ field: item.field, file: item.file }));
     if (selected.length === 0) {
-      setError("Selecione pelo menos um documento que comprove seu direito de anunciar.");
+      setError(
+        "Selecione pelo menos um documento que comprove seu direito de anunciar.",
+      );
       return;
     }
 
@@ -142,10 +171,16 @@ export default function ListingAuthorizationScreen() {
     setSubmitted(false);
     setError(null);
     try {
-      const result = await submitListingAuthorization(id, selected, session.accessToken);
+      const result = await submitListingAuthorization(
+        id,
+        selected,
+        session.accessToken,
+      );
       clearLocalEvidence();
       setStatus(result.status);
-      setSubmittedFiles(result.evidence.map((item) => item.originalFileName ?? item.type));
+      setSubmittedFiles(
+        result.evidence.map((item) => item.originalFileName ?? item.type),
+      );
       setSubmitted(true);
     } catch (caught) {
       const code = (caught as Error & { status?: number }).status;
@@ -155,11 +190,17 @@ export default function ListingAuthorizationScreen() {
         return;
       }
       if (code === 409) {
-        setError("Já existe uma comprovação em andamento ou aprovada para este anúncio.");
+        setError(
+          "Já existe uma comprovação em andamento ou aprovada para este anúncio.",
+        );
       } else if (code === 403) {
-        setError("Este anúncio ou sua conta não está elegível para enviar comprovação agora.");
+        setError(
+          "Este anúncio ou sua conta não está elegível para enviar comprovação agora.",
+        );
       } else {
-        setError("Não foi possível enviar os documentos. Confira os formatos e tente novamente.");
+        setError(
+          "Não foi possível enviar os documentos. Confira os formatos e tente novamente.",
+        );
       }
     } finally {
       setSubmitting(false);
@@ -180,11 +221,17 @@ export default function ListingAuthorizationScreen() {
   return (
     <ScrollView contentContainerStyle={styles.content}>
       <View style={styles.card}>
-        <Text accessibilityRole="header" style={styles.title}>Direito de anunciar</Text>
+        <Text accessibilityRole="header" style={styles.title}>
+          Direito de anunciar
+        </Text>
         <Text style={styles.muted}>{statusCopy(status)}</Text>
-        {reviewReason ? <Text style={styles.warning}>Revisão: {reviewReason}</Text> : null}
+        {reviewReason ? (
+          <Text style={styles.warning}>Revisão: {reviewReason}</Text>
+        ) : null}
         <Text style={styles.helper}>
-          Esses arquivos são evidências privadas. O app mostra apenas tipo, nome e estado da análise — nunca object keys, hashes ou URLs privadas de armazenamento.
+          Esses arquivos são evidências privadas. O app mostra apenas tipo, nome
+          e estado da análise — nunca object keys, hashes ou URLs privadas de
+          armazenamento.
         </Text>
       </View>
 
@@ -192,7 +239,9 @@ export default function ListingAuthorizationScreen() {
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Arquivos da última tentativa</Text>
           {submittedFiles.map((name, index) => (
-            <Text key={`${name}-${index}`} style={styles.muted}>• {name}</Text>
+            <Text key={`${name}-${index}`} style={styles.muted}>
+              • {name}
+            </Text>
           ))}
         </View>
       ) : null}
@@ -200,25 +249,49 @@ export default function ListingAuthorizationScreen() {
       {submissionAllowed ? (
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Selecione os comprovantes</Text>
-          <Text style={styles.helper}>PDF, JPEG, PNG ou WebP. Até 5 arquivos no total e 10 MB por arquivo.</Text>
+          <Text style={styles.helper}>
+            PDF, JPEG, PNG ou WebP. Até 5 arquivos no total e 10 MB por arquivo.
+          </Text>
           {evidence.map((item) => (
             <View key={item.field} style={styles.evidenceRow}>
               <View style={styles.evidenceCopy}>
                 <Text style={styles.evidenceLabel}>{item.label}</Text>
-                <Text style={styles.muted}>{item.file?.name ?? "Nenhum arquivo selecionado"}</Text>
+                <Text style={styles.muted}>
+                  {item.file?.name ?? "Nenhum arquivo selecionado"}
+                </Text>
               </View>
-              <AppButton label={item.file ? "Trocar" : "Selecionar"} onPress={() => void pick(item.field)} variant="secondary" />
+              <AppButton
+                label={item.file ? "Trocar" : "Selecionar"}
+                onPress={() => void pick(item.field)}
+                variant="secondary"
+              />
             </View>
           ))}
-          {error ? <Text accessibilityLiveRegion="polite" style={styles.error}>{error}</Text> : null}
-          {submitted ? <Text accessibilityLiveRegion="polite" style={styles.success}>Comprovação enviada para análise.</Text> : null}
-          <AppButton disabled={submitting} label={submitting ? "Enviando..." : "Enviar comprovação"} onPress={() => void submit()} />
+          {error ? (
+            <Text accessibilityLiveRegion="polite" style={styles.error}>
+              {error}
+            </Text>
+          ) : null}
+          {submitted ? (
+            <Text accessibilityLiveRegion="polite" style={styles.success}>
+              Comprovação enviada para análise.
+            </Text>
+          ) : null}
+          <AppButton
+            disabled={submitting}
+            label={submitting ? "Enviando..." : "Enviar comprovação"}
+            onPress={() => void submit()}
+          />
         </View>
       ) : (
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Nenhum envio necessário agora</Text>
           <Text style={styles.muted}>{statusCopy(status)}</Text>
-          <AppButton label="Atualizar estado" onPress={() => void load()} variant="secondary" />
+          <AppButton
+            label="Atualizar estado"
+            onPress={() => void load()}
+            variant="secondary"
+          />
         </View>
       )}
     </ScrollView>
@@ -227,14 +300,32 @@ export default function ListingAuthorizationScreen() {
 
 const styles = StyleSheet.create({
   content: { gap: spacing.md, padding: spacing.lg, paddingBottom: spacing.xxl },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", gap: spacing.md, padding: spacing.xl },
-  card: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.xl, borderWidth: 1, gap: spacing.md, padding: spacing.lg },
+  center: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.md,
+    padding: spacing.xl,
+  },
+  card: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    gap: spacing.md,
+    padding: spacing.lg,
+  },
   title: { color: colors.text, fontSize: 25, fontWeight: "900" },
   sectionTitle: { color: colors.text, fontSize: 18, fontWeight: "800" },
   muted: { color: colors.textMuted, lineHeight: 21 },
   helper: { color: colors.textMuted, fontSize: 13, lineHeight: 19 },
   warning: { color: colors.warning, lineHeight: 20 },
-  evidenceRow: { alignItems: "center", flexDirection: "row", gap: spacing.md, justifyContent: "space-between" },
+  evidenceRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: spacing.md,
+    justifyContent: "space-between",
+  },
   evidenceCopy: { flex: 1, gap: 2 },
   evidenceLabel: { color: colors.text, fontWeight: "700" },
   error: { color: colors.danger, lineHeight: 20 },

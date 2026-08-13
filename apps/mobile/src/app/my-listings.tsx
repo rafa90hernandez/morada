@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { router } from "expo-router";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 import { listMyListings, type OwnerListing } from "@/api/owner-listings";
 import { AppButton } from "@/components/ui/AppButton";
@@ -24,7 +30,10 @@ export default function MyListingsScreen() {
 
   const load = useCallback(async () => {
     if (!session) {
-      router.replace({ pathname: "/login", params: { returnTo: "/my-listings" } });
+      router.replace({
+        pathname: "/login",
+        params: { returnTo: "/my-listings" },
+      });
       return;
     }
     setLoading(true);
@@ -54,9 +63,14 @@ export default function MyListingsScreen() {
           <Text accessibilityRole="header" style={styles.title}>
             Meus anúncios
           </Text>
-          <Text style={styles.muted}>Crie, acompanhe e gerencie suas moradias.</Text>
+          <Text style={styles.muted}>
+            Crie, acompanhe e gerencie suas moradias.
+          </Text>
         </View>
-        <AppButton label="Novo anúncio" onPress={() => router.push("/listing-editor")} />
+        <AppButton
+          label="Novo anúncio"
+          onPress={() => router.push("/listing-editor")}
+        />
       </View>
 
       {loading ? (
@@ -69,7 +83,11 @@ export default function MyListingsScreen() {
       {!loading && error ? (
         <View style={styles.state}>
           <Text style={styles.error}>{error}</Text>
-          <AppButton label="Tentar novamente" onPress={() => void load()} variant="secondary" />
+          <AppButton
+            label="Tentar novamente"
+            onPress={() => void load()}
+            variant="secondary"
+          />
         </View>
       ) : null}
 
@@ -77,9 +95,13 @@ export default function MyListingsScreen() {
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Você ainda não anunciou</Text>
           <Text style={styles.muted}>
-            O anúncio entra em análise antes de ficar visível para outras pessoas.
+            O anúncio entra em análise antes de ficar visível para outras
+            pessoas.
           </Text>
-          <AppButton label="Criar primeiro anúncio" onPress={() => router.push("/listing-editor")} />
+          <AppButton
+            label="Criar primeiro anúncio"
+            onPress={() => router.push("/listing-editor")}
+          />
         </View>
       ) : null}
 
@@ -92,7 +114,9 @@ export default function MyListingsScreen() {
             </View>
           </View>
           <Text style={styles.muted}>
-            {[item.location.area, item.location.city].filter(Boolean).join(" · ") || "Localização não informada"}
+            {[item.location.area, item.location.city]
+              .filter(Boolean)
+              .join(" · ") || "Localização não informada"}
           </Text>
           <Text style={styles.meta}>
             {item.pricing.monthlyPriceCents === null
@@ -101,11 +125,18 @@ export default function MyListingsScreen() {
             {` · ${item.photos.length} foto${item.photos.length === 1 ? "" : "s"}`}
           </Text>
           {item.moderation.rejectionReason ? (
-            <Text style={styles.error}>Motivo: {item.moderation.rejectionReason}</Text>
+            <Text style={styles.error}>
+              Motivo: {item.moderation.rejectionReason}
+            </Text>
           ) : null}
           <AppButton
             label="Gerenciar anúncio"
-            onPress={() => router.push({ pathname: "/listing-owner/[id]", params: { id: item.id } })}
+            onPress={() =>
+              router.push({
+                pathname: "/listing-owner/[id]",
+                params: { id: item.id },
+              })
+            }
             variant="secondary"
           />
         </View>
@@ -133,7 +164,12 @@ const styles = StyleSheet.create({
   },
   state: { alignItems: "center", gap: spacing.md, paddingVertical: spacing.xl },
   row: { alignItems: "center", flexDirection: "row", gap: spacing.sm },
-  badge: { backgroundColor: colors.primarySoft, borderRadius: radius.pill, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs },
+  badge: {
+    backgroundColor: colors.primarySoft,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
   badgeText: { color: colors.primary, fontSize: 12, fontWeight: "800" },
   error: { color: colors.danger, lineHeight: 20 },
 });

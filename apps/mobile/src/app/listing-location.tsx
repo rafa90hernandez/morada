@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useState, type ComponentProps } from "react";
 import { router, useLocalSearchParams } from "expo-router";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
 import {
   getListingOwnerLocation,
@@ -45,8 +52,12 @@ export default function ListingLocationScreen() {
       setAddressLine1(location.private?.addressLine1 ?? "");
       setAddressLine2(location.private?.addressLine2 ?? "");
       setEircode(location.private?.eircode ?? "");
-      setLatitude(location.private ? String(location.private.exactLatitude) : "");
-      setLongitude(location.private ? String(location.private.exactLongitude) : "");
+      setLatitude(
+        location.private ? String(location.private.exactLatitude) : "",
+      );
+      setLongitude(
+        location.private ? String(location.private.exactLongitude) : "",
+      );
       setApproximateText(
         location.approximate
           ? `O público verá apenas uma área aproximada de ${location.approximate.radiusMeters} m.`
@@ -76,7 +87,12 @@ export default function ListingLocationScreen() {
     if (!session || !id) return;
     const exactLatitude = Number(latitude.replace(",", "."));
     const exactLongitude = Number(longitude.replace(",", "."));
-    if (!city.trim() || !area.trim() || !county.trim() || !addressLine1.trim()) {
+    if (
+      !city.trim() ||
+      !area.trim() ||
+      !county.trim() ||
+      !addressLine1.trim()
+    ) {
       setError("Informe cidade, área, county e endereço.");
       return;
     }
@@ -116,7 +132,9 @@ export default function ListingLocationScreen() {
         router.replace("/login");
         return;
       }
-      setError("Não foi possível salvar a localização. Confira os dados e tente novamente.");
+      setError(
+        "Não foi possível salvar a localização. Confira os dados e tente novamente.",
+      );
     } finally {
       setSaving(false);
     }
@@ -134,12 +152,16 @@ export default function ListingLocationScreen() {
   return (
     <ScrollView contentContainerStyle={styles.content}>
       <View style={styles.card}>
-        <Text accessibilityRole="header" style={styles.title}>Localização privada</Text>
+        <Text accessibilityRole="header" style={styles.title}>
+          Localização privada
+        </Text>
         <Text style={styles.muted}>
-          O endereço e as coordenadas exatas ficam restritos. O backend deriva uma localização pública aproximada separada.
+          O endereço e as coordenadas exatas ficam restritos. O backend deriva
+          uma localização pública aproximada separada.
         </Text>
         <Text style={styles.warning}>
-          Alterar a localização de um anúncio já aprovado é uma mudança crítica e pode enviá-lo novamente para análise.
+          Alterar a localização de um anúncio já aprovado é uma mudança crítica
+          e pode enviá-lo novamente para análise.
         </Text>
       </View>
 
@@ -147,22 +169,66 @@ export default function ListingLocationScreen() {
         <Field label="Cidade" value={city} onChangeText={setCity} />
         <Field label="Área / bairro" value={area} onChangeText={setArea} />
         <Field label="County" value={county} onChangeText={setCounty} />
-        <Field label="Distrito postal" value={postalDistrict} onChangeText={setPostalDistrict} />
-        <Field label="Endereço" value={addressLine1} onChangeText={setAddressLine1} />
-        <Field label="Complemento" value={addressLine2} onChangeText={setAddressLine2} />
-        <Field label="Eircode" autoCapitalize="characters" value={eircode} onChangeText={setEircode} />
-        <Field label="Latitude exata" keyboardType="numbers-and-punctuation" value={latitude} onChangeText={setLatitude} />
-        <Field label="Longitude exata" keyboardType="numbers-and-punctuation" value={longitude} onChangeText={setLongitude} />
-        {approximateText ? <Text style={styles.helper}>{approximateText}</Text> : null}
-        {error ? <Text accessibilityLiveRegion="polite" style={styles.error}>{error}</Text> : null}
-        {saved ? <Text accessibilityLiveRegion="polite" style={styles.success}>Localização salva.</Text> : null}
-        <AppButton disabled={saving} label={saving ? "Salvando..." : "Salvar localização"} onPress={() => void save()} />
+        <Field
+          label="Distrito postal"
+          value={postalDistrict}
+          onChangeText={setPostalDistrict}
+        />
+        <Field
+          label="Endereço"
+          value={addressLine1}
+          onChangeText={setAddressLine1}
+        />
+        <Field
+          label="Complemento"
+          value={addressLine2}
+          onChangeText={setAddressLine2}
+        />
+        <Field
+          label="Eircode"
+          autoCapitalize="characters"
+          value={eircode}
+          onChangeText={setEircode}
+        />
+        <Field
+          label="Latitude exata"
+          keyboardType="numbers-and-punctuation"
+          value={latitude}
+          onChangeText={setLatitude}
+        />
+        <Field
+          label="Longitude exata"
+          keyboardType="numbers-and-punctuation"
+          value={longitude}
+          onChangeText={setLongitude}
+        />
+        {approximateText ? (
+          <Text style={styles.helper}>{approximateText}</Text>
+        ) : null}
+        {error ? (
+          <Text accessibilityLiveRegion="polite" style={styles.error}>
+            {error}
+          </Text>
+        ) : null}
+        {saved ? (
+          <Text accessibilityLiveRegion="polite" style={styles.success}>
+            Localização salva.
+          </Text>
+        ) : null}
+        <AppButton
+          disabled={saving}
+          label={saving ? "Salvando..." : "Salvar localização"}
+          onPress={() => void save()}
+        />
       </View>
     </ScrollView>
   );
 }
 
-function Field({ label, ...props }: { label: string } & ComponentProps<typeof TextInput>) {
+function Field({
+  label,
+  ...props
+}: { label: string } & ComponentProps<typeof TextInput>) {
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
@@ -178,15 +244,37 @@ function Field({ label, ...props }: { label: string } & ComponentProps<typeof Te
 
 const styles = StyleSheet.create({
   content: { gap: spacing.md, padding: spacing.lg, paddingBottom: spacing.xxl },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", gap: spacing.md, padding: spacing.xl },
-  card: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.xl, borderWidth: 1, gap: spacing.md, padding: spacing.lg },
+  center: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.md,
+    padding: spacing.xl,
+  },
+  card: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    gap: spacing.md,
+    padding: spacing.lg,
+  },
   title: { color: colors.text, fontSize: 25, fontWeight: "900" },
   muted: { color: colors.textMuted, lineHeight: 21 },
   helper: { color: colors.textMuted, fontSize: 13, lineHeight: 19 },
   warning: { color: colors.warning, lineHeight: 20 },
   field: { gap: spacing.xs },
   label: { color: colors.text, fontWeight: "700" },
-  input: { backgroundColor: colors.background, borderColor: colors.border, borderRadius: radius.md, borderWidth: 1, color: colors.text, fontSize: 16, minHeight: 48, paddingHorizontal: spacing.md },
+  input: {
+    backgroundColor: colors.background,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    color: colors.text,
+    fontSize: 16,
+    minHeight: 48,
+    paddingHorizontal: spacing.md,
+  },
   error: { color: colors.danger, lineHeight: 20 },
   success: { color: colors.success, fontWeight: "700" },
 });

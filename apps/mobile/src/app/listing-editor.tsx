@@ -1,6 +1,20 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ComponentProps,
+} from "react";
 import { router, useLocalSearchParams } from "expo-router";
-import { ActivityIndicator, ScrollView, StyleSheet, Switch, Text, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
 import {
   createListing,
@@ -27,7 +41,9 @@ const propertyTypes: Array<{ value: OwnerPropertyType; label: string }> = [
 function centsFromEuro(value: string) {
   if (!value.trim()) return undefined;
   const parsed = Number(value.replace(",", "."));
-  return Number.isFinite(parsed) && parsed >= 0 ? Math.round(parsed * 100) : undefined;
+  return Number.isFinite(parsed) && parsed >= 0
+    ? Math.round(parsed * 100)
+    : undefined;
 }
 
 function optionalInt(value: string) {
@@ -50,7 +66,8 @@ export default function ListingEditorScreen() {
   const [description, setDescription] = useState("");
   const [city, setCity] = useState("");
   const [area, setArea] = useState("");
-  const [propertyType, setPropertyType] = useState<OwnerPropertyType>("SINGLE_ROOM");
+  const [propertyType, setPropertyType] =
+    useState<OwnerPropertyType>("SINGLE_ROOM");
   const [bedrooms, setBedrooms] = useState("1");
   const [bathrooms, setBathrooms] = useState("1");
   const [price, setPrice] = useState("");
@@ -64,7 +81,8 @@ export default function ListingEditorScreen() {
   const [familiesAllowed, setFamiliesAllowed] = useState(false);
   const [studentsAllowed, setStudentsAllowed] = useState(true);
   const [formalContract, setFormalContract] = useState(false);
-  const [landlordApprovalRequired, setLandlordApprovalRequired] = useState(false);
+  const [landlordApprovalRequired, setLandlordApprovalRequired] =
+    useState(false);
 
   const load = useCallback(async () => {
     if (!listingId || !session) return;
@@ -80,10 +98,22 @@ export default function ListingEditorScreen() {
       setPropertyType(item.property.propertyType ?? "SINGLE_ROOM");
       setBedrooms(String(item.property.bedroomCount ?? 1));
       setBathrooms(String(item.property.bathroomCount ?? 1));
-      setPrice(item.pricing.monthlyPriceCents === null ? "" : String(item.pricing.monthlyPriceCents / 100));
-      setDeposit(item.pricing.depositAmountCents === null ? "" : String(item.pricing.depositAmountCents / 100));
+      setPrice(
+        item.pricing.monthlyPriceCents === null
+          ? ""
+          : String(item.pricing.monthlyPriceCents / 100),
+      );
+      setDeposit(
+        item.pricing.depositAmountCents === null
+          ? ""
+          : String(item.pricing.depositAmountCents / 100),
+      );
       setAvailableFrom(item.availability.availableFrom?.slice(0, 10) ?? "");
-      setMinimumStayDays(item.availability.minimumStayDays === null ? "" : String(item.availability.minimumStayDays));
+      setMinimumStayDays(
+        item.availability.minimumStayDays === null
+          ? ""
+          : String(item.availability.minimumStayDays),
+      );
       setFurnished(Boolean(item.amenities.furnished));
       setCouplesAllowed(Boolean(item.household.couplesAllowed));
       setPetsAllowed(Boolean(item.household.petsAllowed));
@@ -91,7 +121,9 @@ export default function ListingEditorScreen() {
       setFamiliesAllowed(Boolean(item.household.childrenFamiliesAllowed));
       setStudentsAllowed(Boolean(item.household.studentsAllowed));
       setFormalContract(Boolean(item.requirements.formalContract));
-      setLandlordApprovalRequired(Boolean(item.requirements.landlordApprovalRequired));
+      setLandlordApprovalRequired(
+        Boolean(item.requirements.landlordApprovalRequired),
+      );
     } catch (caught) {
       if ((caught as Error & { status?: number }).status === 401) {
         signOut();
@@ -106,55 +138,65 @@ export default function ListingEditorScreen() {
 
   useEffect(() => {
     if (!session) {
-      router.replace({ pathname: "/login", params: { returnTo: listingId ? `/listing-editor?id=${listingId}` : "/listing-editor" } });
+      router.replace({
+        pathname: "/login",
+        params: {
+          returnTo: listingId
+            ? `/listing-editor?id=${listingId}`
+            : "/listing-editor",
+        },
+      });
       return;
     }
     void load();
   }, [load, listingId, session]);
 
-  const input = useMemo<OwnerListingInput>(() => ({
-    type,
-    title: title.trim(),
-    description: description.trim(),
-    city: city.trim() || undefined,
-    area: area.trim() || undefined,
-    propertyType,
-    bedroomCount: optionalInt(bedrooms),
-    bathroomCount: optionalInt(bathrooms),
-    monthlyPriceCents: centsFromEuro(price),
-    depositAmountCents: centsFromEuro(deposit),
-    furnished,
-    couplesAllowed,
-    petsAllowed,
-    smokingAllowed,
-    childrenFamiliesAllowed: familiesAllowed,
-    studentsAllowed,
-    formalContract,
-    landlordApprovalRequired,
-    availableFrom: availableFrom.trim() || undefined,
-    minimumStayDays: optionalInt(minimumStayDays),
-  }), [
-    area,
-    availableFrom,
-    bathrooms,
-    bedrooms,
-    city,
-    couplesAllowed,
-    deposit,
-    description,
-    familiesAllowed,
-    formalContract,
-    furnished,
-    landlordApprovalRequired,
-    minimumStayDays,
-    petsAllowed,
-    price,
-    propertyType,
-    smokingAllowed,
-    studentsAllowed,
-    title,
-    type,
-  ]);
+  const input = useMemo<OwnerListingInput>(
+    () => ({
+      type,
+      title: title.trim(),
+      description: description.trim(),
+      city: city.trim() || undefined,
+      area: area.trim() || undefined,
+      propertyType,
+      bedroomCount: optionalInt(bedrooms),
+      bathroomCount: optionalInt(bathrooms),
+      monthlyPriceCents: centsFromEuro(price),
+      depositAmountCents: centsFromEuro(deposit),
+      furnished,
+      couplesAllowed,
+      petsAllowed,
+      smokingAllowed,
+      childrenFamiliesAllowed: familiesAllowed,
+      studentsAllowed,
+      formalContract,
+      landlordApprovalRequired,
+      availableFrom: availableFrom.trim() || undefined,
+      minimumStayDays: optionalInt(minimumStayDays),
+    }),
+    [
+      area,
+      availableFrom,
+      bathrooms,
+      bedrooms,
+      city,
+      couplesAllowed,
+      deposit,
+      description,
+      familiesAllowed,
+      formalContract,
+      furnished,
+      landlordApprovalRequired,
+      minimumStayDays,
+      petsAllowed,
+      price,
+      propertyType,
+      smokingAllowed,
+      studentsAllowed,
+      title,
+      type,
+    ],
+  );
 
   const save = async () => {
     if (!session) return;
@@ -168,7 +210,10 @@ export default function ListingEditorScreen() {
       const saved = listingId
         ? await updateListing(listingId, input, session.accessToken)
         : await createListing(input, session.accessToken);
-      router.replace({ pathname: "/listing-owner/[id]", params: { id: saved.id } });
+      router.replace({
+        pathname: "/listing-owner/[id]",
+        params: { id: saved.id },
+      });
     } catch (caught) {
       if ((caught as Error & { status?: number }).status === 401) {
         signOut();
@@ -206,47 +251,137 @@ export default function ListingEditorScreen() {
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Tipo</Text>
         <View style={styles.choiceRow}>
-          <Choice label="Aluguel" selected={type === "RENTAL"} onPress={() => setType("RENTAL")} />
-          <Choice label="Transferência" selected={type === "TRANSFER"} onPress={() => setType("TRANSFER")} />
+          <Choice
+            label="Aluguel"
+            selected={type === "RENTAL"}
+            onPress={() => setType("RENTAL")}
+          />
+          <Choice
+            label="Transferência"
+            selected={type === "TRANSFER"}
+            onPress={() => setType("TRANSFER")}
+          />
         </View>
         <Field label="Título" value={title} onChangeText={setTitle} />
-        <Field label="Descrição" value={description} onChangeText={setDescription} multiline />
+        <Field
+          label="Descrição"
+          value={description}
+          onChangeText={setDescription}
+          multiline
+        />
         <Field label="Cidade" value={city} onChangeText={setCity} />
         <Field label="Área / bairro" value={area} onChangeText={setArea} />
 
         <Text style={styles.sectionTitle}>Imóvel</Text>
         <View style={styles.choiceWrap}>
           {propertyTypes.map((option) => (
-            <Choice key={option.value} label={option.label} selected={propertyType === option.value} onPress={() => setPropertyType(option.value)} />
+            <Choice
+              key={option.value}
+              label={option.label}
+              selected={propertyType === option.value}
+              onPress={() => setPropertyType(option.value)}
+            />
           ))}
         </View>
-        <Field label="Quartos" keyboardType="number-pad" value={bedrooms} onChangeText={setBedrooms} />
-        <Field label="Banheiros" keyboardType="number-pad" value={bathrooms} onChangeText={setBathrooms} />
+        <Field
+          label="Quartos"
+          keyboardType="number-pad"
+          value={bedrooms}
+          onChangeText={setBedrooms}
+        />
+        <Field
+          label="Banheiros"
+          keyboardType="number-pad"
+          value={bathrooms}
+          onChangeText={setBathrooms}
+        />
 
         <Text style={styles.sectionTitle}>Preço e disponibilidade</Text>
-        <Field label="Preço mensal (€)" keyboardType="decimal-pad" value={price} onChangeText={setPrice} />
-        <Field label="Depósito (€)" keyboardType="decimal-pad" value={deposit} onChangeText={setDeposit} />
-        <Field label="Disponível a partir de (AAAA-MM-DD)" value={availableFrom} onChangeText={setAvailableFrom} autoCapitalize="none" />
-        <Field label="Estadia mínima (dias)" keyboardType="number-pad" value={minimumStayDays} onChangeText={setMinimumStayDays} />
+        <Field
+          label="Preço mensal (€)"
+          keyboardType="decimal-pad"
+          value={price}
+          onChangeText={setPrice}
+        />
+        <Field
+          label="Depósito (€)"
+          keyboardType="decimal-pad"
+          value={deposit}
+          onChangeText={setDeposit}
+        />
+        <Field
+          label="Disponível a partir de (AAAA-MM-DD)"
+          value={availableFrom}
+          onChangeText={setAvailableFrom}
+          autoCapitalize="none"
+        />
+        <Field
+          label="Estadia mínima (dias)"
+          keyboardType="number-pad"
+          value={minimumStayDays}
+          onChangeText={setMinimumStayDays}
+        />
 
         <Text style={styles.sectionTitle}>Condições</Text>
         <Toggle label="Mobiliado" value={furnished} onChange={setFurnished} />
-        <Toggle label="Aceita casal" value={couplesAllowed} onChange={setCouplesAllowed} />
-        <Toggle label="Aceita pets" value={petsAllowed} onChange={setPetsAllowed} />
-        <Toggle label="Permite fumar" value={smokingAllowed} onChange={setSmokingAllowed} />
-        <Toggle label="Aceita famílias com crianças" value={familiesAllowed} onChange={setFamiliesAllowed} />
-        <Toggle label="Aceita estudantes" value={studentsAllowed} onChange={setStudentsAllowed} />
-        <Toggle label="Há contrato formal" value={formalContract} onChange={setFormalContract} />
-        <Toggle label="Exige aprovação do landlord" value={landlordApprovalRequired} onChange={setLandlordApprovalRequired} />
+        <Toggle
+          label="Aceita casal"
+          value={couplesAllowed}
+          onChange={setCouplesAllowed}
+        />
+        <Toggle
+          label="Aceita pets"
+          value={petsAllowed}
+          onChange={setPetsAllowed}
+        />
+        <Toggle
+          label="Permite fumar"
+          value={smokingAllowed}
+          onChange={setSmokingAllowed}
+        />
+        <Toggle
+          label="Aceita famílias com crianças"
+          value={familiesAllowed}
+          onChange={setFamiliesAllowed}
+        />
+        <Toggle
+          label="Aceita estudantes"
+          value={studentsAllowed}
+          onChange={setStudentsAllowed}
+        />
+        <Toggle
+          label="Há contrato formal"
+          value={formalContract}
+          onChange={setFormalContract}
+        />
+        <Toggle
+          label="Exige aprovação do landlord"
+          value={landlordApprovalRequired}
+          onChange={setLandlordApprovalRequired}
+        />
 
-        {error ? <Text accessibilityLiveRegion="polite" style={styles.error}>{error}</Text> : null}
-        <AppButton disabled={saving} label={saving ? "Salvando..." : editing ? "Salvar alterações" : "Criar anúncio"} onPress={() => void save()} />
+        {error ? (
+          <Text accessibilityLiveRegion="polite" style={styles.error}>
+            {error}
+          </Text>
+        ) : null}
+        <AppButton
+          disabled={saving}
+          label={
+            saving
+              ? "Salvando..."
+              : editing
+                ? "Salvar alterações"
+                : "Criar anúncio"
+          }
+          onPress={() => void save()}
+        />
       </View>
     </ScrollView>
   );
 }
 
-function Field(props: React.ComponentProps<typeof TextInput> & { label: string }) {
+function Field(props: ComponentProps<typeof TextInput> & { label: string }) {
   const { label, multiline, ...inputProps } = props;
   return (
     <View style={styles.field}>
@@ -262,32 +397,94 @@ function Field(props: React.ComponentProps<typeof TextInput> & { label: string }
   );
 }
 
-function Choice({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
-  return <AppButton label={label} onPress={onPress} variant={selected ? "primary" : "secondary"} />;
+function Choice({
+  label,
+  selected,
+  onPress,
+}: {
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <AppButton
+      label={label}
+      onPress={onPress}
+      variant={selected ? "primary" : "secondary"}
+    />
+  );
 }
 
-function Toggle({ label, value, onChange }: { label: string; value: boolean; onChange: (value: boolean) => void }) {
+function Toggle({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: boolean;
+  onChange: (value: boolean) => void;
+}) {
   return (
     <View style={styles.toggleRow}>
       <Text style={styles.label}>{label}</Text>
-      <Switch accessibilityLabel={label} value={value} onValueChange={onChange} />
+      <Switch
+        accessibilityLabel={label}
+        value={value}
+        onValueChange={onChange}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   content: { gap: spacing.md, padding: spacing.lg, paddingBottom: spacing.xxl },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", gap: spacing.md, padding: spacing.xl },
-  card: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.xl, borderWidth: 1, gap: spacing.md, padding: spacing.lg },
+  center: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.md,
+    padding: spacing.xl,
+  },
+  card: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    gap: spacing.md,
+    padding: spacing.lg,
+  },
   title: { color: colors.text, fontSize: 26, fontWeight: "900" },
-  sectionTitle: { color: colors.text, fontSize: 18, fontWeight: "800", marginTop: spacing.sm },
+  sectionTitle: {
+    color: colors.text,
+    fontSize: 18,
+    fontWeight: "800",
+    marginTop: spacing.sm,
+  },
   muted: { color: colors.textMuted, lineHeight: 21 },
   field: { gap: spacing.xs },
   label: { color: colors.text, fontWeight: "700" },
-  input: { backgroundColor: colors.background, borderColor: colors.border, borderRadius: radius.md, borderWidth: 1, color: colors.text, fontSize: 16, minHeight: 48, paddingHorizontal: spacing.md },
-  multiline: { minHeight: 120, paddingTop: spacing.md, textAlignVertical: "top" },
+  input: {
+    backgroundColor: colors.background,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    color: colors.text,
+    fontSize: 16,
+    minHeight: 48,
+    paddingHorizontal: spacing.md,
+  },
+  multiline: {
+    minHeight: 120,
+    paddingTop: spacing.md,
+    textAlignVertical: "top",
+  },
   choiceRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
   choiceWrap: { gap: spacing.sm },
-  toggleRow: { alignItems: "center", flexDirection: "row", justifyContent: "space-between", minHeight: 48 },
+  toggleRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    minHeight: 48,
+  },
   error: { color: colors.danger, lineHeight: 20 },
 });
