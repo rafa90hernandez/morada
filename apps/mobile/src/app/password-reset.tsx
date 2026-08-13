@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import {
   KeyboardAvoidingView,
@@ -9,46 +9,48 @@ import {
   View,
 } from "react-native";
 
+import { resetPassword } from "@/api/password-recovery";
 import { AppButton } from "@/components/ui/AppButton";
-import { useSession } from "@/session/SessionContext";
 import { colors, radius, spacing } from "@/theme/tokens";
 
-export default function LoginScreen() {
+export default function PasswordResetScreen() {
   const params = useLocalSearchParams<{
-    returnTo?: string;
-    passwordReset?: string;
+    token?: string;
+    development?: string;
   }>();
-  const { clearSessionExpired, sessionExpired, signIn, signingIn } =
-    useSession();
-  const [email, setEmail] = useState("");
+  const [token, setToken] = useState(
+    typeof params.token === "string" ? params.token : "",
+  );
   const [password, setPassword] = useState("");
+  const [confirmation, setConfirmation] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(
-    () => () => {
-      clearSessionExpired();
-    },
-    [clearSessionExpired],
-  );
-
   const submit = async () => {
-    if (!email.trim() || !password) {
-      setError("Informe seu e-mail e sua senha.");
+    if (!token.trim()) {
+      setError("O código de recuperação é obrigatório.");
+      return;
+    }
+    if (password.length < 8) {
+      setError("A nova senha deve ter pelo menos 8 caracteres.");
+      return;
+    }
+    if (password !== confirmation) {
+      setError("As senhas não coincidem.");
       return;
     }
 
+    setSubmitting(true);
     setError(null);
     try {
-      await signIn(email, password);
-      if (params.returnTo) {
-        router.replace(params.returnTo as never);
-      } else {
-        router.replace("/account");
-      }
+      await resetPassword(token.trim(), password);
+      router.replace({ pathname: "/login", params: { passwordReset: "true" } });
     } catch {
       setError(
-        "Não foi possível entrar. Confira seus dados ou tente novamente em instantes.",
+        "Este código é inválido, expirou ou já foi usado. Solicite uma nova recuperação.",
       );
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -59,44 +61,48 @@ export default function LoginScreen() {
     >
       <View style={styles.card}>
         <Text accessibilityRole="header" style={styles.title}>
-          Entre para continuar
+          Criar nova senha
         </Text>
         <Text style={styles.subtitle}>
-          Sua sessão é usada para acessar sua conta e os recursos privados da
-          Beta. O Morada não mostra presença online nem confirmação de leitura.
+          O código é temporário e funciona uma única vez. Depois da troca, as
+          sessões anteriores deixam de ser válidas.
         </Text>
 
-        {sessionExpired ? (
-          <Text accessibilityLiveRegion="polite" style={styles.notice}>
-            Sua sessão expirou. Entre novamente para continuar com segurança.
-          </Text>
-        ) : null}
-        {params.passwordReset === "true" ? (
-          <Text accessibilityLiveRegion="polite" style={styles.notice}>
-            Senha alterada. Entre novamente com a nova senha.
+        {params.development === "true" ? (
+          <Text style={styles.notice}>
+            Ambiente de desenvolvimento: o código foi fornecido diretamente pelo
+            backend de teste. Esse comportamento não é habilitado em produção.
           </Text>
         ) : null}
 
         <TextInput
-          accessibilityLabel="E-mail"
+          accessibilityLabel="Código de recuperação"
           autoCapitalize="none"
-          autoComplete="email"
-          keyboardType="email-address"
-          onChangeText={setEmail}
-          placeholder="seu@email.com"
+          onChangeText={setToken}
+          placeholder="Código de recuperação"
           placeholderTextColor={colors.textMuted}
           style={styles.input}
-          value={email}
+          value={token}
         />
         <TextInput
-          accessibilityLabel="Senha"
+          accessibilityLabel="Nova senha"
           autoCapitalize="none"
           onChangeText={setPassword}
-          placeholder="Senha"
+          placeholder="Nova senha"
           placeholderTextColor={colors.textMuted}
           secureTextEntry
           style={styles.input}
           value={password}
+        />
+        <TextInput
+          accessibilityLabel="Confirmar nova senha"
+          autoCapitalize="none"
+          onChangeText={setConfirmation}
+          placeholder="Confirme a nova senha"
+          placeholderTextColor={colors.textMuted}
+          secureTextEntry
+          style={styles.input}
+          value={confirmation}
         />
 
         {error ? (
@@ -105,19 +111,13 @@ export default function LoginScreen() {
           </Text>
         ) : null}
         <AppButton
-          accessibilityLabel={signingIn ? "Entrando" : "Entrar"}
-          disabled={signingIn}
-          label={signingIn ? "Entrando..." : "Entrar"}
+          disabled={submitting}
+          label={submitting ? "Alterando..." : "Alterar senha"}
           onPress={() => void submit()}
         />
         <AppButton
-          label="Esqueci minha senha"
-          onPress={() => router.push("/password-recovery")}
-          variant="secondary"
-        />
-        <AppButton
-          label="Criar uma conta"
-          onPress={() => router.push("/signup")}
+          label="Solicitar novo código"
+          onPress={() => router.replace("/password-recovery")}
           variant="secondary"
         />
       </View>
@@ -140,16 +140,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     padding: spacing.lg,
   },
-  title: {
-    color: colors.text,
-    fontSize: 26,
-    fontWeight: "900",
-    lineHeight: 32,
-  },
-  subtitle: {
-    color: colors.textMuted,
-    lineHeight: 21,
-  },
+  title: { color: colors.text, fontSize: 26, fontWeight: "900" },
+  subtitle: { color: colors.textMuted, lineHeight: 21 },
   notice: {
     borderWidth: 1,
     borderColor: colors.border,
@@ -169,8 +161,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     fontSize: 16,
   },
-  error: {
-    color: colors.danger ?? "#B42318",
-    lineHeight: 20,
-  },
+  error: { color: colors.danger, lineHeight: 20 },
 });

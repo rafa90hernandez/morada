@@ -6,6 +6,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
+import { createHash } from 'node:crypto';
 
 import { UserMapper } from '../common/mappers/user.mapper';
 import { DatabaseService } from '../database/database.service';
@@ -13,10 +14,21 @@ import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
+import { RequestPasswordRecoveryDto } from './dto/request-password-recovery.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 type RefreshTokenPayload = {
   sub: string;
   email: string;
+  pwd: string;
+  kind: 'refresh';
+};
+
+type PasswordRecoveryPayload = {
+  sub: string;
+  email: string;
+  pwd: string;
+  kind: 'password-recovery';
 };
 
 @Injectable()
@@ -66,7 +78,7 @@ export class AuthService {
       },
     });
 
-    const tokens = await this.generateTokens(user.id, user.email);
+    const tokens = await this.generateTokens(user.id, user.email, passwordHash);
 
     await this.storeRefreshTokenHash(user.id, tokens.refreshToken);
 
@@ -98,7 +110,11 @@ export class AuthService {
       throw new UnauthorizedException('Account is not active.');
     }
 
-    const tokens = await this.generateTokens(user.id, user.email);
+    const tokens = await this.generateTokens(
+      user.id,
+      user.email,
+      user.passwordHash,
+    );
 
     await Promise.all([
       this.storeRefreshTokenHash(user.id, tokens.refreshToken),
@@ -119,12 +135,16 @@ export class AuthService {
 
     const user = await this.usersService.findById(payload.sub);
 
-    if (!user || !user.refreshTokenHash) {
+    if (!user || !user.refreshTokenHash || !user.passwordHash) {
       throw new UnauthorizedException('Invalid refresh token.');
     }
 
     if (user.status !== 'ACTIVE') {
       throw new UnauthorizedException('Account is not active.');
+    }
+
+    if (payload.pwd !== this.passwordFingerprint(user.passwordHash)) {
+      throw new UnauthorizedException('Invalid refresh token.');
     }
 
     const tokenMatches = await argon2.verify(
@@ -136,7 +156,11 @@ export class AuthService {
       throw new UnauthorizedException('Invalid refresh token.');
     }
 
-    const tokens = await this.generateTokens(user.id, user.email);
+    const tokens = await this.generateTokens(
+      user.id,
+      user.email,
+      user.passwordHash,
+    );
 
     await this.storeRefreshTokenHash(user.id, tokens.refreshToken);
 
@@ -173,26 +197,113 @@ export class AuthService {
     };
   }
 
-  private async generateTokens(userId: string, email: string) {
+  async requestPasswordRecovery(dto: RequestPasswordRecoveryDto) {
+    const normalizedEmail = dto.email.toLowerCase().trim();
+    const genericResponse: {
+      accepted: true;
+      developmentToken?: string;
+    } = { accepted: true };
+
+    const user = await this.usersService.findByEmail(normalizedEmail);
+
+    if (!user?.passwordHash) {
+      return genericResponse;
+    }
+
+    const refreshSecret =
+      this.configService.getOrThrow<string>('JWT_REFRESH_SECRET');
+    const token = await this.jwtService.signAsync(
+      {
+        sub: user.id,
+        email: user.email,
+        pwd: this.passwordFingerprint(user.passwordHash),
+        kind: 'password-recovery',
+      } satisfies PasswordRecoveryPayload,
+      {
+        secret: refreshSecret,
+        expiresIn: '30m',
+      },
+    );
+
+    const nodeEnv = this.configService.get<string>('NODE_ENV');
+    const exposeDevelopmentToken =
+      nodeEnv !== 'production' &&
+      this.configService.get<string>('PASSWORD_RECOVERY_DEV_TOKEN') === 'true';
+
+    if (exposeDevelopmentToken) {
+      genericResponse.developmentToken = token;
+    }
+
+    return genericResponse;
+  }
+
+  async resetPassword(dto: ResetPasswordDto) {
+    const payload = await this.verifyPasswordRecoveryToken(dto.token);
+    const user = await this.usersService.findById(payload.sub);
+
+    if (!user?.passwordHash) {
+      throw new UnauthorizedException('Invalid or expired recovery token.');
+    }
+
+    if (payload.email !== user.email) {
+      throw new UnauthorizedException('Invalid or expired recovery token.');
+    }
+
+    if (payload.pwd !== this.passwordFingerprint(user.passwordHash)) {
+      throw new UnauthorizedException('Invalid or expired recovery token.');
+    }
+
+    const passwordHash = await argon2.hash(dto.password);
+
+    await this.database.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash,
+        refreshTokenHash: null,
+      },
+    });
+
+    return {
+      reset: true,
+    };
+  }
+
+  private async generateTokens(
+    userId: string,
+    email: string,
+    passwordHash: string,
+  ) {
     const accessSecret =
       this.configService.getOrThrow<string>('JWT_ACCESS_SECRET');
     const refreshSecret =
       this.configService.getOrThrow<string>('JWT_REFRESH_SECRET');
-
-    const payload = {
-      sub: userId,
-      email,
-    };
+    const pwd = this.passwordFingerprint(passwordHash);
 
     const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(payload, {
-        secret: accessSecret,
-        expiresIn: '15m',
-      }),
-      this.jwtService.signAsync(payload, {
-        secret: refreshSecret,
-        expiresIn: '7d',
-      }),
+      this.jwtService.signAsync(
+        {
+          sub: userId,
+          email,
+          pwd,
+          kind: 'access',
+        },
+        {
+          secret: accessSecret,
+          expiresIn: '15m',
+        },
+      ),
+      this.jwtService.signAsync(
+        {
+          sub: userId,
+          email,
+          pwd,
+          kind: 'refresh',
+        },
+        {
+          secret: refreshSecret,
+          expiresIn: '7d',
+        },
+      ),
     ]);
 
     return {
@@ -224,14 +335,46 @@ export class AuthService {
       this.configService.getOrThrow<string>('JWT_REFRESH_SECRET');
 
     try {
-      return await this.jwtService.verifyAsync<RefreshTokenPayload>(
+      const payload = await this.jwtService.verifyAsync<RefreshTokenPayload>(
         refreshToken,
         {
           secret: refreshSecret,
         },
       );
+
+      if (payload.kind !== 'refresh') {
+        throw new UnauthorizedException('Invalid refresh token.');
+      }
+
+      return payload;
     } catch {
       throw new UnauthorizedException('Invalid refresh token.');
     }
+  }
+
+  private async verifyPasswordRecoveryToken(
+    token: string,
+  ): Promise<PasswordRecoveryPayload> {
+    const refreshSecret =
+      this.configService.getOrThrow<string>('JWT_REFRESH_SECRET');
+
+    try {
+      const payload =
+        await this.jwtService.verifyAsync<PasswordRecoveryPayload>(token, {
+          secret: refreshSecret,
+        });
+
+      if (payload.kind !== 'password-recovery') {
+        throw new UnauthorizedException('Invalid or expired recovery token.');
+      }
+
+      return payload;
+    } catch {
+      throw new UnauthorizedException('Invalid or expired recovery token.');
+    }
+  }
+
+  private passwordFingerprint(passwordHash: string) {
+    return createHash('sha256').update(passwordHash).digest('base64url');
   }
 }

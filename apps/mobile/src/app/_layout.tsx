@@ -19,6 +19,11 @@ export default function RootLayout() {
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="login" options={{ title: "Entrar" }} />
         <Stack.Screen name="signup" options={{ title: "Criar conta" }} />
+        <Stack.Screen
+          name="password-recovery"
+          options={{ title: "Recuperar acesso" }}
+        />
+        <Stack.Screen name="password-reset" options={{ title: "Nova senha" }} />
         <Stack.Screen name="account" options={{ title: "Minha conta" }} />
         <Stack.Screen
           name="identity-verification"
