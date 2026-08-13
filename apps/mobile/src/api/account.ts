@@ -19,10 +19,7 @@ export type PrivateProfile = {
   profilePhotoUrl: string | null;
   bio: string | null;
   primaryLanguage: string | null;
-  currentLocationStatus:
-    | "IN_IRELAND"
-    | "NOT_ARRIVED_YET"
-    | "ARRIVING_SOON";
+  currentLocationStatus: "IN_IRELAND" | "NOT_ARRIVED_YET" | "ARRIVING_SOON";
   currentCity: string | null;
   arrivalDate: string | null;
   occupation: string | null;
