@@ -3,6 +3,7 @@ import type {
   Conversation,
   ConversationPage,
   ExactVisitLocation,
+  FavoriteListItem,
   ListingDetail,
   ListingSearchFilters,
   ListingSearchResponse,
@@ -98,12 +99,26 @@ function authHeaders(accessToken: string) {
 export function searchListings(filters: ListingSearchFilters = {}) {
   return request<ListingSearchResponse>(
     `/discovery/listings${buildQuery({
+      county: filters.county,
       city: filters.city,
       area: filters.area,
+      listingType: filters.listingType,
+      propertyType: filters.propertyType,
+      propertyOccupancyType: filters.propertyOccupancyType,
+      advertisedSpaceType: filters.advertisedSpaceType,
+      bathroomType: filters.bathroomType,
+      billsIncludedType: filters.billsIncludedType,
       maxPriceCents: filters.maxPriceCents,
+      availableOn: filters.availableOn,
       furnished: filters.furnished,
       couplesAllowed: filters.couplesAllowed,
       petsAllowed: filters.petsAllowed,
+      smokingAllowed: filters.smokingAllowed,
+      childrenFamiliesAllowed: filters.childrenFamiliesAllowed,
+      studentsAllowed: filters.studentsAllowed,
+      bedroomCountMin: filters.bedroomCountMin,
+      bathroomCountMin: filters.bathroomCountMin,
+      maxMinimumStayDays: filters.maxMinimumStayDays,
       sort: filters.sort,
       page: 1,
       limit: 30,
@@ -317,6 +332,12 @@ export function markNotificationRead(
 export function markAllNotificationsRead(accessToken: string) {
   return request<{ updated: number }>("/notifications/read-all", {
     method: "PATCH",
+    headers: authHeaders(accessToken),
+  });
+}
+
+export function listFavorites(accessToken: string) {
+  return request<FavoriteListItem[]>("/favorites", {
     headers: authHeaders(accessToken),
   });
 }

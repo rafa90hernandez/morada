@@ -49,6 +49,12 @@ export type ListingCard = {
   expiresAt: string;
 };
 
+export type FavoriteListItem = {
+  favoriteId: string;
+  favoritedAt: string;
+  listing: ListingCard;
+};
+
 export type ListingSearchResponse = {
   items: ListingCard[];
   page: number;
@@ -104,12 +110,33 @@ export type MapResponse = {
 };
 
 export type ListingSearchFilters = {
+  county?: string;
   city?: string;
   area?: string;
+  listingType?: "RENTAL" | "TRANSFER";
+  propertyType?:
+    | "SINGLE_ROOM"
+    | "SHARED_ROOM"
+    | "STUDIO"
+    | "APARTMENT"
+    | "HOUSE"
+    | "BED_SPACE"
+    | "OTHER";
+  propertyOccupancyType?: "ENTIRE_PROPERTY" | "SHARED_PROPERTY";
+  advertisedSpaceType?: "PRIVATE" | "SHARED";
+  bathroomType?: "PRIVATE" | "SHARED";
+  billsIncludedType?: "YES" | "NO" | "PARTIAL";
   maxPriceCents?: number;
+  availableOn?: string;
   furnished?: boolean;
   couplesAllowed?: boolean;
   petsAllowed?: boolean;
+  smokingAllowed?: boolean;
+  childrenFamiliesAllowed?: boolean;
+  studentsAllowed?: boolean;
+  bedroomCountMin?: number;
+  bathroomCountMin?: number;
+  maxMinimumStayDays?: number;
   sort?: ListingSearchResponse["sort"];
 };
 
