@@ -2,7 +2,10 @@ import { ConfigService } from '@nestjs/config';
 import * as argon2 from 'argon2';
 import { createHash } from 'node:crypto';
 
-import { DatabaseService } from '../../database/database.service';
+jest.mock('../../database/database.service', () => ({
+  DatabaseService: class DatabaseService {},
+}));
+
 import { JwtStrategy } from './jwt.strategy';
 
 const ACCESS_SECRET = 'a'.repeat(64);
@@ -28,11 +31,11 @@ describe('JwtStrategy password rotation', () => {
           }),
         ),
       },
-    } as unknown as DatabaseService;
+    };
 
     const strategy = new JwtStrategy(
       new ConfigService({ JWT_ACCESS_SECRET: ACCESS_SECRET }),
-      database,
+      database as never,
     );
 
     const payload = {
