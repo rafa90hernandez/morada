@@ -9,7 +9,10 @@ export class AuthenticatedListingSearchController {
   constructor(private readonly service: PublicListingSearchService) {}
 
   @Get()
-  search(@Req() request: { user: { id: string } }, @Query() query: PublicListingSearchQueryDto) {
+  search(
+    @Req() request: { user: { id: string } },
+    @Query() query: PublicListingSearchQueryDto,
+  ) {
     return this.service.search(query, new Date(), request.user.id);
   }
 }
