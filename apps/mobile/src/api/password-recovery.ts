@@ -38,10 +38,13 @@ async function request<T>(path: string, init: RequestInit) {
 }
 
 export function requestPasswordRecovery(email: string) {
-  return request<PasswordRecoveryRequestResult>("/auth/password-recovery/request", {
-    method: "POST",
-    body: JSON.stringify({ email }),
-  });
+  return request<PasswordRecoveryRequestResult>(
+    "/auth/password-recovery/request",
+    {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    },
+  );
 }
 
 export function resetPassword(token: string, password: string) {
