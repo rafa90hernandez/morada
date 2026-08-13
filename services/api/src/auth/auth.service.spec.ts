@@ -28,18 +28,20 @@ function createHarness(options?: { exposeDevelopmentToken?: boolean }) {
 
   const database = {
     user: {
-      update: jest.fn(async ({ data }: { data: Partial<TestUser> }) => {
+      update: jest.fn(({ data }: { data: Partial<TestUser> }) => {
         Object.assign(user, data);
-        return user;
+        return Promise.resolve(user);
       }),
     },
   } as unknown as DatabaseService;
 
   const usersService = {
-    findByEmail: jest.fn(async (email: string) =>
-      email === user.email ? user : null,
+    findByEmail: jest.fn((email: string) =>
+      Promise.resolve(email === user.email ? user : null),
     ),
-    findById: jest.fn(async (id: string) => (id === user.id ? user : null)),
+    findById: jest.fn((id: string) =>
+      Promise.resolve(id === user.id ? user : null),
+    ),
   } as unknown as UsersService;
 
   const jwtService = new JwtService();
@@ -95,14 +97,19 @@ describe('AuthService password recovery', () => {
     );
 
     await expect(
-      service.resetPassword({ token: expiredToken, password: 'NewPassword123' }),
+      service.resetPassword({
+        token: expiredToken,
+        password: 'NewPassword123',
+      }),
     ).rejects.toThrow('Invalid or expired recovery token.');
   });
 
   it('makes a recovery token one-time by binding it to the current password hash', async () => {
     const { service, user } = createHarness({ exposeDevelopmentToken: true });
     user.passwordHash = await argon2.hash('Password123');
-    const request = await service.requestPasswordRecovery({ email: user.email });
+    const request = await service.requestPasswordRecovery({
+      email: user.email,
+    });
     const token = request.developmentToken;
 
     expect(token).toEqual(expect.any(String));
@@ -118,7 +125,9 @@ describe('AuthService password recovery', () => {
     const { service, user } = createHarness({ exposeDevelopmentToken: true });
     user.passwordHash = await argon2.hash('Password123');
     user.refreshTokenHash = await argon2.hash('old-refresh-token');
-    const request = await service.requestPasswordRecovery({ email: user.email });
+    const request = await service.requestPasswordRecovery({
+      email: user.email,
+    });
 
     await service.resetPassword({
       token: request.developmentToken!,
@@ -137,7 +146,9 @@ describe('AuthService password recovery', () => {
       email: user.email,
       password: 'Password123',
     });
-    const recovery = await service.requestPasswordRecovery({ email: user.email });
+    const recovery = await service.requestPasswordRecovery({
+      email: user.email,
+    });
 
     await service.resetPassword({
       token: recovery.developmentToken!,
