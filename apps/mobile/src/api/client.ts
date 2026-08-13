@@ -3,7 +3,7 @@ import type {
   Conversation,
   ConversationPage,
   ExactVisitLocation,
-  ListingCard,
+  FavoriteListItem,
   ListingDetail,
   ListingSearchFilters,
   ListingSearchResponse,
@@ -337,7 +337,7 @@ export function markAllNotificationsRead(accessToken: string) {
 }
 
 export function listFavorites(accessToken: string) {
-  return request<ListingCard[]>("/favorites", {
+  return request<FavoriteListItem[]>("/favorites", {
     headers: authHeaders(accessToken),
   });
 }
