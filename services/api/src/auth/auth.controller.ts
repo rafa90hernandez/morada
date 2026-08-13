@@ -1,5 +1,6 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import {
+  ApiAcceptedResponse,
   ApiConflictResponse,
   ApiCreatedResponse,
   ApiOkResponse,
@@ -7,12 +8,14 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
-import { Throttle } from '@nestjs/throttler';
+import { RequestPasswordRecoveryDto } from './dto/request-password-recovery.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -88,5 +91,39 @@ export class AuthController {
   })
   logout(@Body() dto: RefreshTokenDto) {
     return this.authService.logout(dto);
+  }
+
+  @Throttle({
+    short: { limit: 1, ttl: 1000 },
+    medium: { limit: 3, ttl: 60000 },
+    long: { limit: 10, ttl: 3600000 },
+  })
+  @Post('password-recovery/request')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @ApiOperation({
+    summary: 'Request password recovery without revealing account existence',
+  })
+  @ApiAcceptedResponse({
+    description:
+      'The same accepted response is returned whether or not the email exists.',
+  })
+  requestPasswordRecovery(@Body() dto: RequestPasswordRecoveryDto) {
+    return this.authService.requestPasswordRecovery(dto);
+  }
+
+  @Throttle({
+    short: { limit: 2, ttl: 1000 },
+    medium: { limit: 5, ttl: 60000 },
+    long: { limit: 20, ttl: 3600000 },
+  })
+  @Post('password-recovery/reset')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Reset a password with an expiring recovery token' })
+  @ApiOkResponse({ description: 'Password reset and sessions revoked.' })
+  @ApiUnauthorizedResponse({
+    description: 'Recovery token is invalid, expired or already consumed.',
+  })
+  resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto);
   }
 }
