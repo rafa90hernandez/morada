@@ -25,6 +25,7 @@ export default function RootLayout() {
           options={{ title: "Verificação de identidade" }}
         />
         <Stack.Screen name="favorites" options={{ title: "Favoritos" }} />
+        <Stack.Screen name="report" options={{ title: "Denunciar" }} />
         <Stack.Screen name="my-listings" options={{ title: "Meus anúncios" }} />
         <Stack.Screen
           name="listing-editor"

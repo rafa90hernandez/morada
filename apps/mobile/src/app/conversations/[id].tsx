@@ -31,6 +31,7 @@ import type {
   Visit,
 } from "@/api/types";
 import { AppButton } from "@/components/ui/AppButton";
+import { blockUser, listOwnBlocks, unblockUser } from "@/api/safety";
 import {
   chronologicalMessages,
   otherParticipant,
@@ -85,6 +86,8 @@ export default function ConversationDetailScreen() {
   >({});
   const [overlapNotice, setOverlapNotice] = useState<string | null>(null);
   const [contactUnavailable, setContactUnavailable] = useState(false);
+  const [ownBlock, setOwnBlock] = useState(false);
+  const [workingSafety, setWorkingSafety] = useState(false);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [workingVisitId, setWorkingVisitId] = useState<string | null>(null);
@@ -96,14 +99,21 @@ export default function ConversationDetailScreen() {
   const load = useCallback(async () => {
     if (!accessToken || !params.id) return;
     try {
-      const [conversationResult, messageResult, allVisits] = await Promise.all([
-        getConversation(params.id, accessToken),
-        listMessages(params.id, accessToken),
-        listVisits(accessToken),
-      ]);
+      const [conversationResult, messageResult, allVisits, ownBlocks] =
+        await Promise.all([
+          getConversation(params.id, accessToken),
+          listMessages(params.id, accessToken),
+          listVisits(accessToken),
+          listOwnBlocks(accessToken),
+        ]);
 
       setConversation(conversationResult);
       setContactUnavailable(conversationResult.status !== "ACTIVE");
+      const otherUserId =
+        conversationResult.participantA.id === currentUserId
+          ? conversationResult.participantB.id
+          : conversationResult.participantA.id;
+      setOwnBlock(ownBlocks.some((block) => block.blockedId === otherUserId));
       const orderedMessages = chronologicalMessages(messageResult.items);
       setMessages(orderedMessages);
       setVisits(
@@ -178,6 +188,56 @@ export default function ConversationDetailScreen() {
     if (!conversation || !currentUserId) return null;
     return otherParticipant(conversation, currentUserId);
   }, [conversation, currentUserId]);
+
+  const toggleBlock = async () => {
+    if (!accessToken || !counterpart) return;
+    setWorkingSafety(true);
+    setError(null);
+    try {
+      if (ownBlock) {
+        await unblockUser(counterpart.id, accessToken);
+      } else {
+        await blockUser(counterpart.id, accessToken);
+        setContactUnavailable(true);
+        setLocations({});
+      }
+      await load();
+    } catch (blockError) {
+      if (statusOf(blockError) === 401) {
+        router.replace("/login");
+        return;
+      }
+      setError("Não foi possível atualizar o bloqueio agora.");
+    } finally {
+      setWorkingSafety(false);
+    }
+  };
+
+  const reportConversation = () => {
+    if (!counterpart) return;
+    router.push({
+      pathname: "/report",
+      params: {
+        reportedUserId: counterpart.id,
+        listingId: conversation?.listing.id,
+        conversationId: params.id,
+        context: "esta conversa",
+      },
+    });
+  };
+
+  const reportMessage = (message: Message) => {
+    if (!counterpart) return;
+    router.push({
+      pathname: "/report",
+      params: {
+        reportedUserId: message.senderId,
+        listingId: conversation?.listing.id,
+        conversationId: params.id,
+        context: "esta mensagem",
+      },
+    });
+  };
 
   const send = async () => {
     if (!accessToken || !params.id) return;
@@ -326,6 +386,33 @@ export default function ConversationDetailScreen() {
         </Text>
       </View>
 
+      <View style={styles.sectionCard}>
+        <Text style={styles.sectionTitle}>Segurança e privacidade</Text>
+        <Text style={styles.mutedLeft}>
+          Denúncias são sinais para análise, não prova automática. Bloqueios
+          impedem novo contato e acesso futuro ao endereço exato de visitas, mas
+          o histórico desta conversa permanece visível.
+        </Text>
+        <AppButton
+          disabled={workingSafety || !counterpart}
+          label={
+            workingSafety
+              ? "Atualizando..."
+              : ownBlock
+                ? "Desbloquear usuário"
+                : "Bloquear usuário"
+          }
+          onPress={() => void toggleBlock()}
+          variant="secondary"
+        />
+        <AppButton
+          disabled={!counterpart}
+          label="Denunciar conversa"
+          onPress={reportConversation}
+          variant="secondary"
+        />
+      </View>
+
       {contactUnavailable ? (
         <View style={styles.warningCard}>
           <Text style={styles.warningTitle}>Contato indisponível</Text>
@@ -380,6 +467,14 @@ export default function ConversationDetailScreen() {
                 <Text style={styles.messageTime}>
                   {new Date(message.createdAt).toLocaleString("pt-BR")}
                 </Text>
+                {!mine ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => reportMessage(message)}
+                  >
+                    <Text style={styles.reportLink}>Denunciar mensagem</Text>
+                  </Pressable>
+                ) : null}
               </View>
             );
           })
@@ -636,6 +731,11 @@ const styles = StyleSheet.create({
   messageTime: {
     color: colors.textMuted,
     fontSize: 11,
+  },
+  reportLink: {
+    color: colors.danger,
+    fontSize: 12,
+    fontWeight: "700",
   },
   messageInput: {
     minHeight: 80,
