@@ -27,10 +27,7 @@ export type PrivateProfile = {
 };
 
 export type IdentityDocumentType =
-  | "PASSPORT"
-  | "EU_EEA_NATIONAL_ID"
-  | "DRIVING_LICENCE"
-  | "IRP";
+  "PASSPORT" | "EU_EEA_NATIONAL_ID" | "DRIVING_LICENCE" | "IRP";
 
 export type IdentityVerificationStatus =
   | "SUBMITTED"
