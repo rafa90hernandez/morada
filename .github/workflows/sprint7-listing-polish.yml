@@ -10,7 +10,6 @@ permissions:
 
 jobs:
   polish:
-    if: github.event.head_commit.message == 'ci(mobile): add temporary listing polish workflow'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,7 +28,6 @@ jobs:
         shell: python
         run: |
           from pathlib import Path
-
           account = Path('apps/mobile/src/app/account.tsx')
           text = account.read_text()
           needle = '''        <AppButton\n          label="Verificação de identidade"\n          onPress={() => router.push("/identity-verification")}\n          variant="secondary"\n        />'''
@@ -38,7 +36,6 @@ jobs:
               if needle not in text:
                   raise SystemExit('account shortcut insertion point not found')
               account.write_text(text.replace(needle, replacement, 1))
-
           editor = Path('apps/mobile/src/app/listing-editor.tsx')
           text = editor.read_text()
           text = text.replace(
