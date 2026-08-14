@@ -1,4 +1,9 @@
-import { ChoiceGroup, Field, SectionTitle, Toggle } from "./ListingFormControls";
+import {
+  ChoiceGroup,
+  Field,
+  SectionTitle,
+  Toggle,
+} from "./ListingFormControls";
 import type { ListingDraft } from "./listing-draft";
 
 const genders = [

@@ -1,4 +1,11 @@
-import { Pressable, StyleSheet, Switch, Text, TextInput, View } from "react-native";
+import {
+  Pressable,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
 import { colors, radius, spacing } from "@/theme/tokens";
 
@@ -164,7 +171,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     fontSize: 16,
   },
-  multiline: { minHeight: 96, paddingTop: spacing.md, textAlignVertical: "top" },
+  multiline: {
+    minHeight: 96,
+    paddingTop: spacing.md,
+    textAlignVertical: "top",
+  },
   toggleRow: {
     minHeight: 48,
     flexDirection: "row",
@@ -183,7 +194,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     paddingHorizontal: spacing.md,
   },
-  choiceSelected: { borderColor: colors.primary, backgroundColor: colors.primarySoft },
+  choiceSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primarySoft,
+  },
   choiceText: { color: colors.text, fontWeight: "700" },
   choiceTextSelected: { color: colors.primary },
 });

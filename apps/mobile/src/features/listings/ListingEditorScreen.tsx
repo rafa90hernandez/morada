@@ -1,8 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
-import { createListing, getMyListing, updateListing } from "@/api/owner-listings";
+import {
+  createListing,
+  getMyListing,
+  updateListing,
+} from "@/api/owner-listings";
 import { AppButton } from "@/components/ui/AppButton";
 import { useSession } from "@/session/SessionContext";
 import { colors, radius, spacing } from "@/theme/tokens";
@@ -159,7 +169,8 @@ export function ListingEditorScreen() {
           {estimatedInitialCost.toFixed(2)}
         </Text>
         <Text style={styles.note}>
-          Este valor é apenas uma soma dos campos informados e não representa cobrança pelo Morada.
+          Este valor é apenas uma soma dos campos informados e não representa
+          cobrança pelo Morada.
         </Text>
         {error ? (
           <Text accessibilityLiveRegion="polite" style={styles.error}>
@@ -168,7 +179,13 @@ export function ListingEditorScreen() {
         ) : null}
         <AppButton
           disabled={saving}
-          label={saving ? "Salvando..." : editing ? "Salvar alterações" : "Criar anúncio"}
+          label={
+            saving
+              ? "Salvando..."
+              : editing
+                ? "Salvar alterações"
+                : "Criar anúncio"
+          }
           onPress={() => void save()}
         />
       </View>
