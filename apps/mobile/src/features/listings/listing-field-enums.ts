@@ -1,46 +1,18 @@
 export type PropertyOccupancy = "ENTIRE_PROPERTY" | "SHARED_PROPERTY";
 export type AdvertisedSpace = "PRIVATE" | "SHARED";
 export type RoomType =
-  | "SINGLE"
-  | "DOUBLE"
-  | "TWIN"
-  | "ENSUITE"
-  | "STUDIO"
-  | "OTHER";
+  "SINGLE" | "DOUBLE" | "TWIN" | "ENSUITE" | "STUDIO" | "OTHER";
 export type BedType =
-  | "SINGLE"
-  | "DOUBLE"
-  | "BUNK"
-  | "TWO_SINGLE_BEDS"
-  | "OTHER";
+  "SINGLE" | "DOUBLE" | "BUNK" | "TWO_SINGLE_BEDS" | "OTHER";
 export type BathroomType = "PRIVATE" | "SHARED";
 export type GenderComposition =
-  | "ALL_WOMEN"
-  | "ALL_MEN"
-  | "MIXED"
-  | "OTHER"
-  | "NOT_STATED";
+  "ALL_WOMEN" | "ALL_MEN" | "MIXED" | "OTHER" | "NOT_STATED";
 export type HeatingType =
-  | "CENTRAL"
-  | "GAS"
-  | "ELECTRIC"
-  | "HEAT_PUMP"
-  | "OTHER"
-  | "NOT_STATED";
+  "CENTRAL" | "GAS" | "ELECTRIC" | "HEAT_PUMP" | "OTHER" | "NOT_STATED";
 export type KitchenAmenity =
-  | "FRIDGE"
-  | "FREEZER"
-  | "OVEN"
-  | "HOB"
-  | "MICROWAVE"
-  | "DISHWASHER"
-  | "KETTLE";
+  "FRIDGE" | "FREEZER" | "OVEN" | "HOB" | "MICROWAVE" | "DISHWASHER" | "KETTLE";
 export type OutdoorAmenity =
-  | "BALCONY"
-  | "GARDEN"
-  | "YARD"
-  | "TERRACE"
-  | "SHARED_OUTDOOR_SPACE";
+  "BALCONY" | "GARDEN" | "YARD" | "TERRACE" | "SHARED_OUTDOOR_SPACE";
 export type TransportMode = "BUS" | "LUAS" | "DART" | "TRAIN";
 
 export const roomTypes: Array<{ value: RoomType; label: string }> = [
