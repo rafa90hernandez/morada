@@ -7,13 +7,12 @@
     "dev:mobile": "pnpm --filter @morada/mobile start",
     "typecheck:mobile": "pnpm --filter @morada/mobile typecheck",
     "generate": "turbo run generate",
-    "format:diagnose": "prettier --write \"apps/mobile/src/features/listings/**/*.{ts,tsx}\" && echo __FORMAT_START__ && cat apps/mobile/src/features/listings/ListingTransportFields.tsx && echo __FORMAT_END__",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "build": "turbo run build",
     "backup:validate": "bash scripts/backup/validate-backup-scripts.sh",
-    "quality": "pnpm generate && pnpm format:diagnose && pnpm lint && pnpm typecheck && pnpm test && pnpm backup:validate && pnpm build"
+    "quality": "pnpm generate && pnpm lint && pnpm typecheck && pnpm test && pnpm backup:validate && pnpm build"
   },
   "keywords": [],
   "author": "",
