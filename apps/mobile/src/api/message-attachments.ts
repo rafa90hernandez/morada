@@ -43,7 +43,8 @@ export async function uploadMessageAttachment(
     throw error;
   }
 
-  const envelope = (await response.json()) as ApiEnvelope<MessageAttachmentUploadResult>;
+  const envelope =
+    (await response.json()) as ApiEnvelope<MessageAttachmentUploadResult>;
   if (!envelope.success) {
     throw new Error("Morada API returned an unsuccessful response.");
   }
