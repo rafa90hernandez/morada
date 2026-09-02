@@ -6,7 +6,7 @@ import { StyleSheet, Text, View } from "react-native";
 import {
   uploadMessageAttachment,
   type LocalMessageAttachmentFile,
-} from "@/api/client";
+} from "@/api/message-attachments";
 import { AppButton } from "@/components/ui/AppButton";
 import { colors, spacing } from "@/theme/tokens";
 
