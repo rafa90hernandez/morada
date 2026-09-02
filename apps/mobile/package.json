@@ -8,7 +8,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "prettier --check \"src/**/*.{ts,tsx}\"",
+    "lint": "prettier --write \"src/**/*.{ts,tsx}\" && git diff --exit-code -- src",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test src/api/client.test.ts src/features/discovery/discovery-utils.test.ts src/features/communication/communication-utils.test.ts",
     "build": "expo export --platform web --output-dir dist"
