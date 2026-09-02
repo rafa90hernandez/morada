@@ -50,15 +50,11 @@ export function formatBrazilianCurrencyInput(value: string) {
   }).format(whole)},00`;
 }
 
-export function brazilianCurrencyToCents(
-  value: string,
-): number | undefined {
+export function brazilianCurrencyToCents(value: string): number | undefined {
   const normalized = value.trim();
   if (!normalized) return undefined;
 
-  const wholeDigits = normalized
-    .replace(/,\d{0,2}$/, "")
-    .replace(/\D/g, "");
+  const wholeDigits = normalized.replace(/,\d{0,2}$/, "").replace(/\D/g, "");
   if (!wholeDigits) return undefined;
 
   const whole = Number(wholeDigits);
