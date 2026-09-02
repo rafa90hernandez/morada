@@ -1,6 +1,7 @@
 import {
   ChoiceGroup,
   Field,
+  NumericStepper,
   SectionTitle,
   Toggle,
 } from "./ListingFormControls";
@@ -23,9 +24,10 @@ export function ListingHouseholdFields({ draft, set }: Props) {
   return (
     <>
       <SectionTitle>Moradores e regras</SectionTitle>
-      <Field
+      <NumericStepper
         label="Total de moradores atuais"
-        numeric
+        min={0}
+        max={100}
         value={draft.currentResidentCount}
         onChangeText={(value) => set("currentResidentCount", value)}
       />
