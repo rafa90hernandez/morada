@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState, type ComponentProps } from "react";
+import { useCallback, useEffect, useMemo, useState, type ComponentProps } from "react";
 import { router } from "expo-router";
 import {
   ActivityIndicator,
+  Pressable,
   ScrollView,
   StyleSheet,
   Switch,
@@ -17,12 +18,18 @@ import {
   type UpdatePrivateProfile,
 } from "@/api/account";
 import { AppButton } from "@/components/ui/AppButton";
+import {
+  brazilianDateToIso,
+  formatBrazilianDateInput,
+  isoToBrazilianDate,
+} from "@/features/listings/input-formatters";
+import {
+  countrySuggestions,
+  irelandCitySuggestions,
+  matchingSuggestions,
+} from "@/features/listings/location-suggestions";
 import { useSession } from "@/session/SessionContext";
 import { colors, radius, spacing } from "@/theme/tokens";
-
-function dateInputValue(value: string | null | undefined) {
-  return value ? value.slice(0, 10) : "";
-}
 
 function statusLabel(user: PrivateUser) {
   if (user.eligibility.isEligible) {
@@ -60,7 +67,7 @@ export default function AccountScreen() {
     setUser(nextUser);
     setDisplayName(nextUser.profile?.displayName ?? "");
     setFullName(nextUser.profile?.fullName ?? "");
-    setDateOfBirth(dateInputValue(nextUser.profile?.dateOfBirth));
+    setDateOfBirth(isoToBrazilianDate(nextUser.profile?.dateOfBirth));
     setNationality(nextUser.profile?.nationality ?? "");
     setHometown(nextUser.profile?.hometown ?? "");
     setCurrentCity(nextUser.profile?.currentCity ?? "");
@@ -112,7 +119,14 @@ export default function AccountScreen() {
     };
 
     if (fullName.trim()) update.fullName = fullName.trim();
-    if (dateOfBirth.trim()) update.dateOfBirth = dateOfBirth.trim();
+    if (dateOfBirth.trim()) {
+      const isoDate = brazilianDateToIso(dateOfBirth.trim());
+      if (!isoDate) {
+        setError("Informe uma data de nascimento válida no formato DD/MM/AAAA.");
+        return;
+      }
+      update.dateOfBirth = isoDate;
+    }
     if (nationality.trim()) update.nationality = nationality.trim();
     if (hometown.trim()) update.hometown = hometown.trim();
     if (currentCity.trim()) update.currentCity = currentCity.trim();
@@ -130,9 +144,7 @@ export default function AccountScreen() {
         handleUnauthorized();
         return;
       }
-      setError(
-        "Não foi possível salvar. Confira os campos — inclusive a data no formato AAAA-MM-DD — e tente novamente.",
-      );
+      setError("Não foi possível salvar. Confira os campos e tente novamente.");
     } finally {
       setSaving(false);
     }
@@ -203,14 +215,19 @@ export default function AccountScreen() {
           value={fullName}
         />
         <Field
-          autoCapitalize="none"
-          label="Data de nascimento (AAAA-MM-DD)"
-          onChangeText={setDateOfBirth}
+          keyboardType="number-pad"
+          label="Data de nascimento"
+          maxLength={10}
+          onChangeText={(value) =>
+            setDateOfBirth(formatBrazilianDateInput(value))
+          }
+          placeholder="DD/MM/AAAA"
           value={dateOfBirth}
         />
         <Field
           label="Nacionalidade"
           onChangeText={setNationality}
+          suggestions={countrySuggestions}
           value={nationality}
         />
         <Field
@@ -221,6 +238,7 @@ export default function AccountScreen() {
         <Field
           label="Cidade atual"
           onChangeText={setCurrentCity}
+          suggestions={irelandCitySuggestions}
           value={currentCity}
         />
         <Field
@@ -286,19 +304,51 @@ export default function AccountScreen() {
   );
 }
 
-function Field({
-  label,
-  ...props
-}: { label: string } & ComponentProps<typeof TextInput>) {
+type FieldProps = { label: string; suggestions?: string[] } & ComponentProps<
+  typeof TextInput
+>;
+
+function Field({ label, suggestions, ...props }: FieldProps) {
+  const [focused, setFocused] = useState(false);
+  const matches = useMemo(
+    () => matchingSuggestions(String(props.value ?? ""), suggestions ?? []),
+    [props.value, suggestions],
+  );
+
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
       <TextInput
         accessibilityLabel={label}
+        onBlur={(event) => {
+          setFocused(false);
+          props.onBlur?.(event);
+        }}
+        onFocus={(event) => {
+          setFocused(true);
+          props.onFocus?.(event);
+        }}
         placeholderTextColor={colors.textMuted}
         style={[styles.input, props.multiline && styles.multiline]}
         {...props}
       />
+      {focused && matches.length > 0 ? (
+        <View style={styles.suggestionList}>
+          {matches.map((suggestion) => (
+            <Pressable
+              accessibilityRole="button"
+              key={suggestion}
+              onPress={() => {
+                props.onChangeText?.(suggestion);
+                setFocused(false);
+              }}
+              style={styles.suggestionItem}
+            >
+              <Text style={styles.suggestionText}>{suggestion}</Text>
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -386,6 +436,24 @@ const styles = StyleSheet.create({
     minHeight: 100,
     paddingTop: spacing.md,
     textAlignVertical: "top",
+  },
+  suggestionList: {
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
+  },
+  suggestionItem: {
+    minHeight: 44,
+    justifyContent: "center",
+    paddingHorizontal: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  suggestionText: {
+    color: colors.text,
+    fontWeight: "600",
   },
   switchRow: {
     minHeight: 48,
