@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useMemo, useState, type ComponentProps } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ComponentProps,
+} from "react";
 import { router } from "expo-router";
 import {
   ActivityIndicator,
@@ -122,7 +128,9 @@ export default function AccountScreen() {
     if (dateOfBirth.trim()) {
       const isoDate = brazilianDateToIso(dateOfBirth.trim());
       if (!isoDate) {
-        setError("Informe uma data de nascimento válida no formato DD/MM/AAAA.");
+        setError(
+          "Informe uma data de nascimento válida no formato DD/MM/AAAA.",
+        );
         return;
       }
       update.dateOfBirth = isoDate;
