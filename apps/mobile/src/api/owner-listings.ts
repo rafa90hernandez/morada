@@ -3,12 +3,7 @@ import { appendMultipartFile } from "./multipart";
 
 export type OwnerListingType = "RENTAL" | "TRANSFER";
 export type OwnerListingStatus =
-  | "DRAFT"
-  | "PENDING_REVIEW"
-  | "ACTIVE"
-  | "PAUSED"
-  | "CLOSED"
-  | "REJECTED";
+  "DRAFT" | "PENDING_REVIEW" | "ACTIVE" | "PAUSED" | "CLOSED" | "REJECTED";
 
 export type ListingCloseReason =
   | "RENTED_VIA_MORADA"
