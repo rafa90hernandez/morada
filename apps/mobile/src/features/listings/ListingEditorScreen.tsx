@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import {
   ActivityIndicator,
@@ -17,8 +23,10 @@ import { AppButton } from "@/components/ui/AppButton";
 import { useSession } from "@/session/SessionContext";
 import { colors, radius, spacing } from "@/theme/tokens";
 import { ListingAmenitiesFields } from "./ListingAmenitiesFields";
-import { ListingCoreFields } from "./ListingCoreFields";
+import { ListingBasicFields } from "./ListingBasicFields";
 import { ChoiceGroup } from "./ListingFormControls";
+import { ListingHouseholdFields } from "./ListingHouseholdFields";
+import { ListingPriceFields } from "./ListingPriceFields";
 import { ListingTransportFields } from "./ListingTransportFields";
 import {
   draftFromListing,
@@ -34,12 +42,24 @@ const listingTypes = [
   { value: "TRANSFER", label: "Transferência" },
 ] as const;
 
+const steps = [
+  { title: "O que você está anunciando?", short: "Anúncio" },
+  { title: "Onde fica?", short: "Localização" },
+  { title: "Preço e disponibilidade", short: "Preço" },
+  { title: "Quarto e moradores", short: "Moradia" },
+  { title: "Comodidades e transporte", short: "Comodidades" },
+  { title: "Regras e requisitos", short: "Regras" },
+  { title: "Revise antes de continuar", short: "Revisão" },
+] as const;
+
 export function ListingEditorScreen() {
   const params = useLocalSearchParams<{ id?: string }>();
   const listingId = typeof params.id === "string" ? params.id : undefined;
   const editing = Boolean(listingId);
   const { session, signOut } = useSession();
+  const scrollRef = useRef<ScrollView>(null);
   const [draft, setDraft] = useState<ListingDraft>(emptyListingDraft);
+  const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(editing);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +67,7 @@ export function ListingEditorScreen() {
   const set = useCallback(
     <K extends keyof ListingDraft>(key: K, value: ListingDraft[K]) => {
       setDraft((current) => ({ ...current, [key]: value }));
+      setError(null);
     },
     [],
   );
@@ -91,12 +112,37 @@ export function ListingEditorScreen() {
     [draft],
   );
 
+  const goToStep = (nextStep: number) => {
+    setStep(nextStep);
+    setError(null);
+    requestAnimationFrame(() => scrollRef.current?.scrollTo({ y: 0 }));
+  };
+
+  const next = () => {
+    if (step === 0 && (!input.title || !input.description)) {
+      setError("Informe título e descrição para continuar.");
+      return;
+    }
+    if (step === 1 && !input.city) {
+      setError("Informe a cidade para continuar.");
+      return;
+    }
+    goToStep(Math.min(step + 1, steps.length - 1));
+  };
+
   const save = async () => {
     if (!session) return;
     if (!input.title || !input.description) {
       setError("Informe título e descrição.");
+      goToStep(0);
       return;
     }
+    if (!input.city) {
+      setError("Informe a cidade do anúncio.");
+      goToStep(1);
+      return;
+    }
+
     setSaving(true);
     setError(null);
     try {
@@ -131,76 +177,217 @@ export function ListingEditorScreen() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.content}>
-      <View style={styles.card}>
-        <Text accessibilityRole="header" style={styles.title}>
-          {editing ? "Editar anúncio" : "Novo anúncio"}
+    <ScrollView ref={scrollRef} contentContainerStyle={styles.content}>
+      <View style={styles.progressCard}>
+        <Text style={styles.eyebrow}>
+          Etapa {step + 1} de {steps.length}
         </Text>
+        <Text accessibilityRole="header" style={styles.title}>
+          {steps[step].title}
+        </Text>
+        <View style={styles.progressTrack}>
+          <View
+            style={[
+              styles.progressFill,
+              { width: `${((step + 1) / steps.length) * 100}%` },
+            ]}
+          />
+        </View>
         <Text style={styles.muted}>
           {editing
-            ? "Alterações materiais podem enviar o anúncio novamente para moderação. Essa decisão é feita pelo servidor."
-            : "O anúncio será enviado para moderação antes de ficar público."}
+            ? "Você pode avançar e voltar sem salvar a cada etapa."
+            : "Preencha aos poucos. Você poderá revisar tudo antes de criar o anúncio."}
         </Text>
-        <ChoiceGroup
-          clearable={false}
-          label="Tipo de anúncio"
-          onChange={(value) => value && set("type", value)}
-          options={[...listingTypes]}
-          value={draft.type}
-        />
       </View>
 
-      <View style={styles.card}>
-        <ListingCoreFields draft={draft} set={set} />
-      </View>
+      <View style={styles.card}>{renderStep(step, draft, set)}</View>
 
-      <View style={styles.card}>
-        <ListingAmenitiesFields draft={draft} set={set} />
-      </View>
-
-      <View style={styles.card}>
-        <ListingTransportFields draft={draft} set={set} />
-      </View>
-
-      <View style={styles.card}>
-        <Text style={styles.summaryTitle}>Resumo financeiro</Text>
-        <Text style={styles.muted}>
-          Custo inicial estimado com depósito + aluguel antecipado: €
-          {estimatedInitialCost.toFixed(2)}
-        </Text>
-        <Text style={styles.note}>
-          Este valor é apenas uma soma dos campos informados e não representa
-          cobrança pelo Morada.
-        </Text>
-        {error ? (
-          <Text accessibilityLiveRegion="polite" style={styles.error}>
-            {error}
+      {step === steps.length - 1 ? (
+        <View style={styles.card}>
+          <Text style={styles.summaryTitle}>Resumo</Text>
+          <SummaryRow label="Título" value={draft.title || "Não informado"} />
+          <SummaryRow
+            label="Localização"
+            value={
+              [draft.area, draft.city].filter(Boolean).join(" · ") ||
+              "Não informada"
+            }
+          />
+          <SummaryRow
+            label="Aluguel mensal"
+            value={draft.monthlyPrice ? `€ ${draft.monthlyPrice}` : "Não informado"}
+          />
+          <SummaryRow
+            label="Disponível a partir de"
+            value={draft.availableFrom || "Não informado"}
+          />
+          <SummaryRow
+            label="Custo inicial estimado"
+            value={`€ ${estimatedInitialCost.toLocaleString("pt-BR", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}`}
+          />
+          <Text style={styles.note}>
+            O custo inicial é apenas uma soma dos valores informados. O Morada
+            não faz essa cobrança.
           </Text>
+          <View style={styles.photoCallout}>
+            <Text style={styles.photoTitle}>Fotos vêm logo em seguida</Text>
+            <Text style={styles.muted}>
+              Ao salvar, você irá para o gerenciamento do anúncio para adicionar,
+              conferir e escolher visualmente as fotos antes da publicação.
+            </Text>
+          </View>
+        </View>
+      ) : null}
+
+      {error ? (
+        <Text accessibilityLiveRegion="polite" style={styles.error}>
+          {error}
+        </Text>
+      ) : null}
+
+      <View style={styles.actions}>
+        {step > 0 ? (
+          <View style={styles.actionButton}>
+            <AppButton
+              disabled={saving}
+              label="Voltar"
+              onPress={() => goToStep(step - 1)}
+              variant="secondary"
+            />
+          </View>
         ) : null}
-        <AppButton
-          disabled={saving}
-          label={
-            saving
-              ? "Salvando..."
-              : editing
-                ? "Salvar alterações"
-                : "Criar anúncio"
-          }
-          onPress={() => void save()}
-        />
+        <View style={styles.actionButton}>
+          {step < steps.length - 1 ? (
+            <AppButton label="Continuar" onPress={next} />
+          ) : (
+            <AppButton
+              disabled={saving}
+              label={
+                saving
+                  ? "Salvando..."
+                  : editing
+                    ? "Salvar alterações"
+                    : "Criar e adicionar fotos"
+              }
+              onPress={() => void save()}
+            />
+          )}
+        </View>
       </View>
+
+      <Text style={styles.stepHint}>
+        {steps.map((item, index) => (index === step ? `● ${item.short}` : item.short)).join("  ·  ")}
+      </Text>
     </ScrollView>
   );
 }
 
+function renderStep(
+  step: number,
+  draft: ListingDraft,
+  set: <K extends keyof ListingDraft>(key: K, value: ListingDraft[K]) => void,
+) {
+  switch (step) {
+    case 0:
+      return (
+        <>
+          <ChoiceGroup
+            clearable={false}
+            label="Tipo de anúncio"
+            onChange={(value) => value && set("type", value)}
+            options={[...listingTypes]}
+            value={draft.type}
+          />
+          <ListingBasicFields draft={draft} section="intro" set={set} />
+        </>
+      );
+    case 1:
+      return <ListingBasicFields draft={draft} section="location" set={set} />;
+    case 2:
+      return <ListingPriceFields draft={draft} set={set} />;
+    case 3:
+      return (
+        <>
+          <ListingBasicFields draft={draft} section="space" set={set} />
+          <ListingHouseholdFields draft={draft} section="household" set={set} />
+        </>
+      );
+    case 4:
+      return (
+        <>
+          <ListingAmenitiesFields draft={draft} section="amenities" set={set} />
+          <ListingTransportFields draft={draft} set={set} />
+        </>
+      );
+    case 5:
+      return (
+        <>
+          <ListingHouseholdFields draft={draft} section="rules" set={set} />
+          <ListingAmenitiesFields
+            draft={draft}
+            section="requirements"
+            set={set}
+          />
+        </>
+      );
+    default:
+      return (
+        <View style={styles.reviewIntro}>
+          <Text style={styles.summaryTitle}>Tudo pronto para revisar</Text>
+          <Text style={styles.muted}>
+            Confira os principais dados abaixo. Se precisar ajustar algo, use
+            Voltar. Depois de salvar, o próximo passo é completar as fotos.
+          </Text>
+        </View>
+      );
+  }
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.summaryRow}>
+      <Text style={styles.summaryLabel}>{label}</Text>
+      <Text style={styles.summaryValue}>{value}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  content: { gap: spacing.md, padding: spacing.lg, paddingBottom: spacing.xxl },
+  content: {
+    gap: spacing.md,
+    padding: spacing.lg,
+    paddingBottom: spacing.xxl,
+  },
   center: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     gap: spacing.md,
     padding: spacing.xl,
+  },
+  progressCard: {
+    gap: spacing.sm,
+    paddingBottom: spacing.sm,
+  },
+  eyebrow: {
+    color: colors.primary,
+    fontSize: 13,
+    fontWeight: "800",
+    textTransform: "uppercase",
+  },
+  progressTrack: {
+    height: 6,
+    overflow: "hidden",
+    borderRadius: radius.pill,
+    backgroundColor: colors.primarySoft,
+  },
+  progressFill: {
+    height: "100%",
+    borderRadius: radius.pill,
+    backgroundColor: colors.primary,
   },
   card: {
     backgroundColor: colors.surface,
@@ -210,9 +397,36 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     padding: spacing.lg,
   },
-  title: { color: colors.text, fontSize: 26, fontWeight: "900" },
-  summaryTitle: { color: colors.text, fontSize: 18, fontWeight: "800" },
+  title: { color: colors.text, fontSize: 27, fontWeight: "900" },
+  summaryTitle: { color: colors.text, fontSize: 19, fontWeight: "800" },
   muted: { color: colors.textMuted, lineHeight: 21 },
   note: { color: colors.textMuted, fontSize: 13, lineHeight: 18 },
   error: { color: colors.danger, lineHeight: 20 },
+  actions: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  actionButton: { flex: 1 },
+  stepHint: {
+    color: colors.textMuted,
+    fontSize: 11,
+    lineHeight: 18,
+    textAlign: "center",
+  },
+  reviewIntro: { gap: spacing.sm },
+  summaryRow: {
+    gap: spacing.xs,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+    paddingBottom: spacing.sm,
+  },
+  summaryLabel: { color: colors.textMuted, fontSize: 13 },
+  summaryValue: { color: colors.text, fontSize: 16, fontWeight: "700" },
+  photoCallout: {
+    gap: spacing.xs,
+    borderRadius: radius.lg,
+    backgroundColor: colors.primarySoft,
+    padding: spacing.md,
+  },
+  photoTitle: { color: colors.primary, fontWeight: "800" },
 });
