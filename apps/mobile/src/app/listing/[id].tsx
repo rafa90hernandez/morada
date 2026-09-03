@@ -34,6 +34,21 @@ const propertyLabels: Record<string, string> = {
   OTHER: "Outro",
 };
 
+const amenityLabels: Record<string, string> = {
+  FRIDGE: "Geladeira",
+  FREEZER: "Freezer",
+  OVEN: "Forno",
+  HOB: "Fogão",
+  MICROWAVE: "Micro-ondas",
+  DISHWASHER: "Lava-louças",
+  KETTLE: "Chaleira",
+  BALCONY: "Varanda",
+  GARDEN: "Jardim",
+  YARD: "Quintal",
+  TERRACE: "Terraço",
+  SHARED_OUTDOOR_SPACE: "Área externa compartilhada",
+};
+
 function price(cents: number | null) {
   if (cents === null) return "Preço a confirmar";
   return new Intl.NumberFormat("pt-BR", {
@@ -43,9 +58,22 @@ function price(cents: number | null) {
   }).format(cents / 100);
 }
 
+function money(cents: number | null) {
+  return cents === null ? null : price(cents);
+}
+
 function yesNo(value: boolean | null) {
   if (value === null) return null;
   return value ? "Sim" : "Não";
+}
+
+function humanize(value: string | null) {
+  if (!value) return null;
+  return value
+    .toLowerCase()
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
 }
 
 export default function ListingDetailScreen() {
@@ -201,6 +229,10 @@ export default function ListingDetailScreen() {
       listing.accommodation.propertyType)
     : null;
   const availableFrom = isoToBrazilianDate(listing.availability.availableFrom);
+  const availableUntil = isoToBrazilianDate(
+    listing.availabilityDetail.availableUntil,
+  );
+  const amenities = [...listing.amenities.kitchen, ...listing.amenities.outdoor];
 
   return (
     <ScrollView contentContainerStyle={styles.content}>
@@ -250,29 +282,21 @@ export default function ListingDetailScreen() {
 
       <View style={styles.section}>
         <View style={styles.badgeRow}>
-          {propertyLabel ? (
-            <Text style={styles.badge}>{propertyLabel}</Text>
-          ) : null}
+          {propertyLabel ? <Text style={styles.badge}>{propertyLabel}</Text> : null}
           <Text style={styles.trustBadge}>Confiança {listing.trustScore}</Text>
         </View>
-        <Text style={styles.eyebrow}>
-          {location || "Localização aproximada"}
-        </Text>
+        <Text style={styles.eyebrow}>{location || "Localização aproximada"}</Text>
         <Text accessibilityRole="header" style={styles.title}>
           {listing.title}
         </Text>
         <View style={styles.priceRow}>
-          <Text style={styles.price}>
-            {price(listing.pricing.monthlyPriceCents)}
-          </Text>
+          <Text style={styles.price}>{price(listing.pricing.monthlyPriceCents)}</Text>
           {listing.pricing.monthlyPriceCents !== null ? (
             <Text style={styles.perMonth}>/ mês</Text>
           ) : null}
         </View>
         {availableFrom ? (
-          <Text style={styles.availability}>
-            Disponível a partir de {availableFrom}
-          </Text>
+          <Text style={styles.availability}>Disponível a partir de {availableFrom}</Text>
         ) : null}
         <Text style={styles.description}>{listing.description}</Text>
 
@@ -322,14 +346,8 @@ export default function ListingDetailScreen() {
 
       <View style={styles.trustCard}>
         <Text style={styles.sectionTitle}>Confiança e verificações</Text>
-        <TrustRow
-          label="Identidade do anunciante"
-          value={listing.trust.identityVerified}
-        />
-        <TrustRow
-          label="Vínculo com o imóvel"
-          value={listing.trust.relationshipVerified}
-        />
+        <TrustRow label="Identidade do anunciante" value={listing.trust.identityVerified} />
+        <TrustRow label="Vínculo com o imóvel" value={listing.trust.relationshipVerified} />
         <TrustRow
           label="Autorização do landlord"
           value={listing.trust.landlordAuthorization.status === "VERIFIED"}
@@ -344,10 +362,7 @@ export default function ListingDetailScreen() {
         <Text style={styles.sectionTitle}>Sobre a moradia</Text>
         <InfoRow label="Tipo" value={propertyLabel} />
         <InfoRow label="Quartos" value={listing.accommodation.bedroomCount} />
-        <InfoRow
-          label="Banheiros"
-          value={listing.accommodation.bathroomCount}
-        />
+        <InfoRow label="Banheiros" value={listing.accommodation.bathroomCount} />
         <InfoRow
           label="Espaço"
           value={
@@ -368,10 +383,13 @@ export default function ListingDetailScreen() {
                 : null
           }
         />
-        <InfoRow
-          label="Mobiliado"
-          value={yesNo(listing.accommodation.furnished)}
-        />
+        <InfoRow label="Tipo de quarto" value={humanize(listing.space.roomType)} />
+        <InfoRow label="Tipo de cama" value={humanize(listing.space.bedType)} />
+        <InfoRow label="Máximo de ocupantes" value={listing.space.maxOccupants} />
+        <InfoRow label="Mobiliado" value={yesNo(listing.accommodation.furnished)} />
+        <InfoRow label="Andar" value={listing.property.floorNumber} />
+        <InfoRow label="Elevador" value={yesNo(listing.property.hasLift)} />
+        <InfoRow label="Aquecimento" value={humanize(listing.property.heatingType)} />
         <InfoRow
           label="Estadia mínima"
           value={
@@ -380,23 +398,103 @@ export default function ListingDetailScreen() {
               : null
           }
         />
+        <InfoRow label="Disponível até" value={availableUntil} />
+      </View>
+
+      <View style={styles.sectionCard}>
+        <Text style={styles.sectionTitle}>Casa e convivência</Text>
+        <InfoRow label="Moradores atuais" value={listing.household.currentResidentCount} />
+        <InfoRow label="Compartilham o espaço" value={listing.space.peopleSharingSpace} />
+        <InfoRow label="Compartilham o banheiro" value={listing.space.peopleSharingBathroom} />
+        <InfoRow label="Composição da casa" value={humanize(listing.household.genderComposition)} />
+        <InfoRow label="Landlord mora no imóvel" value={yesNo(listing.household.landlordLivesHere)} />
+        <InfoRow label="Aceita casais" value={yesNo(listing.suitability.couplesAllowed)} />
+        <InfoRow label="Aceita famílias" value={yesNo(listing.household.childrenFamiliesAllowed)} />
+        <InfoRow label="Aceita estudantes" value={yesNo(listing.household.studentsAllowed)} />
+        <InfoRow label="Aceita pets" value={yesNo(listing.suitability.petsAllowed)} />
+        <InfoRow label="Permite fumar" value={yesNo(listing.suitability.smokingAllowed)} />
+      </View>
+
+      <View style={styles.sectionCard}>
+        <Text style={styles.sectionTitle}>Custos e condições</Text>
+        <InfoRow label="Aluguel mensal" value={money(listing.pricing.monthlyPriceCents)} />
+        <InfoRow label="Depósito" value={money(listing.pricingDetail.depositAmountCents)} />
+        <InfoRow label="Contas mensais estimadas" value={money(listing.pricingDetail.estimatedMonthlyBillsCents)} />
+        <InfoRow label="Aluguel adiantado" value={money(listing.pricingDetail.firstRentAdvanceCents)} />
+        {listing.pricingDetail.extraCostsNote ? (
+          <Text style={styles.note}>{listing.pricingDetail.extraCostsNote}</Text>
+        ) : null}
+      </View>
+
+      <View style={styles.sectionCard}>
+        <Text style={styles.sectionTitle}>Requisitos</Text>
+        <InfoRow label="Contrato formal" value={yesNo(listing.requirements.formalContract)} />
+        <InfoRow label="Aprovação do landlord" value={yesNo(listing.requirements.landlordApprovalRequired)} />
+        <InfoRow label="Comprovante de renda" value={yesNo(listing.requirements.proofOfIncomeRequired)} />
+        <InfoRow label="Comprovante de emprego" value={yesNo(listing.requirements.proofOfEmploymentRequired)} />
+        <InfoRow label="Referência anterior" value={yesNo(listing.requirements.priorReferenceRequired)} />
+        {listing.requirements.otherRequirementsNote ? (
+          <Text style={styles.note}>{listing.requirements.otherRequirementsNote}</Text>
+        ) : null}
+      </View>
+
+      <View style={styles.sectionCard}>
+        <Text style={styles.sectionTitle}>Comodidades</Text>
+        <InfoRow label="Internet" value={yesNo(listing.connectivity.internetAvailable)} />
+        <InfoRow label="Wi-Fi" value={yesNo(listing.connectivity.wifiAvailable)} />
+        <InfoRow label="Internet incluída" value={yesNo(listing.connectivity.internetIncludedInBills)} />
+        <InfoRow
+          label="Velocidade da internet"
+          value={
+            listing.connectivity.internetSpeedMbps
+              ? `${listing.connectivity.internetSpeedMbps} Mbps`
+              : null
+          }
+        />
+        <InfoRow label="Máquina de lavar" value={yesNo(listing.laundry.washingMachine)} />
+        <InfoRow label="Secadora" value={yesNo(listing.laundry.dryer)} />
+        <InfoRow label="Estacionamento para carro" value={yesNo(listing.parking.car)} />
+        <InfoRow label="Estacionamento para bicicleta" value={yesNo(listing.parking.bicycle)} />
+        {amenities.length > 0 ? (
+          <View style={styles.chipRow}>
+            {amenities.map((amenity) => (
+              <Text key={amenity} style={styles.amenityChip}>
+                {amenityLabels[amenity] ?? humanize(amenity)}
+              </Text>
+            ))}
+          </View>
+        ) : null}
+      </View>
+
+      <View style={styles.sectionCard}>
+        <Text style={styles.sectionTitle}>Regras da casa</Text>
+        <InfoRow label="Festas" value={yesNo(listing.rules.partiesAllowed)} />
+        <InfoRow label="Visitantes" value={yesNo(listing.rules.visitorsAllowed)} />
+        {listing.rules.quietHoursNote ? (
+          <Text style={styles.note}>Horário de silêncio: {listing.rules.quietHoursNote}</Text>
+        ) : null}
+        {listing.rules.houseRules ? <Text style={styles.note}>{listing.rules.houseRules}</Text> : null}
+      </View>
+
+      <View style={styles.sectionCard}>
+        <Text style={styles.sectionTitle}>Acessibilidade</Text>
+        <InfoRow label="Acesso sem degraus" value={yesNo(listing.accessibility.stepFreeAccess)} />
+        <InfoRow label="Entrada acessível" value={yesNo(listing.accessibility.accessibleEntrance)} />
+        <InfoRow label="Banheiro adaptado" value={yesNo(listing.accessibility.adaptedBathroom)} />
+        <InfoRow label="Espaço para cadeira de rodas" value={yesNo(listing.accessibility.wheelchairSpace)} />
+        <InfoRow label="Estacionamento acessível" value={yesNo(listing.accessibility.accessibleParking)} />
+        {listing.accessibility.otherNote ? <Text style={styles.note}>{listing.accessibility.otherNote}</Text> : null}
       </View>
 
       {listing.advertiser ? (
         <View style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>Quem está anunciando</Text>
-          <Text style={styles.advertiserName}>
-            {listing.advertiser.displayName}
-          </Text>
+          <Text style={styles.advertiserName}>{listing.advertiser.displayName}</Text>
           {listing.advertiser.nationality ? (
-            <Text style={styles.mutedLeft}>
-              Nacionalidade: {listing.advertiser.nationality}
-            </Text>
+            <Text style={styles.mutedLeft}>Nacionalidade: {listing.advertiser.nationality}</Text>
           ) : null}
           {listing.advertiser.hometown ? (
-            <Text style={styles.mutedLeft}>
-              Cidade de origem: {listing.advertiser.hometown}
-            </Text>
+            <Text style={styles.mutedLeft}>Cidade de origem: {listing.advertiser.hometown}</Text>
           ) : null}
         </View>
       ) : null}
@@ -409,9 +507,7 @@ export default function ListingDetailScreen() {
               <Text style={styles.transportMode}>{option.mode}</Text>
               <View style={styles.transportText}>
                 <Text style={styles.rowValue}>
-                  {[option.stopName, option.lineName]
-                    .filter(Boolean)
-                    .join(" · ")}
+                  {[option.stopName, option.lineName].filter(Boolean).join(" · ")}
                 </Text>
                 {option.walkingMinutes !== null ? (
                   <Text style={styles.mutedLeft}>
@@ -432,8 +528,7 @@ export default function ListingDetailScreen() {
         </Text>
         {listing.location.approximate ? (
           <Text style={styles.locationHint}>
-            Área aproximada em um raio de{" "}
-            {listing.location.approximate.radiusMeters} m
+            Área aproximada em um raio de {listing.location.approximate.radiusMeters} m
           </Text>
         ) : null}
       </View>
@@ -465,9 +560,7 @@ function TrustRow({ label, value }: { label: string; value: boolean }) {
   return (
     <View style={styles.row}>
       <Text style={styles.rowLabel}>{label}</Text>
-      <Text
-        style={[styles.rowValue, value ? styles.verified : styles.notVerified]}
-      >
+      <Text style={[styles.rowValue, value ? styles.verified : styles.notVerified]}>
         {value ? "Verificado" : "Não verificado"}
       </Text>
     </View>
@@ -504,23 +597,15 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     backgroundColor: colors.background,
   },
-  gallery: {
-    gap: spacing.sm,
-  },
+  gallery: { gap: spacing.sm },
   hero: {
     width: "100%",
     aspectRatio: 1.35,
     borderRadius: radius.xl,
     backgroundColor: colors.surfaceMuted,
   },
-  heroPlaceholder: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  thumbnailRow: {
-    gap: spacing.sm,
-    paddingRight: spacing.md,
-  },
+  heroPlaceholder: { alignItems: "center", justifyContent: "center" },
+  thumbnailRow: { gap: spacing.sm, paddingRight: spacing.md },
   thumbnailButton: {
     overflow: "hidden",
     width: 76,
@@ -529,17 +614,9 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
     borderRadius: radius.md,
   },
-  thumbnailButtonSelected: {
-    borderColor: colors.primary,
-  },
-  thumbnail: {
-    width: "100%",
-    height: "100%",
-    backgroundColor: colors.surfaceMuted,
-  },
-  section: {
-    gap: spacing.sm,
-  },
+  thumbnailButtonSelected: { borderColor: colors.primary },
+  thumbnail: { width: "100%", height: "100%", backgroundColor: colors.surfaceMuted },
+  section: { gap: spacing.sm },
   badgeRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -556,53 +633,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "800",
   },
-  trustBadge: {
-    color: colors.primary,
-    fontSize: 12,
-    fontWeight: "800",
-  },
-  eyebrow: {
-    color: colors.textMuted,
-    fontWeight: "700",
-  },
-  title: {
-    color: colors.text,
-    fontSize: 30,
-    fontWeight: "900",
-    letterSpacing: -0.7,
-  },
-  priceRow: {
-    flexDirection: "row",
-    alignItems: "baseline",
-  },
-  price: {
-    color: colors.text,
-    fontSize: 24,
-    fontWeight: "900",
-  },
-  perMonth: {
-    color: colors.textMuted,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  availability: {
-    color: colors.primary,
-    fontWeight: "800",
-  },
-  description: {
-    color: colors.textMuted,
-    fontSize: 16,
-    lineHeight: 24,
-  },
-  actionRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  actionButton: {
-    flexGrow: 1,
-    minWidth: 150,
-  },
+  trustBadge: { color: colors.primary, fontSize: 12, fontWeight: "800" },
+  eyebrow: { color: colors.textMuted, fontWeight: "700" },
+  title: { color: colors.text, fontSize: 30, fontWeight: "900", letterSpacing: -0.7 },
+  priceRow: { flexDirection: "row", alignItems: "baseline" },
+  price: { color: colors.text, fontSize: 24, fontWeight: "900" },
+  perMonth: { color: colors.textMuted, fontSize: 14, fontWeight: "600" },
+  availability: { color: colors.primary, fontWeight: "800" },
+  description: { color: colors.textMuted, fontSize: 16, lineHeight: 24 },
+  actionRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
+  actionButton: { flexGrow: 1, minWidth: 150 },
   trustCard: {
     gap: spacing.sm,
     borderRadius: radius.lg,
@@ -625,16 +665,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     padding: spacing.md,
   },
-  sectionTitle: {
-    color: colors.text,
-    fontSize: 18,
-    fontWeight: "800",
-  },
-  advertiserName: {
-    color: colors.text,
-    fontSize: 17,
-    fontWeight: "800",
-  },
+  sectionTitle: { color: colors.text, fontSize: 18, fontWeight: "800" },
+  advertiserName: { color: colors.text, fontSize: 17, fontWeight: "800" },
   row: {
     flexDirection: "row",
     alignItems: "center",
@@ -642,61 +674,38 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     minHeight: 32,
   },
-  rowLabel: {
-    flex: 1,
-    color: colors.textMuted,
-  },
-  rowValue: {
-    color: colors.text,
-    fontWeight: "700",
-  },
-  verified: {
-    color: colors.primary,
-  },
-  notVerified: {
-    color: colors.textMuted,
-  },
+  rowLabel: { flex: 1, color: colors.textMuted },
+  rowValue: { color: colors.text, fontWeight: "700", textAlign: "right" },
+  verified: { color: colors.primary },
+  notVerified: { color: colors.textMuted },
   trustNote: {
     marginTop: spacing.sm,
     color: colors.textMuted,
     fontSize: 12,
     lineHeight: 18,
   },
-  muted: {
-    color: colors.textMuted,
-    textAlign: "center",
-    lineHeight: 22,
-  },
-  mutedLeft: {
-    color: colors.textMuted,
-    lineHeight: 22,
-  },
-  stateTitle: {
-    color: colors.text,
-    fontSize: 22,
-    fontWeight: "800",
-  },
-  locationHint: {
-    color: colors.text,
+  note: { color: colors.textMuted, lineHeight: 21 },
+  chipRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.xs },
+  amenityChip: {
+    borderRadius: radius.pill,
+    backgroundColor: colors.primarySoft,
+    color: colors.primary,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    fontSize: 12,
     fontWeight: "700",
   },
+  muted: { color: colors.textMuted, textAlign: "center", lineHeight: 22 },
+  mutedLeft: { color: colors.textMuted, lineHeight: 22 },
+  stateTitle: { color: colors.text, fontSize: 22, fontWeight: "800" },
+  locationHint: { color: colors.text, fontWeight: "700" },
   transportRow: {
     flexDirection: "row",
     alignItems: "flex-start",
     gap: spacing.sm,
     paddingVertical: spacing.xs,
   },
-  transportMode: {
-    minWidth: 58,
-    color: colors.primary,
-    fontWeight: "800",
-  },
-  transportText: {
-    flex: 1,
-    gap: 2,
-  },
-  error: {
-    color: colors.danger,
-    lineHeight: 20,
-  },
+  transportMode: { minWidth: 58, color: colors.primary, fontWeight: "800" },
+  transportText: { flex: 1, gap: 2 },
+  error: { color: colors.danger, lineHeight: 20 },
 });
