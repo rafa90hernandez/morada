@@ -127,13 +127,13 @@ export function ListingEditorScreen() {
   const save = async () => {
     if (!session) return;
     if (!input.title || !input.description) {
-      setError("Informe título e descrição.");
       goToStep(0);
+      setError("Informe título e descrição.");
       return;
     }
     if (!input.city) {
-      setError("Informe a cidade do anúncio.");
       goToStep(1);
+      setError("Informe a cidade do anúncio.");
       return;
     }
 
