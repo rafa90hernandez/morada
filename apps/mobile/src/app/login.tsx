@@ -43,7 +43,7 @@ export default function LoginScreen() {
       if (params.returnTo) {
         router.replace(params.returnTo as never);
       } else {
-        router.replace("/account");
+        router.replace("/");
       }
     } catch {
       setError(
