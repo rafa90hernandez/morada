@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import * as ImagePicker from "expo-image-picker";
 import { router, useLocalSearchParams } from "expo-router";
 import {
   ActivityIndicator,
+  Image,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -40,6 +42,7 @@ export default function ListingOwnerScreen() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [selectedPhotoId, setSelectedPhotoId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!session) {
@@ -52,7 +55,14 @@ export default function ListingOwnerScreen() {
     setLoading(true);
     setError(null);
     try {
-      setItem(await getMyListing(id, session.accessToken));
+      const nextItem = await getMyListing(id, session.accessToken);
+      setItem(nextItem);
+      setSelectedPhotoId((current) => {
+        if (current && nextItem.photos.some((photo) => photo.id === current)) {
+          return current;
+        }
+        return nextItem.photos[0]?.id ?? null;
+      });
     } catch (caught) {
       if ((caught as Error & { status?: number }).status === 401) {
         signOut();
@@ -68,6 +78,13 @@ export default function ListingOwnerScreen() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  const selectedPhoto = useMemo(() => {
+    if (!item?.photos.length) return null;
+    return (
+      item.photos.find((photo) => photo.id === selectedPhotoId) ?? item.photos[0]
+    );
+  }, [item, selectedPhotoId]);
 
   const runAction = async (
     label: string,
@@ -107,7 +124,7 @@ export default function ListingOwnerScreen() {
     setBusy(true);
     try {
       const extension = asset.mimeType?.split("/")[1] ?? "jpg";
-      await uploadListingPhoto(
+      const uploaded = await uploadListingPhoto(
         id,
         {
           uri: asset.uri,
@@ -116,6 +133,7 @@ export default function ListingOwnerScreen() {
         },
         session.accessToken,
       );
+      setSelectedPhotoId(uploaded.id);
       await load();
       setSuccess("Foto adicionada.");
     } catch (caught) {
@@ -178,12 +196,67 @@ export default function ListingOwnerScreen() {
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Conteúdo</Text>
+        <Text style={styles.sectionTitle}>Fotos do anúncio</Text>
         <Text style={styles.muted}>
           {item.photos.length} foto{item.photos.length === 1 ? "" : "s"}{" "}
           cadastrada
           {item.photos.length === 1 ? "" : "s"}.
         </Text>
+
+        {selectedPhoto ? (
+          <View style={styles.gallery}>
+            <View style={styles.coverWrap}>
+              <Image
+                accessibilityLabel="Prévia da foto selecionada do anúncio"
+                resizeMode="cover"
+                source={{ uri: selectedPhoto.url }}
+                style={styles.coverImage}
+              />
+              {selectedPhoto.position === 0 ? (
+                <View style={styles.coverBadge}>
+                  <Text style={styles.coverBadgeText}>Capa</Text>
+                </View>
+              ) : null}
+            </View>
+
+            {item.photos.length > 1 ? (
+              <ScrollView
+                contentContainerStyle={styles.thumbnailRow}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+              >
+                {item.photos.map((photo) => {
+                  const selected = photo.id === selectedPhoto.id;
+                  return (
+                    <Pressable
+                      accessibilityLabel={`Visualizar foto ${photo.position + 1}`}
+                      accessibilityRole="button"
+                      key={photo.id}
+                      onPress={() => setSelectedPhotoId(photo.id)}
+                      style={[
+                        styles.thumbnailButton,
+                        selected && styles.thumbnailButtonSelected,
+                      ]}
+                    >
+                      <Image
+                        resizeMode="cover"
+                        source={{ uri: photo.url }}
+                        style={styles.thumbnailImage}
+                      />
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            ) : null}
+          </View>
+        ) : (
+          <View style={styles.emptyPhotos}>
+            <Text style={styles.muted}>
+              Adicione a primeira foto para criar a prévia do anúncio.
+            </Text>
+          </View>
+        )}
+
         <AppButton
           disabled={busy || item.status === "CLOSED"}
           label="Adicionar foto"
@@ -325,6 +398,44 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
   badgeText: { color: colors.primary, fontWeight: "800" },
+  gallery: { gap: spacing.sm },
+  coverWrap: {
+    position: "relative",
+    overflow: "hidden",
+    borderRadius: radius.lg,
+    backgroundColor: colors.background,
+  },
+  coverImage: { width: "100%", aspectRatio: 4 / 3 },
+  coverBadge: {
+    position: "absolute",
+    left: spacing.sm,
+    top: spacing.sm,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  coverBadgeText: { color: colors.text, fontWeight: "800" },
+  thumbnailRow: { gap: spacing.sm },
+  thumbnailButton: {
+    overflow: "hidden",
+    width: 76,
+    height: 76,
+    borderWidth: 2,
+    borderColor: "transparent",
+    borderRadius: radius.md,
+  },
+  thumbnailButtonSelected: { borderColor: colors.primary },
+  thumbnailImage: { width: "100%", height: "100%" },
+  emptyPhotos: {
+    minHeight: 110,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+  },
   error: { color: colors.danger, lineHeight: 20 },
   warning: { color: colors.warning, lineHeight: 20 },
   success: { color: colors.success, fontWeight: "700" },
