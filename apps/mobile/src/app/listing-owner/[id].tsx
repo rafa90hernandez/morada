@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 
+import { resolveMediaUrl } from "@/api/media";
 import {
   getMyListing,
   pauseListing,
@@ -209,7 +210,7 @@ export default function ListingOwnerScreen() {
               <Image
                 accessibilityLabel="Prévia da foto selecionada do anúncio"
                 resizeMode="cover"
-                source={{ uri: selectedPhoto.url }}
+                source={{ uri: resolveMediaUrl(selectedPhoto.url) }}
                 style={styles.coverImage}
               />
               {selectedPhoto.position === 0 ? (
@@ -240,7 +241,7 @@ export default function ListingOwnerScreen() {
                     >
                       <Image
                         resizeMode="cover"
-                        source={{ uri: photo.url }}
+                        source={{ uri: resolveMediaUrl(photo.url) }}
                         style={styles.thumbnailImage}
                       />
                     </Pressable>
