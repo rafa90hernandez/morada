@@ -232,7 +232,10 @@ export default function ListingDetailScreen() {
   const availableUntil = isoToBrazilianDate(
     listing.availabilityDetail.availableUntil,
   );
-  const amenities = [...listing.amenities.kitchen, ...listing.amenities.outdoor];
+  const amenities = [
+    ...listing.amenities.kitchen,
+    ...listing.amenities.outdoor,
+  ];
 
   return (
     <ScrollView contentContainerStyle={styles.content}>
@@ -282,21 +285,29 @@ export default function ListingDetailScreen() {
 
       <View style={styles.section}>
         <View style={styles.badgeRow}>
-          {propertyLabel ? <Text style={styles.badge}>{propertyLabel}</Text> : null}
+          {propertyLabel ? (
+            <Text style={styles.badge}>{propertyLabel}</Text>
+          ) : null}
           <Text style={styles.trustBadge}>Confiança {listing.trustScore}</Text>
         </View>
-        <Text style={styles.eyebrow}>{location || "Localização aproximada"}</Text>
+        <Text style={styles.eyebrow}>
+          {location || "Localização aproximada"}
+        </Text>
         <Text accessibilityRole="header" style={styles.title}>
           {listing.title}
         </Text>
         <View style={styles.priceRow}>
-          <Text style={styles.price}>{price(listing.pricing.monthlyPriceCents)}</Text>
+          <Text style={styles.price}>
+            {price(listing.pricing.monthlyPriceCents)}
+          </Text>
           {listing.pricing.monthlyPriceCents !== null ? (
             <Text style={styles.perMonth}>/ mês</Text>
           ) : null}
         </View>
         {availableFrom ? (
-          <Text style={styles.availability}>Disponível a partir de {availableFrom}</Text>
+          <Text style={styles.availability}>
+            Disponível a partir de {availableFrom}
+          </Text>
         ) : null}
         <Text style={styles.description}>{listing.description}</Text>
 
@@ -346,8 +357,14 @@ export default function ListingDetailScreen() {
 
       <View style={styles.trustCard}>
         <Text style={styles.sectionTitle}>Confiança e verificações</Text>
-        <TrustRow label="Identidade do anunciante" value={listing.trust.identityVerified} />
-        <TrustRow label="Vínculo com o imóvel" value={listing.trust.relationshipVerified} />
+        <TrustRow
+          label="Identidade do anunciante"
+          value={listing.trust.identityVerified}
+        />
+        <TrustRow
+          label="Vínculo com o imóvel"
+          value={listing.trust.relationshipVerified}
+        />
         <TrustRow
           label="Autorização do landlord"
           value={listing.trust.landlordAuthorization.status === "VERIFIED"}
@@ -362,7 +379,10 @@ export default function ListingDetailScreen() {
         <Text style={styles.sectionTitle}>Sobre a moradia</Text>
         <InfoRow label="Tipo" value={propertyLabel} />
         <InfoRow label="Quartos" value={listing.accommodation.bedroomCount} />
-        <InfoRow label="Banheiros" value={listing.accommodation.bathroomCount} />
+        <InfoRow
+          label="Banheiros"
+          value={listing.accommodation.bathroomCount}
+        />
         <InfoRow
           label="Espaço"
           value={
@@ -383,13 +403,25 @@ export default function ListingDetailScreen() {
                 : null
           }
         />
-        <InfoRow label="Tipo de quarto" value={humanize(listing.space.roomType)} />
+        <InfoRow
+          label="Tipo de quarto"
+          value={humanize(listing.space.roomType)}
+        />
         <InfoRow label="Tipo de cama" value={humanize(listing.space.bedType)} />
-        <InfoRow label="Máximo de ocupantes" value={listing.space.maxOccupants} />
-        <InfoRow label="Mobiliado" value={yesNo(listing.accommodation.furnished)} />
+        <InfoRow
+          label="Máximo de ocupantes"
+          value={listing.space.maxOccupants}
+        />
+        <InfoRow
+          label="Mobiliado"
+          value={yesNo(listing.accommodation.furnished)}
+        />
         <InfoRow label="Andar" value={listing.property.floorNumber} />
         <InfoRow label="Elevador" value={yesNo(listing.property.hasLift)} />
-        <InfoRow label="Aquecimento" value={humanize(listing.property.heatingType)} />
+        <InfoRow
+          label="Aquecimento"
+          value={humanize(listing.property.heatingType)}
+        />
         <InfoRow
           label="Estadia mínima"
           value={
@@ -403,46 +435,116 @@ export default function ListingDetailScreen() {
 
       <View style={styles.sectionCard}>
         <Text style={styles.sectionTitle}>Casa e convivência</Text>
-        <InfoRow label="Moradores atuais" value={listing.household.currentResidentCount} />
-        <InfoRow label="Compartilham o espaço" value={listing.space.peopleSharingSpace} />
-        <InfoRow label="Compartilham o banheiro" value={listing.space.peopleSharingBathroom} />
-        <InfoRow label="Composição da casa" value={humanize(listing.household.genderComposition)} />
-        <InfoRow label="Landlord mora no imóvel" value={yesNo(listing.household.landlordLivesHere)} />
-        <InfoRow label="Aceita casais" value={yesNo(listing.suitability.couplesAllowed)} />
-        <InfoRow label="Aceita famílias" value={yesNo(listing.household.childrenFamiliesAllowed)} />
-        <InfoRow label="Aceita estudantes" value={yesNo(listing.household.studentsAllowed)} />
-        <InfoRow label="Aceita pets" value={yesNo(listing.suitability.petsAllowed)} />
-        <InfoRow label="Permite fumar" value={yesNo(listing.suitability.smokingAllowed)} />
+        <InfoRow
+          label="Moradores atuais"
+          value={listing.household.currentResidentCount}
+        />
+        <InfoRow
+          label="Compartilham o espaço"
+          value={listing.space.peopleSharingSpace}
+        />
+        <InfoRow
+          label="Compartilham o banheiro"
+          value={listing.space.peopleSharingBathroom}
+        />
+        <InfoRow
+          label="Composição da casa"
+          value={humanize(listing.household.genderComposition)}
+        />
+        <InfoRow
+          label="Landlord mora no imóvel"
+          value={yesNo(listing.household.landlordLivesHere)}
+        />
+        <InfoRow
+          label="Aceita casais"
+          value={yesNo(listing.suitability.couplesAllowed)}
+        />
+        <InfoRow
+          label="Aceita famílias"
+          value={yesNo(listing.household.childrenFamiliesAllowed)}
+        />
+        <InfoRow
+          label="Aceita estudantes"
+          value={yesNo(listing.household.studentsAllowed)}
+        />
+        <InfoRow
+          label="Aceita pets"
+          value={yesNo(listing.suitability.petsAllowed)}
+        />
+        <InfoRow
+          label="Permite fumar"
+          value={yesNo(listing.suitability.smokingAllowed)}
+        />
       </View>
 
       <View style={styles.sectionCard}>
         <Text style={styles.sectionTitle}>Custos e condições</Text>
-        <InfoRow label="Aluguel mensal" value={money(listing.pricing.monthlyPriceCents)} />
-        <InfoRow label="Depósito" value={money(listing.pricingDetail.depositAmountCents)} />
-        <InfoRow label="Contas mensais estimadas" value={money(listing.pricingDetail.estimatedMonthlyBillsCents)} />
-        <InfoRow label="Aluguel adiantado" value={money(listing.pricingDetail.firstRentAdvanceCents)} />
+        <InfoRow
+          label="Aluguel mensal"
+          value={money(listing.pricing.monthlyPriceCents)}
+        />
+        <InfoRow
+          label="Depósito"
+          value={money(listing.pricingDetail.depositAmountCents)}
+        />
+        <InfoRow
+          label="Contas mensais estimadas"
+          value={money(listing.pricingDetail.estimatedMonthlyBillsCents)}
+        />
+        <InfoRow
+          label="Aluguel adiantado"
+          value={money(listing.pricingDetail.firstRentAdvanceCents)}
+        />
         {listing.pricingDetail.extraCostsNote ? (
-          <Text style={styles.note}>{listing.pricingDetail.extraCostsNote}</Text>
+          <Text style={styles.note}>
+            {listing.pricingDetail.extraCostsNote}
+          </Text>
         ) : null}
       </View>
 
       <View style={styles.sectionCard}>
         <Text style={styles.sectionTitle}>Requisitos</Text>
-        <InfoRow label="Contrato formal" value={yesNo(listing.requirements.formalContract)} />
-        <InfoRow label="Aprovação do landlord" value={yesNo(listing.requirements.landlordApprovalRequired)} />
-        <InfoRow label="Comprovante de renda" value={yesNo(listing.requirements.proofOfIncomeRequired)} />
-        <InfoRow label="Comprovante de emprego" value={yesNo(listing.requirements.proofOfEmploymentRequired)} />
-        <InfoRow label="Referência anterior" value={yesNo(listing.requirements.priorReferenceRequired)} />
+        <InfoRow
+          label="Contrato formal"
+          value={yesNo(listing.requirements.formalContract)}
+        />
+        <InfoRow
+          label="Aprovação do landlord"
+          value={yesNo(listing.requirements.landlordApprovalRequired)}
+        />
+        <InfoRow
+          label="Comprovante de renda"
+          value={yesNo(listing.requirements.proofOfIncomeRequired)}
+        />
+        <InfoRow
+          label="Comprovante de emprego"
+          value={yesNo(listing.requirements.proofOfEmploymentRequired)}
+        />
+        <InfoRow
+          label="Referência anterior"
+          value={yesNo(listing.requirements.priorReferenceRequired)}
+        />
         {listing.requirements.otherRequirementsNote ? (
-          <Text style={styles.note}>{listing.requirements.otherRequirementsNote}</Text>
+          <Text style={styles.note}>
+            {listing.requirements.otherRequirementsNote}
+          </Text>
         ) : null}
       </View>
 
       <View style={styles.sectionCard}>
         <Text style={styles.sectionTitle}>Comodidades</Text>
-        <InfoRow label="Internet" value={yesNo(listing.connectivity.internetAvailable)} />
-        <InfoRow label="Wi-Fi" value={yesNo(listing.connectivity.wifiAvailable)} />
-        <InfoRow label="Internet incluída" value={yesNo(listing.connectivity.internetIncludedInBills)} />
+        <InfoRow
+          label="Internet"
+          value={yesNo(listing.connectivity.internetAvailable)}
+        />
+        <InfoRow
+          label="Wi-Fi"
+          value={yesNo(listing.connectivity.wifiAvailable)}
+        />
+        <InfoRow
+          label="Internet incluída"
+          value={yesNo(listing.connectivity.internetIncludedInBills)}
+        />
         <InfoRow
           label="Velocidade da internet"
           value={
@@ -451,10 +553,19 @@ export default function ListingDetailScreen() {
               : null
           }
         />
-        <InfoRow label="Máquina de lavar" value={yesNo(listing.laundry.washingMachine)} />
+        <InfoRow
+          label="Máquina de lavar"
+          value={yesNo(listing.laundry.washingMachine)}
+        />
         <InfoRow label="Secadora" value={yesNo(listing.laundry.dryer)} />
-        <InfoRow label="Estacionamento para carro" value={yesNo(listing.parking.car)} />
-        <InfoRow label="Estacionamento para bicicleta" value={yesNo(listing.parking.bicycle)} />
+        <InfoRow
+          label="Estacionamento para carro"
+          value={yesNo(listing.parking.car)}
+        />
+        <InfoRow
+          label="Estacionamento para bicicleta"
+          value={yesNo(listing.parking.bicycle)}
+        />
         {amenities.length > 0 ? (
           <View style={styles.chipRow}>
             {amenities.map((amenity) => (
@@ -469,32 +580,62 @@ export default function ListingDetailScreen() {
       <View style={styles.sectionCard}>
         <Text style={styles.sectionTitle}>Regras da casa</Text>
         <InfoRow label="Festas" value={yesNo(listing.rules.partiesAllowed)} />
-        <InfoRow label="Visitantes" value={yesNo(listing.rules.visitorsAllowed)} />
+        <InfoRow
+          label="Visitantes"
+          value={yesNo(listing.rules.visitorsAllowed)}
+        />
         {listing.rules.quietHoursNote ? (
-          <Text style={styles.note}>Horário de silêncio: {listing.rules.quietHoursNote}</Text>
+          <Text style={styles.note}>
+            Horário de silêncio: {listing.rules.quietHoursNote}
+          </Text>
         ) : null}
-        {listing.rules.houseRules ? <Text style={styles.note}>{listing.rules.houseRules}</Text> : null}
+        {listing.rules.houseRules ? (
+          <Text style={styles.note}>{listing.rules.houseRules}</Text>
+        ) : null}
       </View>
 
       <View style={styles.sectionCard}>
         <Text style={styles.sectionTitle}>Acessibilidade</Text>
-        <InfoRow label="Acesso sem degraus" value={yesNo(listing.accessibility.stepFreeAccess)} />
-        <InfoRow label="Entrada acessível" value={yesNo(listing.accessibility.accessibleEntrance)} />
-        <InfoRow label="Banheiro adaptado" value={yesNo(listing.accessibility.adaptedBathroom)} />
-        <InfoRow label="Espaço para cadeira de rodas" value={yesNo(listing.accessibility.wheelchairSpace)} />
-        <InfoRow label="Estacionamento acessível" value={yesNo(listing.accessibility.accessibleParking)} />
-        {listing.accessibility.otherNote ? <Text style={styles.note}>{listing.accessibility.otherNote}</Text> : null}
+        <InfoRow
+          label="Acesso sem degraus"
+          value={yesNo(listing.accessibility.stepFreeAccess)}
+        />
+        <InfoRow
+          label="Entrada acessível"
+          value={yesNo(listing.accessibility.accessibleEntrance)}
+        />
+        <InfoRow
+          label="Banheiro adaptado"
+          value={yesNo(listing.accessibility.adaptedBathroom)}
+        />
+        <InfoRow
+          label="Espaço para cadeira de rodas"
+          value={yesNo(listing.accessibility.wheelchairSpace)}
+        />
+        <InfoRow
+          label="Estacionamento acessível"
+          value={yesNo(listing.accessibility.accessibleParking)}
+        />
+        {listing.accessibility.otherNote ? (
+          <Text style={styles.note}>{listing.accessibility.otherNote}</Text>
+        ) : null}
       </View>
 
       {listing.advertiser ? (
         <View style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>Quem está anunciando</Text>
-          <Text style={styles.advertiserName}>{listing.advertiser.displayName}</Text>
+          <Text style={styles.advertiserName}>
+            {listing.advertiser.displayName}
+          </Text>
           {listing.advertiser.nationality ? (
-            <Text style={styles.mutedLeft}>Nacionalidade: {listing.advertiser.nationality}</Text>
+            <Text style={styles.mutedLeft}>
+              Nacionalidade: {listing.advertiser.nationality}
+            </Text>
           ) : null}
           {listing.advertiser.hometown ? (
-            <Text style={styles.mutedLeft}>Cidade de origem: {listing.advertiser.hometown}</Text>
+            <Text style={styles.mutedLeft}>
+              Cidade de origem: {listing.advertiser.hometown}
+            </Text>
           ) : null}
         </View>
       ) : null}
@@ -507,7 +648,9 @@ export default function ListingDetailScreen() {
               <Text style={styles.transportMode}>{option.mode}</Text>
               <View style={styles.transportText}>
                 <Text style={styles.rowValue}>
-                  {[option.stopName, option.lineName].filter(Boolean).join(" · ")}
+                  {[option.stopName, option.lineName]
+                    .filter(Boolean)
+                    .join(" · ")}
                 </Text>
                 {option.walkingMinutes !== null ? (
                   <Text style={styles.mutedLeft}>
@@ -528,7 +671,8 @@ export default function ListingDetailScreen() {
         </Text>
         {listing.location.approximate ? (
           <Text style={styles.locationHint}>
-            Área aproximada em um raio de {listing.location.approximate.radiusMeters} m
+            Área aproximada em um raio de{" "}
+            {listing.location.approximate.radiusMeters} m
           </Text>
         ) : null}
       </View>
@@ -560,7 +704,9 @@ function TrustRow({ label, value }: { label: string; value: boolean }) {
   return (
     <View style={styles.row}>
       <Text style={styles.rowLabel}>{label}</Text>
-      <Text style={[styles.rowValue, value ? styles.verified : styles.notVerified]}>
+      <Text
+        style={[styles.rowValue, value ? styles.verified : styles.notVerified]}
+      >
         {value ? "Verificado" : "Não verificado"}
       </Text>
     </View>
@@ -615,7 +761,11 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
   },
   thumbnailButtonSelected: { borderColor: colors.primary },
-  thumbnail: { width: "100%", height: "100%", backgroundColor: colors.surfaceMuted },
+  thumbnail: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: colors.surfaceMuted,
+  },
   section: { gap: spacing.sm },
   badgeRow: {
     flexDirection: "row",
@@ -635,7 +785,12 @@ const styles = StyleSheet.create({
   },
   trustBadge: { color: colors.primary, fontSize: 12, fontWeight: "800" },
   eyebrow: { color: colors.textMuted, fontWeight: "700" },
-  title: { color: colors.text, fontSize: 30, fontWeight: "900", letterSpacing: -0.7 },
+  title: {
+    color: colors.text,
+    fontSize: 30,
+    fontWeight: "900",
+    letterSpacing: -0.7,
+  },
   priceRow: { flexDirection: "row", alignItems: "baseline" },
   price: { color: colors.text, fontSize: 24, fontWeight: "900" },
   perMonth: { color: colors.textMuted, fontSize: 14, fontWeight: "600" },
