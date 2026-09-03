@@ -48,10 +48,14 @@ export function ListingCard({ listing, onPress }: Props) {
   const availableFrom = isoToBrazilianDate(listing.availability.availableFrom);
   const configuration = [
     listing.accommodation.bedroomCount !== null
-      ? `${listing.accommodation.bedroomCount} quarto${listing.accommodation.bedroomCount === 1 ? "" : "s"}`
+      ? `${listing.accommodation.bedroomCount} quarto${
+          listing.accommodation.bedroomCount === 1 ? "" : "s"
+        }`
       : null,
     listing.accommodation.bathroomCount !== null
-      ? `${listing.accommodation.bathroomCount} banheiro${listing.accommodation.bathroomCount === 1 ? "" : "s"}`
+      ? `${listing.accommodation.bathroomCount} banheiro${
+          listing.accommodation.bathroomCount === 1 ? "" : "s"
+        }`
       : null,
   ]
     .filter(Boolean)
@@ -110,7 +114,9 @@ export function ListingCard({ listing, onPress }: Props) {
           <Text style={styles.detail}>{configuration}</Text>
         ) : null}
         {availableFrom ? (
-          <Text style={styles.detail}>Disponível a partir de {availableFrom}</Text>
+          <Text style={styles.detail}>
+            Disponível a partir de {availableFrom}
+          </Text>
         ) : null}
 
         <View style={styles.metaRow}>
