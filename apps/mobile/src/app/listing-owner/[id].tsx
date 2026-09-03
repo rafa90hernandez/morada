@@ -230,7 +230,9 @@ export default function ListingOwnerScreen() {
                   const selected = photo.id === selectedPhoto.id;
                   return (
                     <Pressable
-                      accessibilityLabel={`Visualizar foto ${photo.position + 1}`}
+                      accessibilityLabel={`Visualizar foto ${
+                        photo.position + 1
+                      }`}
                       accessibilityRole="button"
                       key={photo.id}
                       onPress={() => setSelectedPhotoId(photo.id)}
