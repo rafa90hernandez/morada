@@ -1,10 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import {
   ActivityIndicator,
@@ -215,7 +209,9 @@ export function ListingEditorScreen() {
           />
           <SummaryRow
             label="Aluguel mensal"
-            value={draft.monthlyPrice ? `€ ${draft.monthlyPrice}` : "Não informado"}
+            value={
+              draft.monthlyPrice ? `€ ${draft.monthlyPrice}` : "Não informado"
+            }
           />
           <SummaryRow
             label="Disponível a partir de"
@@ -235,8 +231,9 @@ export function ListingEditorScreen() {
           <View style={styles.photoCallout}>
             <Text style={styles.photoTitle}>Fotos vêm logo em seguida</Text>
             <Text style={styles.muted}>
-              Ao salvar, você irá para o gerenciamento do anúncio para adicionar,
-              conferir e escolher visualmente as fotos antes da publicação.
+              Ao salvar, você irá para o gerenciamento do anúncio para
+              adicionar, conferir e escolher visualmente as fotos antes da
+              publicação.
             </Text>
           </View>
         </View>
@@ -279,7 +276,11 @@ export function ListingEditorScreen() {
       </View>
 
       <Text style={styles.stepHint}>
-        {steps.map((item, index) => (index === step ? `● ${item.short}` : item.short)).join("  ·  ")}
+        {steps
+          .map((item, index) =>
+            index === step ? `● ${item.short}` : item.short,
+          )
+          .join("  ·  ")}
       </Text>
     </ScrollView>
   );
