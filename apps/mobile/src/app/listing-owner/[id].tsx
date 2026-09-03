@@ -83,7 +83,8 @@ export default function ListingOwnerScreen() {
   const selectedPhoto = useMemo(() => {
     if (!item?.photos.length) return null;
     return (
-      item.photos.find((photo) => photo.id === selectedPhotoId) ?? item.photos[0]
+      item.photos.find((photo) => photo.id === selectedPhotoId) ??
+      item.photos[0]
     );
   }, [item, selectedPhotoId]);
 
