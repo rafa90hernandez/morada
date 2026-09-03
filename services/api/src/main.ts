@@ -50,6 +50,13 @@ async function bootstrap(): Promise<void> {
     serveStatic(resolve(process.cwd(), 'storage', 'uploads'), {
       index: false,
       maxAge: nodeEnv === 'production' ? '1d' : 0,
+      setHeaders: (response) => {
+        // The Expo web client and API run on different origins in development,
+        // and production media can also be delivered from a dedicated origin.
+        // These objects are intentionally public listing photos only.
+        response.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+        response.setHeader('Access-Control-Allow-Origin', '*');
+      },
     }),
   );
 
