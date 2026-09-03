@@ -158,6 +158,9 @@ export function DiscoveryScreen() {
     students,
   ]);
 
+  const [appliedFilters, setAppliedFilters] =
+    useState<ListingSearchFilters>(filters);
+
   const load = useCallback(
     async (refresh = false) => {
       if (refresh) setRefreshing(true);
@@ -165,7 +168,7 @@ export function DiscoveryScreen() {
       setError(null);
 
       try {
-        const result = await search(filters);
+        const result = await search(appliedFilters);
         setListings(result.items);
         const allowedIds = new Set(result.items.map((item) => item.id));
         const bounds = boundsFromCards(result.items);
@@ -186,7 +189,7 @@ export function DiscoveryScreen() {
         setRefreshing(false);
       }
     },
-    [filters, search, session],
+    [appliedFilters, search, session],
   );
 
   useEffect(() => {
@@ -234,7 +237,10 @@ export function DiscoveryScreen() {
           />
         </View>
         <View style={styles.filterActions}>
-          <AppButton label="Buscar" onPress={() => void load()} />
+          <AppButton
+            label="Buscar"
+            onPress={() => setAppliedFilters(filters)}
+          />
           <AppButton
             label={showAdvanced ? "Menos filtros" : "Mais filtros"}
             onPress={() => setShowAdvanced((value) => !value)}
@@ -411,7 +417,13 @@ export function DiscoveryScreen() {
                 }}
                 allowClear={false}
               />
-              <AppButton label="Aplicar filtros" onPress={() => void load()} />
+              <AppButton
+                label="Aplicar filtros"
+                onPress={() => {
+                  setAppliedFilters(filters);
+                  setShowAdvanced(false);
+                }}
+              />
             </View>
           </ScrollView>
         ) : null}
