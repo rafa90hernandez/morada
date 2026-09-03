@@ -37,7 +37,10 @@ export function AppTabBar() {
   const pathname = usePathname();
   const { session } = useSession();
 
-  if (!session || hiddenPrefixes.some((prefix) => pathname.startsWith(prefix))) {
+  if (
+    !session ||
+    hiddenPrefixes.some((prefix) => pathname.startsWith(prefix))
+  ) {
     return null;
   }
 
