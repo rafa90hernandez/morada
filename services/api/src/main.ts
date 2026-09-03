@@ -3,8 +3,9 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import compression from 'compression';
-import { json, urlencoded } from 'express';
+import { json, static as serveStatic, urlencoded } from 'express';
 import helmet from 'helmet';
+import { resolve } from 'node:path';
 
 import { AppModule } from './app.module';
 import { resolveCorsOrigins } from './common/config/cors.config';
@@ -40,6 +41,17 @@ async function bootstrap(): Promise<void> {
   );
 
   app.use(compression());
+
+  // Listing photos use the public storage service and may be delivered directly.
+  // Private identity, authorization and message evidence is stored elsewhere and
+  // must never be exposed through this static route.
+  app.use(
+    '/uploads',
+    serveStatic(resolve(process.cwd(), 'storage', 'uploads'), {
+      index: false,
+      maxAge: nodeEnv === 'production' ? '1d' : 0,
+    }),
+  );
 
   app.setGlobalPrefix('api/v1');
 
