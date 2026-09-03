@@ -250,7 +250,9 @@ export default function ListingDetailScreen() {
 
       <View style={styles.section}>
         <View style={styles.badgeRow}>
-          {propertyLabel ? <Text style={styles.badge}>{propertyLabel}</Text> : null}
+          {propertyLabel ? (
+            <Text style={styles.badge}>{propertyLabel}</Text>
+          ) : null}
           <Text style={styles.trustBadge}>Confiança {listing.trustScore}</Text>
         </View>
         <Text style={styles.eyebrow}>
@@ -407,7 +409,9 @@ export default function ListingDetailScreen() {
               <Text style={styles.transportMode}>{option.mode}</Text>
               <View style={styles.transportText}>
                 <Text style={styles.rowValue}>
-                  {[option.stopName, option.lineName].filter(Boolean).join(" · ")}
+                  {[option.stopName, option.lineName]
+                    .filter(Boolean)
+                    .join(" · ")}
                 </Text>
                 {option.walkingMinutes !== null ? (
                   <Text style={styles.mutedLeft}>
@@ -515,11 +519,12 @@ const styles = StyleSheet.create({
   },
   thumbnailRow: {
     gap: spacing.sm,
+    paddingRight: spacing.md,
   },
   thumbnailButton: {
-    width: 72,
-    height: 72,
     overflow: "hidden",
+    width: 76,
+    height: 58,
     borderWidth: 2,
     borderColor: "transparent",
     borderRadius: radius.md,
@@ -530,6 +535,7 @@ const styles = StyleSheet.create({
   thumbnail: {
     width: "100%",
     height: "100%",
+    backgroundColor: colors.surfaceMuted,
   },
   section: {
     gap: spacing.sm,
@@ -537,6 +543,7 @@ const styles = StyleSheet.create({
   badgeRow: {
     flexDirection: "row",
     flexWrap: "wrap",
+    alignItems: "center",
     justifyContent: "space-between",
     gap: spacing.sm,
   },
@@ -550,11 +557,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   trustBadge: {
-    borderRadius: radius.pill,
-    backgroundColor: colors.surface,
     color: colors.primary,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
     fontSize: 12,
     fontWeight: "800",
   },
@@ -564,9 +567,9 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: "900",
-    letterSpacing: -0.6,
+    letterSpacing: -0.7,
   },
   priceRow: {
     flexDirection: "row",
@@ -593,10 +596,12 @@ const styles = StyleSheet.create({
   },
   actionRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: spacing.sm,
   },
   actionButton: {
-    flex: 1,
+    flexGrow: 1,
+    minWidth: 150,
   },
   trustCard: {
     gap: spacing.sm,
@@ -657,20 +662,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
   },
-  transportRow: {
-    flexDirection: "row",
-    gap: spacing.md,
-    alignItems: "flex-start",
-  },
-  transportMode: {
-    minWidth: 54,
-    color: colors.primary,
-    fontWeight: "800",
-  },
-  transportText: {
-    flex: 1,
-    gap: spacing.xs,
-  },
   muted: {
     color: colors.textMuted,
     textAlign: "center",
@@ -688,6 +679,21 @@ const styles = StyleSheet.create({
   locationHint: {
     color: colors.text,
     fontWeight: "700",
+  },
+  transportRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  transportMode: {
+    minWidth: 58,
+    color: colors.primary,
+    fontWeight: "800",
+  },
+  transportText: {
+    flex: 1,
+    gap: 2,
   },
   error: {
     color: colors.danger,
