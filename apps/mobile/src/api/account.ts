@@ -1,4 +1,5 @@
 import { API_BASE_URL } from "./client";
+import { appendMultipartFile } from "./multipart";
 import type { AuthSession } from "./types";
 
 export type AdultEligibility = {
@@ -162,7 +163,7 @@ export function updateMyProfile(
   });
 }
 
-export function submitIdentityVerification(
+export async function submitIdentityVerification(
   accessToken: string,
   input: {
     documentType: IdentityDocumentType;
@@ -173,13 +174,14 @@ export function submitIdentityVerification(
 ) {
   const form = new FormData();
   form.append("documentType", input.documentType);
-  form.append("documentFront", input.documentFront as unknown as Blob);
+  await appendMultipartFile(form, "documentFront", input.documentFront);
   if (input.documentBack) {
-    form.append("documentBack", input.documentBack as unknown as Blob);
+    await appendMultipartFile(form, "documentBack", input.documentBack);
   }
-  form.append(
+  await appendMultipartFile(
+    form,
     "selfieWithDocument",
-    input.selfieWithDocument as unknown as Blob,
+    input.selfieWithDocument,
   );
 
   return accountRequest<IdentitySubmissionResponse>(

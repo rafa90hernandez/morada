@@ -1,6 +1,13 @@
-import { ChoiceGroup, Field, SectionTitle } from "./ListingFormControls";
+import {
+  ChoiceGroup,
+  Field,
+  NumericStepper,
+  SectionTitle,
+  SuggestionField,
+} from "./ListingFormControls";
 import type { ListingDraft } from "./listing-draft";
 import { bedTypes, roomTypes } from "./listing-field-types";
+import { irelandCitySuggestions } from "./location-suggestions";
 
 const propertyTypes = [
   { value: "SINGLE_ROOM", label: "Quarto individual" },
@@ -11,14 +18,17 @@ const propertyTypes = [
   { value: "BED_SPACE", label: "Vaga em quarto" },
   { value: "OTHER", label: "Outro" },
 ] as const;
+
 const occupancy = [
   { value: "ENTIRE_PROPERTY", label: "Imóvel inteiro" },
   { value: "SHARED_PROPERTY", label: "Imóvel compartilhado" },
 ] as const;
+
 const space = [
   { value: "PRIVATE", label: "Privado" },
   { value: "SHARED", label: "Compartilhado" },
 ] as const;
+
 const bathrooms = [
   { value: "PRIVATE", label: "Banheiro privado" },
   { value: "SHARED", label: "Banheiro compartilhado" },
@@ -44,10 +54,11 @@ export function ListingBasicFields({ draft, set }: Props) {
         value={draft.description}
         onChangeText={(value) => set("description", value)}
       />
-      <Field
+      <SuggestionField
         label="Cidade"
         value={draft.city}
         onChangeText={(value) => set("city", value)}
+        suggestions={irelandCitySuggestions}
       />
       <Field
         label="Área / bairro"
@@ -73,15 +84,17 @@ export function ListingBasicFields({ draft, set }: Props) {
         options={[...space]}
         value={draft.advertisedSpaceType}
       />
-      <Field
+      <NumericStepper
         label="Número de quartos"
-        numeric
+        min={0}
+        max={50}
         value={draft.bedroomCount}
         onChangeText={(value) => set("bedroomCount", value)}
       />
-      <Field
+      <NumericStepper
         label="Número de banheiros"
-        numeric
+        min={0}
+        max={50}
         value={draft.bathroomCount}
         onChangeText={(value) => set("bathroomCount", value)}
       />
@@ -97,15 +110,17 @@ export function ListingBasicFields({ draft, set }: Props) {
         options={bedTypes}
         value={draft.bedType}
       />
-      <Field
+      <NumericStepper
         label="Capacidade máxima"
-        numeric
+        min={1}
+        max={100}
         value={draft.maxOccupants}
         onChangeText={(value) => set("maxOccupants", value)}
       />
-      <Field
+      <NumericStepper
         label="Pessoas compartilhando o espaço"
-        numeric
+        min={0}
+        max={100}
         value={draft.peopleSharingSpace}
         onChangeText={(value) => set("peopleSharingSpace", value)}
       />
@@ -115,9 +130,10 @@ export function ListingBasicFields({ draft, set }: Props) {
         options={[...bathrooms]}
         value={draft.bathroomType}
       />
-      <Field
+      <NumericStepper
         label="Pessoas compartilhando o banheiro"
-        numeric
+        min={0}
+        max={100}
         value={draft.peopleSharingBathroom}
         onChangeText={(value) => set("peopleSharingBathroom", value)}
       />

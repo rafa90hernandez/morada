@@ -16,6 +16,7 @@ import {
   removeFavorite,
   startConversation,
 } from "@/api/client";
+import { resolveMediaUrl } from "@/api/media";
 import type { ListingDetail } from "@/api/types";
 import { AppButton } from "@/components/ui/AppButton";
 import { useSession } from "@/session/SessionContext";
@@ -171,7 +172,7 @@ export default function ListingDetailScreen() {
       {listing.photos[0] ? (
         <Image
           accessibilityLabel={`Foto de ${listing.title}`}
-          source={{ uri: listing.photos[0].url }}
+          source={{ uri: resolveMediaUrl(listing.photos[0].url) }}
           style={styles.hero}
         />
       ) : null}

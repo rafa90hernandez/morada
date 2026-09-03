@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from "react";
 import {
   Pressable,
   StyleSheet,
@@ -8,6 +9,14 @@ import {
 } from "react-native";
 
 import { colors, radius, spacing } from "@/theme/tokens";
+import {
+  brazilianDateToIso,
+  digitsOnly,
+  formatBrazilianCurrencyInput,
+  formatBrazilianDateInput,
+  isoToBrazilianDate,
+} from "./input-formatters";
+import { matchingSuggestions } from "./location-suggestions";
 
 export function SectionTitle({ children }: { children: string }) {
   return <Text style={styles.sectionTitle}>{children}</Text>;
@@ -39,6 +48,206 @@ export function Field({
         style={[styles.input, multiline && styles.multiline]}
         value={value}
       />
+    </View>
+  );
+}
+
+export function SuggestionField({
+  label,
+  value,
+  onChangeText,
+  suggestions,
+}: {
+  label: string;
+  value: string;
+  onChangeText: (value: string) => void;
+  suggestions: string[];
+}) {
+  const [focused, setFocused] = useState(false);
+  const matches = useMemo(
+    () => matchingSuggestions(value, suggestions),
+    [suggestions, value],
+  );
+
+  return (
+    <View style={styles.field}>
+      <Text style={styles.label}>{label}</Text>
+      <TextInput
+        accessibilityLabel={label}
+        autoCapitalize="words"
+        onBlur={() => setFocused(false)}
+        onChangeText={onChangeText}
+        onFocus={() => setFocused(true)}
+        placeholder={label}
+        placeholderTextColor={colors.textMuted}
+        style={styles.input}
+        value={value}
+      />
+      {focused && matches.length > 0 ? (
+        <View style={styles.suggestionList}>
+          {matches.map((suggestion) => (
+            <Pressable
+              accessibilityRole="button"
+              key={suggestion}
+              onPress={() => {
+                onChangeText(suggestion);
+                setFocused(false);
+              }}
+              style={styles.suggestionItem}
+            >
+              <Text style={styles.suggestionText}>{suggestion}</Text>
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+export function DateField({
+  label,
+  value,
+  onChangeText,
+}: {
+  label: string;
+  value: string;
+  onChangeText: (value: string) => void;
+}) {
+  const [display, setDisplay] = useState(() => isoToBrazilianDate(value));
+  const [invalid, setInvalid] = useState(false);
+
+  useEffect(() => {
+    setDisplay(isoToBrazilianDate(value));
+  }, [value]);
+
+  const change = (next: string) => {
+    const formatted = formatBrazilianDateInput(next);
+    setDisplay(formatted);
+    setInvalid(false);
+
+    if (!formatted) {
+      onChangeText("");
+      return;
+    }
+
+    if (formatted.length === 10) {
+      const iso = brazilianDateToIso(formatted);
+      if (iso) {
+        onChangeText(iso);
+      } else {
+        setInvalid(true);
+      }
+    }
+  };
+
+  return (
+    <View style={styles.field}>
+      <Text style={styles.label}>{label}</Text>
+      <TextInput
+        accessibilityLabel={label}
+        keyboardType="number-pad"
+        maxLength={10}
+        onChangeText={change}
+        placeholder="DD/MM/AAAA"
+        placeholderTextColor={colors.textMuted}
+        style={[styles.input, invalid && styles.inputInvalid]}
+        value={display}
+      />
+      {invalid ? (
+        <Text style={styles.error}>Informe uma data válida.</Text>
+      ) : null}
+    </View>
+  );
+}
+
+export function CurrencyField({
+  label,
+  value,
+  onChangeText,
+}: {
+  label: string;
+  value: string;
+  onChangeText: (value: string) => void;
+}) {
+  const formatted = value ? formatBrazilianCurrencyInput(value) : "";
+
+  return (
+    <View style={styles.field}>
+      <Text style={styles.label}>{label}</Text>
+      <View style={styles.currencyRow}>
+        <Text style={styles.currencyPrefix}>€</Text>
+        <TextInput
+          accessibilityLabel={label}
+          keyboardType="number-pad"
+          onChangeText={(next) => {
+            const integerPart = next.split(",")[0] ?? "";
+            onChangeText(digitsOnly(integerPart));
+          }}
+          placeholder="0,00"
+          placeholderTextColor={colors.textMuted}
+          style={[styles.input, styles.currencyInput]}
+          value={formatted}
+        />
+      </View>
+    </View>
+  );
+}
+
+export function NumericStepper({
+  label,
+  value,
+  onChangeText,
+  min = 0,
+  max = 100,
+}: {
+  label: string;
+  value: string;
+  onChangeText: (value: string) => void;
+  min?: number;
+  max?: number;
+}) {
+  const parsed = Number.parseInt(value, 10);
+  const current = Number.isFinite(parsed) ? parsed : min;
+  const setBounded = (next: number) =>
+    onChangeText(String(Math.min(max, Math.max(min, next))));
+
+  return (
+    <View style={styles.field}>
+      <Text style={styles.label}>{label}</Text>
+      <View style={styles.stepperRow}>
+        <Pressable
+          accessibilityLabel={`Diminuir ${label}`}
+          accessibilityRole="button"
+          disabled={current <= min}
+          onPress={() => setBounded(current - 1)}
+          style={[
+            styles.stepperButton,
+            current <= min && styles.stepperButtonDisabled,
+          ]}
+        >
+          <Text style={styles.stepperText}>−</Text>
+        </Pressable>
+        <TextInput
+          accessibilityLabel={label}
+          keyboardType="number-pad"
+          onBlur={() => value && setBounded(current)}
+          onChangeText={(next) => onChangeText(digitsOnly(next))}
+          style={[styles.input, styles.stepperInput]}
+          value={value}
+        />
+        <Pressable
+          accessibilityLabel={`Aumentar ${label}`}
+          accessibilityRole="button"
+          disabled={current >= max}
+          onPress={() => setBounded(current + 1)}
+          style={[
+            styles.stepperButton,
+            current >= max && styles.stepperButtonDisabled,
+          ]}
+        >
+          <Text style={styles.stepperText}>+</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -171,11 +380,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     fontSize: 16,
   },
+  inputInvalid: { borderColor: colors.danger },
+  error: { color: colors.danger, fontSize: 12, fontWeight: "600" },
   multiline: {
     minHeight: 96,
     paddingTop: spacing.md,
     textAlignVertical: "top",
   },
+  suggestionList: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
+    overflow: "hidden",
+  },
+  suggestionItem: {
+    minHeight: 44,
+    justifyContent: "center",
+    paddingHorizontal: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  suggestionText: { color: colors.text, fontWeight: "600" },
   toggleRow: {
     minHeight: 48,
     flexDirection: "row",
@@ -200,4 +426,21 @@ const styles = StyleSheet.create({
   },
   choiceText: { color: colors.text, fontWeight: "700" },
   choiceTextSelected: { color: colors.primary },
+  stepperRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  stepperButton: {
+    minWidth: 48,
+    minHeight: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
+  },
+  stepperButtonDisabled: { opacity: 0.4 },
+  stepperText: { color: colors.primary, fontSize: 24, fontWeight: "800" },
+  stepperInput: { flex: 1, textAlign: "center" },
+  currencyRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  currencyPrefix: { color: colors.text, fontSize: 18, fontWeight: "800" },
+  currencyInput: { flex: 1 },
 });

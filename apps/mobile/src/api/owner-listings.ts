@@ -1,4 +1,5 @@
 import { API_BASE_URL } from "./client";
+import { appendMultipartFile } from "./multipart";
 
 export type OwnerListingType = "RENTAL" | "TRANSFER";
 export type OwnerListingStatus =
@@ -315,13 +316,13 @@ export function getListingOwnerLocation(id: string, accessToken: string) {
   );
 }
 
-export function uploadListingPhoto(
+export async function uploadListingPhoto(
   id: string,
   file: LocalImageFile,
   accessToken: string,
 ) {
   const form = new FormData();
-  form.append("file", file as unknown as Blob);
+  await appendMultipartFile(form, "file", file);
   return request<{ id: string; url: string; position: number }>(
     `/listings/${encodeURIComponent(id)}/photos`,
     accessToken,
@@ -336,7 +337,7 @@ export function getLatestListingAuthorization(id: string, accessToken: string) {
   );
 }
 
-export function submitListingAuthorization(
+export async function submitListingAuthorization(
   id: string,
   evidence: Array<{
     field: ListingAuthorizationEvidenceField;
@@ -346,7 +347,7 @@ export function submitListingAuthorization(
 ) {
   const form = new FormData();
   for (const item of evidence) {
-    form.append(item.field, item.file as unknown as Blob);
+    await appendMultipartFile(form, item.field, item.file);
   }
   return request<ListingAuthorizationSubmission>(
     `/listings/me/${encodeURIComponent(id)}/authorization/submissions`,
