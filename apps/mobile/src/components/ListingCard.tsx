@@ -41,8 +41,8 @@ export function ListingCard({ listing, onPress }: Props) {
     .filter(Boolean)
     .join(" · ");
   const propertyLabel = listing.accommodation.propertyType
-    ? propertyLabels[listing.accommodation.propertyType] ??
-      listing.accommodation.propertyType
+    ? (propertyLabels[listing.accommodation.propertyType] ??
+      listing.accommodation.propertyType)
     : null;
   const bills = billsLabel(listing.pricing.billsIncludedType);
   const availableFrom = isoToBrazilianDate(listing.availability.availableFrom);

@@ -197,8 +197,8 @@ export default function ListingDetailScreen() {
     .filter(Boolean)
     .join(" · ");
   const propertyLabel = listing.accommodation.propertyType
-    ? propertyLabels[listing.accommodation.propertyType] ??
-      listing.accommodation.propertyType
+    ? (propertyLabels[listing.accommodation.propertyType] ??
+      listing.accommodation.propertyType)
     : null;
   const availableFrom = isoToBrazilianDate(listing.availability.availableFrom);
 
