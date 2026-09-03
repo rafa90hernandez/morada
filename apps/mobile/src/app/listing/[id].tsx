@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import {
   ActivityIndicator,
   Image,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -19,8 +20,19 @@ import {
 import { resolveMediaUrl } from "@/api/media";
 import type { ListingDetail } from "@/api/types";
 import { AppButton } from "@/components/ui/AppButton";
+import { isoToBrazilianDate } from "@/features/listings/input-formatters";
 import { useSession } from "@/session/SessionContext";
 import { colors, radius, spacing } from "@/theme/tokens";
+
+const propertyLabels: Record<string, string> = {
+  SINGLE_ROOM: "Quarto individual",
+  SHARED_ROOM: "Quarto compartilhado",
+  STUDIO: "Studio",
+  APARTMENT: "Apartamento",
+  HOUSE: "Casa",
+  BED_SPACE: "Vaga em quarto",
+  OTHER: "Outro",
+};
 
 function price(cents: number | null) {
   if (cents === null) return "Preço a confirmar";
@@ -31,6 +43,11 @@ function price(cents: number | null) {
   }).format(cents / 100);
 }
 
+function yesNo(value: boolean | null) {
+  if (value === null) return null;
+  return value ? "Sim" : "Não";
+}
+
 export default function ListingDetailScreen() {
   const params = useLocalSearchParams<{ id: string }>();
   const { session } = useSession();
@@ -39,6 +56,7 @@ export default function ListingDetailScreen() {
   const [contacting, setContacting] = useState(false);
   const [favorite, setFavorite] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
+  const [selectedPhotoId, setSelectedPhotoId] = useState<string | null>(null);
   const [error, setError] = useState(false);
   const [contactError, setContactError] = useState<string | null>(null);
   const [favoriteError, setFavoriteError] = useState<string | null>(null);
@@ -50,7 +68,10 @@ export default function ListingDetailScreen() {
 
     void getListingDetail(params.id)
       .then((result) => {
-        if (active) setListing(result);
+        if (active) {
+          setListing(result);
+          setSelectedPhotoId(result.photos[0]?.id ?? null);
+        }
       })
       .catch(() => {
         if (active) setError(true);
@@ -78,14 +99,23 @@ export default function ListingDetailScreen() {
         }
       })
       .catch(() => {
-        if (active)
+        if (active) {
           setFavoriteError("Não foi possível consultar seus favoritos.");
+        }
       });
 
     return () => {
       active = false;
     };
   }, [params.id, session]);
+
+  const selectedPhoto = useMemo(() => {
+    if (!listing?.photos.length) return null;
+    return (
+      listing.photos.find((photo) => photo.id === selectedPhotoId) ??
+      listing.photos[0]
+    );
+  }, [listing, selectedPhotoId]);
 
   const toggleFavorite = async () => {
     if (!session) {
@@ -166,68 +196,130 @@ export default function ListingDetailScreen() {
   const location = [listing.location.area, listing.location.city]
     .filter(Boolean)
     .join(" · ");
+  const propertyLabel = listing.accommodation.propertyType
+    ? propertyLabels[listing.accommodation.propertyType] ??
+      listing.accommodation.propertyType
+    : null;
+  const availableFrom = isoToBrazilianDate(listing.availability.availableFrom);
 
   return (
     <ScrollView contentContainerStyle={styles.content}>
-      {listing.photos[0] ? (
-        <Image
-          accessibilityLabel={`Foto de ${listing.title}`}
-          source={{ uri: resolveMediaUrl(listing.photos[0].url) }}
-          style={styles.hero}
-        />
-      ) : null}
+      {selectedPhoto ? (
+        <View style={styles.gallery}>
+          <Image
+            accessibilityLabel={`Foto de ${listing.title}`}
+            resizeMode="cover"
+            source={{ uri: resolveMediaUrl(selectedPhoto.url) }}
+            style={styles.hero}
+          />
+          {listing.photos.length > 1 ? (
+            <ScrollView
+              contentContainerStyle={styles.thumbnailRow}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+            >
+              {listing.photos.map((photo, index) => {
+                const selected = photo.id === selectedPhoto.id;
+                return (
+                  <Pressable
+                    accessibilityLabel={`Visualizar foto ${index + 1}`}
+                    accessibilityRole="button"
+                    key={photo.id}
+                    onPress={() => setSelectedPhotoId(photo.id)}
+                    style={[
+                      styles.thumbnailButton,
+                      selected && styles.thumbnailButtonSelected,
+                    ]}
+                  >
+                    <Image
+                      resizeMode="cover"
+                      source={{ uri: resolveMediaUrl(photo.url) }}
+                      style={styles.thumbnail}
+                    />
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          ) : null}
+        </View>
+      ) : (
+        <View style={[styles.hero, styles.heroPlaceholder]}>
+          <Text style={styles.muted}>Fotos ainda não disponíveis.</Text>
+        </View>
+      )}
 
       <View style={styles.section}>
+        <View style={styles.badgeRow}>
+          {propertyLabel ? <Text style={styles.badge}>{propertyLabel}</Text> : null}
+          <Text style={styles.trustBadge}>Confiança {listing.trustScore}</Text>
+        </View>
         <Text style={styles.eyebrow}>
           {location || "Localização aproximada"}
         </Text>
         <Text accessibilityRole="header" style={styles.title}>
           {listing.title}
         </Text>
-        <Text style={styles.price}>
-          {price(listing.pricing.monthlyPriceCents)}/mês
-        </Text>
+        <View style={styles.priceRow}>
+          <Text style={styles.price}>
+            {price(listing.pricing.monthlyPriceCents)}
+          </Text>
+          {listing.pricing.monthlyPriceCents !== null ? (
+            <Text style={styles.perMonth}>/ mês</Text>
+          ) : null}
+        </View>
+        {availableFrom ? (
+          <Text style={styles.availability}>
+            Disponível a partir de {availableFrom}
+          </Text>
+        ) : null}
         <Text style={styles.description}>{listing.description}</Text>
+
         {favoriteError ? (
           <Text accessibilityLiveRegion="polite" style={styles.error}>
             {favoriteError}
           </Text>
         ) : null}
-        <AppButton
-          label={session ? "Denunciar anúncio" : "Entrar para denunciar"}
-          onPress={() => {
-            if (!session) {
-              router.push({
-                pathname: "/login",
-                params: { returnTo: `/listing/${params.id}` },
-              });
-              return;
-            }
-            router.push({
-              pathname: "/report",
-              params: { listingId: params.id, context: "este anúncio" },
-            });
-          }}
-          variant="secondary"
-        />
-        <AppButton
-          disabled={favoriteLoading}
-          label={
-            favoriteLoading
-              ? "Atualizando favorito..."
-              : favorite
-                ? "Remover dos favoritos"
-                : session
-                  ? "Salvar nos favoritos"
-                  : "Entrar para favoritar"
-          }
-          onPress={() => void toggleFavorite()}
-          variant="secondary"
-        />
+        <View style={styles.actionRow}>
+          <View style={styles.actionButton}>
+            <AppButton
+              disabled={favoriteLoading}
+              label={
+                favoriteLoading
+                  ? "Atualizando..."
+                  : favorite
+                    ? "Favoritado"
+                    : session
+                      ? "Favoritar"
+                      : "Entrar para favoritar"
+              }
+              onPress={() => void toggleFavorite()}
+              variant="secondary"
+            />
+          </View>
+          <View style={styles.actionButton}>
+            <AppButton
+              label={session ? "Denunciar" : "Entrar para denunciar"}
+              onPress={() => {
+                if (!session) {
+                  router.push({
+                    pathname: "/login",
+                    params: { returnTo: `/listing/${params.id}` },
+                  });
+                  return;
+                }
+                router.push({
+                  pathname: "/report",
+                  params: { listingId: params.id, context: "este anúncio" },
+                });
+              }}
+              variant="secondary"
+            />
+          </View>
+        </View>
       </View>
 
       <View style={styles.trustCard}>
-        <Text style={styles.sectionTitle}>O que o Morada verificou</Text>
+        <Text style={styles.sectionTitle}>Confiança e verificações</Text>
         <TrustRow
           label="Identidade do anunciante"
           value={listing.trust.identityVerified}
@@ -241,40 +333,102 @@ export default function ListingDetailScreen() {
           value={listing.trust.landlordAuthorization.status === "VERIFIED"}
         />
         <Text style={styles.trustNote}>
-          Verificações reduzem incertezas, mas não significam garantia absoluta
-          de segurança ou de fechamento do aluguel.
+          Verificações ajudam a reduzir incertezas, mas não representam garantia
+          absoluta de segurança ou fechamento do aluguel.
         </Text>
       </View>
 
       <View style={styles.sectionCard}>
         <Text style={styles.sectionTitle}>Sobre a moradia</Text>
-        <InfoRow label="Tipo" value={listing.accommodation.propertyType} />
+        <InfoRow label="Tipo" value={propertyLabel} />
         <InfoRow label="Quartos" value={listing.accommodation.bedroomCount} />
         <InfoRow
           label="Banheiros"
           value={listing.accommodation.bathroomCount}
         />
         <InfoRow
-          label="Mobilado"
+          label="Espaço"
           value={
-            listing.accommodation.furnished === null
-              ? null
-              : listing.accommodation.furnished
-                ? "Sim"
-                : "Não"
+            listing.accommodation.advertisedSpaceType === "PRIVATE"
+              ? "Privado"
+              : listing.accommodation.advertisedSpaceType === "SHARED"
+                ? "Compartilhado"
+                : null
+          }
+        />
+        <InfoRow
+          label="Banheiro"
+          value={
+            listing.accommodation.bathroomType === "PRIVATE"
+              ? "Privado"
+              : listing.accommodation.bathroomType === "SHARED"
+                ? "Compartilhado"
+                : null
+          }
+        />
+        <InfoRow
+          label="Mobiliado"
+          value={yesNo(listing.accommodation.furnished)}
+        />
+        <InfoRow
+          label="Estadia mínima"
+          value={
+            listing.availability.minimumStayDays
+              ? `${listing.availability.minimumStayDays} dias`
+              : null
           }
         />
       </View>
 
+      {listing.advertiser ? (
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Quem está anunciando</Text>
+          <Text style={styles.advertiserName}>
+            {listing.advertiser.displayName}
+          </Text>
+          {listing.advertiser.nationality ? (
+            <Text style={styles.mutedLeft}>
+              Nacionalidade: {listing.advertiser.nationality}
+            </Text>
+          ) : null}
+          {listing.advertiser.hometown ? (
+            <Text style={styles.mutedLeft}>
+              Cidade de origem: {listing.advertiser.hometown}
+            </Text>
+          ) : null}
+        </View>
+      ) : null}
+
+      {listing.transport.length > 0 ? (
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Transporte próximo</Text>
+          {listing.transport.map((option) => (
+            <View key={option.id} style={styles.transportRow}>
+              <Text style={styles.transportMode}>{option.mode}</Text>
+              <View style={styles.transportText}>
+                <Text style={styles.rowValue}>
+                  {[option.stopName, option.lineName].filter(Boolean).join(" · ")}
+                </Text>
+                {option.walkingMinutes !== null ? (
+                  <Text style={styles.mutedLeft}>
+                    Aproximadamente {option.walkingMinutes} min a pé
+                  </Text>
+                ) : null}
+              </View>
+            </View>
+          ))}
+        </View>
+      ) : null}
+
       <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Localização</Text>
+        <Text style={styles.sectionTitle}>Localização e privacidade</Text>
         <Text style={styles.mutedLeft}>
           Por privacidade, o Morada mostra apenas uma área aproximada antes de
-          uma visita aceita. O endereço exato não vem deste anúncio.
+          uma visita aceita. O endereço exato não aparece neste anúncio.
         </Text>
         {listing.location.approximate ? (
           <Text style={styles.locationHint}>
-            Precisão aproximada: raio de{" "}
+            Área aproximada em um raio de{" "}
             {listing.location.approximate.radiusMeters} m
           </Text>
         ) : null}
@@ -283,8 +437,8 @@ export default function ListingDetailScreen() {
       <View style={styles.contactCard}>
         <Text style={styles.sectionTitle}>Interessado nesta moradia?</Text>
         <Text style={styles.mutedLeft}>
-          A conversa fica vinculada a este anúncio. Depois vocês podem combinar
-          uma visita pelo próprio Morada.
+          Fale com o anunciante sem sair do Morada. A conversa permanece ligada
+          a este anúncio e pode ser usada para combinar uma visita.
         </Text>
         {contactError ? <Text style={styles.error}>{contactError}</Text> : null}
         <AppButton
@@ -298,20 +452,6 @@ export default function ListingDetailScreen() {
           }
           onPress={() => void contactAdvertiser()}
         />
-        {session ? (
-          <>
-            <AppButton
-              label="Meus favoritos"
-              onPress={() => router.push("/favorites")}
-              variant="secondary"
-            />
-            <AppButton
-              label="Ver minhas conversas"
-              onPress={() => router.push("/conversations")}
-              variant="secondary"
-            />
-          </>
-        ) : null}
       </View>
     </ScrollView>
   );
@@ -360,17 +500,66 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     backgroundColor: colors.background,
   },
+  gallery: {
+    gap: spacing.sm,
+  },
   hero: {
     width: "100%",
-    aspectRatio: 1.45,
+    aspectRatio: 1.35,
     borderRadius: radius.xl,
     backgroundColor: colors.surfaceMuted,
+  },
+  heroPlaceholder: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  thumbnailRow: {
+    gap: spacing.sm,
+  },
+  thumbnailButton: {
+    width: 72,
+    height: 72,
+    overflow: "hidden",
+    borderWidth: 2,
+    borderColor: "transparent",
+    borderRadius: radius.md,
+  },
+  thumbnailButtonSelected: {
+    borderColor: colors.primary,
+  },
+  thumbnail: {
+    width: "100%",
+    height: "100%",
   },
   section: {
     gap: spacing.sm,
   },
-  eyebrow: {
+  badgeRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    gap: spacing.sm,
+  },
+  badge: {
+    borderRadius: radius.pill,
+    backgroundColor: colors.primarySoft,
     color: colors.primary,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  trustBadge: {
+    borderRadius: radius.pill,
+    backgroundColor: colors.surface,
+    color: colors.primary,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  eyebrow: {
+    color: colors.textMuted,
     fontWeight: "700",
   },
   title: {
@@ -379,15 +568,35 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     letterSpacing: -0.6,
   },
+  priceRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+  },
   price: {
     color: colors.text,
-    fontSize: 21,
+    fontSize: 24,
+    fontWeight: "900",
+  },
+  perMonth: {
+    color: colors.textMuted,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  availability: {
+    color: colors.primary,
     fontWeight: "800",
   },
   description: {
     color: colors.textMuted,
     fontSize: 16,
     lineHeight: 24,
+  },
+  actionRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  actionButton: {
+    flex: 1,
   },
   trustCard: {
     gap: spacing.sm,
@@ -416,6 +625,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "800",
   },
+  advertiserName: {
+    color: colors.text,
+    fontSize: 17,
+    fontWeight: "800",
+  },
   row: {
     flexDirection: "row",
     alignItems: "center",
@@ -442,6 +656,20 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 12,
     lineHeight: 18,
+  },
+  transportRow: {
+    flexDirection: "row",
+    gap: spacing.md,
+    alignItems: "flex-start",
+  },
+  transportMode: {
+    minWidth: 54,
+    color: colors.primary,
+    fontWeight: "800",
+  },
+  transportText: {
+    flex: 1,
+    gap: spacing.xs,
   },
   muted: {
     color: colors.textMuted,
