@@ -1,5 +1,6 @@
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
+import { resolveMediaUrl } from "@/api/media";
 import type { ListingCard as ListingCardType } from "@/api/types";
 import { colors, radius, spacing } from "@/theme/tokens";
 
@@ -32,7 +33,7 @@ export function ListingCard({ listing, onPress }: Props) {
       {listing.coverPhoto ? (
         <Image
           accessibilityLabel={`Foto de ${listing.title}`}
-          source={{ uri: listing.coverPhoto.url }}
+          source={{ uri: resolveMediaUrl(listing.coverPhoto.url) }}
           style={styles.image}
         />
       ) : (
