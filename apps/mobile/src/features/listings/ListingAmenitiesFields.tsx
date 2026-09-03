@@ -38,11 +38,7 @@ type Props = {
   set: <K extends keyof ListingDraft>(key: K, value: ListingDraft[K]) => void;
 };
 
-export function ListingAmenitiesFields({
-  draft,
-  section = "all",
-  set,
-}: Props) {
+export function ListingAmenitiesFields({ draft, section = "all", set }: Props) {
   const showRequirements = section === "all" || section === "requirements";
   const showAmenities = section === "all" || section === "amenities";
 
