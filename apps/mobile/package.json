@@ -8,7 +8,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "prettier --write \"src/**/*.{ts,tsx}\" && git diff -- src/app/listing-owner/'[id].tsx' && false",
+    "lint": "prettier --check \"src/**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test src/api/client.test.ts src/features/discovery/discovery-utils.test.ts src/features/communication/communication-utils.test.ts src/features/listings/input-formatters.test.ts",
     "build": "expo export --platform web --output-dir dist"
