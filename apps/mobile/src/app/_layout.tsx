@@ -26,7 +26,10 @@ export default function RootLayout() {
             name="password-recovery"
             options={{ title: "Recuperar acesso" }}
           />
-          <Stack.Screen name="password-reset" options={{ title: "Nova senha" }} />
+          <Stack.Screen
+            name="password-reset"
+            options={{ title: "Nova senha" }}
+          />
           <Stack.Screen name="account" options={{ title: "Perfil" }} />
           <Stack.Screen
             name="identity-verification"
@@ -34,11 +37,11 @@ export default function RootLayout() {
           />
           <Stack.Screen name="favorites" options={{ title: "Favoritos" }} />
           <Stack.Screen name="report" options={{ title: "Denunciar" }} />
-          <Stack.Screen name="my-listings" options={{ title: "Meus anúncios" }} />
           <Stack.Screen
-            name="listing-editor"
-            options={{ title: "Anúncio" }}
+            name="my-listings"
+            options={{ title: "Meus anúncios" }}
           />
+          <Stack.Screen name="listing-editor" options={{ title: "Anúncio" }} />
           <Stack.Screen
             name="listing-owner/[id]"
             options={{ title: "Gerenciar anúncio" }}
