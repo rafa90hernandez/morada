@@ -9,7 +9,12 @@ type AppCardProps = PropsWithChildren<
   }
 >;
 
-export function AppCard({ children, style, tone = "default", ...props }: AppCardProps) {
+export function AppCard({
+  children,
+  style,
+  tone = "default",
+  ...props
+}: AppCardProps) {
   return (
     <View
       style={[
