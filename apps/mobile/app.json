@@ -8,6 +8,9 @@
     "scheme": "morada",
     "newArchEnabled": true,
     "plugins": ["expo-router"],
+    "splash": {
+      "backgroundColor": "#F7F8F5"
+    },
     "experiments": {
       "typedRoutes": true
     },
