@@ -1,4 +1,9 @@
-import { Pressable, StyleSheet, Text, type PressableProps } from "react-native";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  type PressableProps,
+} from "react-native";
 
 import { colors, layout, radius, spacing, typeScale } from "@/theme/tokens";
 
