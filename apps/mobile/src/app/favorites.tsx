@@ -1,17 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { router } from "expo-router";
-import {
-  ActivityIndicator,
-  FlatList,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { FlatList, StyleSheet, Text, View } from "react-native";
 
 import { listFavorites, removeFavorite } from "@/api/client";
 import type { FavoriteListItem } from "@/api/types";
 import { ListingCard } from "@/components/ListingCard";
 import { AppButton } from "@/components/ui/AppButton";
+import { ProductState } from "@/components/ui/ProductState";
 import { useSession } from "@/session/SessionContext";
 import { colors, spacing } from "@/theme/tokens";
 
@@ -64,20 +59,23 @@ export default function FavoritesScreen() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator color={colors.primary} size="large" />
-        <Text style={styles.muted}>Carregando favoritos...</Text>
-      </View>
+      <ProductState
+        description="Estamos reunindo os anúncios que você salvou."
+        kind="loading"
+        title="Carregando favoritos"
+      />
     );
   }
 
   if (error && items.length === 0) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.title}>Não foi possível abrir seus favoritos</Text>
-        <Text style={styles.muted}>{error}</Text>
-        <AppButton label="Tentar novamente" onPress={() => void load()} />
-      </View>
+      <ProductState
+        actionLabel="Tentar novamente"
+        description={error}
+        kind="error"
+        onAction={() => void load()}
+        title="Não foi possível abrir seus favoritos"
+      />
     );
   }
 
@@ -87,16 +85,13 @@ export default function FavoritesScreen() {
       data={items}
       keyExtractor={(item) => item.favoriteId}
       ListEmptyComponent={
-        <View style={styles.center}>
-          <Text style={styles.title}>Nenhum favorito ainda</Text>
-          <Text style={styles.muted}>
-            Salve anúncios interessantes para encontrá-los novamente aqui.
-          </Text>
-          <AppButton
-            label="Explorar moradias"
-            onPress={() => router.push("/")}
-          />
-        </View>
+        <ProductState
+          actionLabel="Explorar moradias"
+          description="Salve anúncios interessantes para encontrá-los novamente aqui."
+          kind="empty"
+          onAction={() => router.push("/")}
+          title="Nenhum favorito ainda"
+        />
       }
       ListHeaderComponent={
         error ? (
@@ -141,25 +136,6 @@ const styles = StyleSheet.create({
   },
   item: {
     gap: spacing.sm,
-  },
-  center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.md,
-    padding: spacing.xl,
-  },
-  title: {
-    color: colors.text,
-    fontSize: 20,
-    fontWeight: "800",
-    textAlign: "center",
-  },
-  muted: {
-    maxWidth: 320,
-    color: colors.textMuted,
-    textAlign: "center",
-    lineHeight: 22,
   },
   error: {
     color: colors.danger,
