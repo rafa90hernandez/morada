@@ -26,10 +26,16 @@ export function ProductState({
       <Text accessibilityRole="header" style={styles.title}>
         {title}
       </Text>
-      {description ? <Text style={styles.description}>{description}</Text> : null}
+      {description ? (
+        <Text style={styles.description}>{description}</Text>
+      ) : null}
       {actionLabel && onAction ? (
         <View style={styles.action}>
-          <AppButton label={actionLabel} onPress={onAction} variant="secondary" />
+          <AppButton
+            label={actionLabel}
+            onPress={onAction}
+            variant="secondary"
+          />
         </View>
       ) : null}
     </View>
