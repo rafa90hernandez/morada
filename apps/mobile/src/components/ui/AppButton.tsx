@@ -18,15 +18,15 @@ export function AppButton({
     <Pressable
       accessibilityRole="button"
       disabled={disabled}
-      style={({ pressed }) => [
+      style={(state) => [
         styles.button,
         variant === "secondary" && styles.secondary,
         variant === "danger" && styles.danger,
-        pressed && variant === "primary" && styles.primaryPressed,
-        pressed && variant === "secondary" && styles.secondaryPressed,
-        pressed && variant === "danger" && styles.dangerPressed,
+        state.pressed && variant === "primary" && styles.primaryPressed,
+        state.pressed && variant === "secondary" && styles.secondaryPressed,
+        state.pressed && variant === "danger" && styles.dangerPressed,
         disabled && styles.disabled,
-        typeof style === "function" ? style({ pressed }) : style,
+        typeof style === "function" ? style(state) : style,
       ]}
       {...props}
     >
