@@ -285,20 +285,9 @@ export default function AccountScreen() {
 
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Atalhos</Text>
-        <AppButton label="Explorar moradias" onPress={() => router.push("/")} />
         <AppButton
           label="Verificação de identidade"
           onPress={() => router.push("/identity-verification")}
-          variant="secondary"
-        />
-        <AppButton
-          label="Meus anúncios"
-          onPress={() => router.push("/my-listings")}
-          variant="secondary"
-        />
-        <AppButton
-          label="Conversas"
-          onPress={() => router.push("/conversations")}
           variant="secondary"
         />
         <AppButton

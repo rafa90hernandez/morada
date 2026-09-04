@@ -40,7 +40,7 @@ export default function SignupScreen() {
         password,
         phone: phone || undefined,
       });
-      router.replace("/account");
+      router.replace("/");
     } catch (caught) {
       const status = (caught as Error & { status?: number }).status;
       if (status === 409) {
@@ -67,7 +67,8 @@ export default function SignupScreen() {
           </Text>
           <Text style={styles.subtitle}>
             Comece com seus dados básicos. A confirmação de elegibilidade 18+ e
-            os dados privados do perfil são concluídos na sua conta.
+            os dados privados do perfil podem ser concluídos depois, na sua
+            conta.
           </Text>
 
           <TextInput

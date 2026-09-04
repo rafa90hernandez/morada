@@ -25,6 +25,10 @@ import { ListingCard } from "@/components/ListingCard";
 import { AppButton } from "@/components/ui/AppButton";
 import { boundsFromCards } from "@/features/discovery/discovery-utils";
 import { useDiscoverySearch } from "@/features/discovery/useDiscoverySearch";
+import {
+  brazilianDateToIso,
+  formatBrazilianDateInput,
+} from "@/features/listings/input-formatters";
 import { useSession } from "@/session/SessionContext";
 import { colors, radius, spacing } from "@/theme/tokens";
 
@@ -110,7 +114,9 @@ export function DiscoveryScreen() {
       bathroomType,
       billsIncludedType: billsIncluded,
       maxPriceCents: parsedPrice ? parsedPrice * 100 : undefined,
-      availableOn: availableOn.trim() || undefined,
+      availableOn: availableOn.trim()
+        ? brazilianDateToIso(availableOn.trim())
+        : undefined,
       bedroomCountMin: positiveInteger(bedrooms),
       bathroomCountMin: positiveInteger(bathrooms),
       currentResidentCount: positiveInteger(currentResidents),
@@ -152,6 +158,9 @@ export function DiscoveryScreen() {
     students,
   ]);
 
+  const [appliedFilters, setAppliedFilters] =
+    useState<ListingSearchFilters>(filters);
+
   const load = useCallback(
     async (refresh = false) => {
       if (refresh) setRefreshing(true);
@@ -159,7 +168,7 @@ export function DiscoveryScreen() {
       setError(null);
 
       try {
-        const result = await search(filters);
+        const result = await search(appliedFilters);
         setListings(result.items);
         const allowedIds = new Set(result.items.map((item) => item.id));
         const bounds = boundsFromCards(result.items);
@@ -180,7 +189,7 @@ export function DiscoveryScreen() {
         setRefreshing(false);
       }
     },
-    [filters, search, session],
+    [appliedFilters, search, session],
   );
 
   useEffect(() => {
@@ -195,18 +204,14 @@ export function DiscoveryScreen() {
       <View style={styles.header}>
         <View style={styles.brandRow}>
           <Text style={styles.brand}>MORADA</Text>
-          <View style={styles.headerActions}>
-            {session ? (
+          {!session ? (
+            <View style={styles.headerActions}>
               <HeaderButton
-                label="Favoritos"
-                onPress={() => router.push("/favorites")}
+                label="Entrar"
+                onPress={() => router.push("/login")}
               />
-            ) : null}
-            <HeaderButton
-              label={session ? "Conta" : "Entrar"}
-              onPress={() => router.push(session ? "/account" : "/login")}
-            />
-          </View>
+            </View>
+          ) : null}
         </View>
         <Text accessibilityRole="header" style={styles.title}>
           Encontre sua próxima moradia
@@ -232,7 +237,10 @@ export function DiscoveryScreen() {
           />
         </View>
         <View style={styles.filterActions}>
-          <AppButton label="Buscar" onPress={() => void load()} />
+          <AppButton
+            label="Buscar"
+            onPress={() => setAppliedFilters(filters)}
+          />
           <AppButton
             label={showAdvanced ? "Menos filtros" : "Mais filtros"}
             onPress={() => setShowAdvanced((value) => !value)}
@@ -264,9 +272,12 @@ export function DiscoveryScreen() {
               />
               <TextInput
                 accessibilityLabel="Disponível em"
-                autoCapitalize="none"
-                onChangeText={setAvailableOn}
-                placeholder="Disponível em AAAA-MM-DD"
+                inputMode="numeric"
+                maxLength={10}
+                onChangeText={(value) =>
+                  setAvailableOn(formatBrazilianDateInput(value))
+                }
+                placeholder="Disponível em DD/MM/AAAA"
                 placeholderTextColor={colors.textMuted}
                 style={styles.input}
                 value={availableOn}
@@ -406,7 +417,13 @@ export function DiscoveryScreen() {
                 }}
                 allowClear={false}
               />
-              <AppButton label="Aplicar filtros" onPress={() => void load()} />
+              <AppButton
+                label="Aplicar filtros"
+                onPress={() => {
+                  setAppliedFilters(filters);
+                  setShowAdvanced(false);
+                }}
+              />
             </View>
           </ScrollView>
         ) : null}
