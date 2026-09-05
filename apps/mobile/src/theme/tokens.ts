@@ -1,23 +1,36 @@
 export const colors = {
-  background: "#F7F8F5",
+  background: "#F8F7EF",
   surface: "#FFFFFF",
-  surfaceMuted: "#EEF2EE",
-  surfaceWarm: "#F7F1EA",
-  text: "#17211B",
-  textMuted: "#66736B",
-  textSubtle: "#87918B",
-  primary: "#245C45",
-  primaryPressed: "#1B4936",
-  primarySoft: "#DDEBE4",
-  border: "#DDE3DE",
-  borderStrong: "#C7D0C9",
+  surfaceMuted: "#F1F5EE",
+  surfaceWarm: "#FFF8E6",
+  text: "#0D1B2B",
+  textMuted: "#5C6872",
+  textSubtle: "#7A858D",
+  primary: "#006853",
+  primaryPressed: "#005342",
+  primarySoft: "#DDF0E9",
+  accent: "#F4B400",
+  accentPressed: "#D99E00",
+  accentSoft: "#FFF1BF",
+  secondary: "#0D1B2B",
+  secondarySoft: "#E8ECF0",
+  brazilSoft: "#E7F6D9",
+  wellbeing: "#A7D781",
+  border: "#DCE4DD",
+  borderStrong: "#BAC9C0",
   danger: "#B42318",
   dangerSoft: "#FDE8E5",
-  warning: "#9A6700",
-  warningSoft: "#FFF2CC",
-  success: "#18794E",
-  successSoft: "#DDF3E8",
-  shadow: "#0B1710",
+  warning: "#8A6300",
+  warningSoft: "#FFF1BF",
+  success: "#006853",
+  successSoft: "#DDF0E9",
+  shadow: "#07150F",
+} as const;
+
+export const brand = {
+  name: "morada",
+  tagline: "Seu lugar seguro na Irlanda",
+  audience: "Brasileiros na Irlanda",
 } as const;
 
 export const spacing = {
@@ -45,6 +58,14 @@ export const typeScale = {
   titleSmall: 18,
   title: 24,
   display: 32,
+} as const;
+
+export const fontWeight = {
+  regular: "400",
+  medium: "500",
+  semibold: "600",
+  bold: "700",
+  extraBold: "800",
 } as const;
 
 export const layout = {
