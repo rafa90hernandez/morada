@@ -9,7 +9,7 @@
     "newArchEnabled": true,
     "plugins": ["expo-router"],
     "splash": {
-      "backgroundColor": "#F7F8F5"
+      "backgroundColor": "#F8F7EF"
     },
     "experiments": {
       "typedRoutes": true
@@ -21,11 +21,12 @@
     "android": {
       "package": "ie.morada.mobile",
       "adaptiveIcon": {
-        "backgroundColor": "#F7F8F5"
+        "backgroundColor": "#F8F7EF"
       }
     },
     "web": {
-      "bundler": "metro"
+      "bundler": "metro",
+      "backgroundColor": "#F8F7EF"
     }
   }
 }
