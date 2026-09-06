@@ -7,8 +7,11 @@
     "userInterfaceStyle": "automatic",
     "scheme": "morada",
     "newArchEnabled": true,
+    "icon": "./assets/icon.png",
     "plugins": ["expo-router"],
     "splash": {
+      "image": "./assets/adaptive-icon.png",
+      "resizeMode": "contain",
       "backgroundColor": "#F8F7EF"
     },
     "experiments": {
@@ -21,7 +24,8 @@
     "android": {
       "package": "ie.morada.mobile",
       "adaptiveIcon": {
-        "backgroundColor": "#F8F7EF"
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#004D3F"
       }
     },
     "web": {
