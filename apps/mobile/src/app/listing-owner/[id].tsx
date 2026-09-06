@@ -194,7 +194,10 @@ export default function ListingOwnerScreen() {
         <Text accessibilityRole="header" style={styles.title}>
           {item.title}
         </Text>
-        <AppBadge label={statusLabels[item.status]} tone={statusTone(item.status)} />
+        <AppBadge
+          label={statusLabels[item.status]}
+          tone={statusTone(item.status)}
+        />
         <Text style={styles.muted}>
           {[item.location.area, item.location.city]
             .filter(Boolean)
@@ -217,8 +220,8 @@ export default function ListingOwnerScreen() {
           <View style={styles.sectionCopy}>
             <Text style={styles.sectionTitle}>Fotos do anúncio</Text>
             <Text style={styles.muted}>
-              {item.photos.length} foto{item.photos.length === 1 ? "" : "s"}{" "}
-              cadastrada
+              {item.photos.length} foto
+              {item.photos.length === 1 ? "" : "s"} cadastrada
               {item.photos.length === 1 ? "" : "s"}.
             </Text>
           </View>
@@ -256,9 +259,7 @@ export default function ListingOwnerScreen() {
                   const selected = photo.id === selectedPhoto.id;
                   return (
                     <Pressable
-                      accessibilityLabel={`Visualizar foto ${
-                        photo.position + 1
-                      }`}
+                      accessibilityLabel={`Visualizar foto ${photo.position + 1}`}
                       accessibilityRole="button"
                       key={photo.id}
                       onPress={() => setSelectedPhotoId(photo.id)}
