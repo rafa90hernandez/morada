@@ -251,7 +251,9 @@ export default function ListingAuthorizationScreen() {
   return (
     <ScrollView contentContainerStyle={styles.content}>
       <AppCard tone="muted">
-        <Text style={styles.eyebrow}>CONFIANÇA PARA QUEM ANUNCIA E PARA QUEM BUSCA</Text>
+        <Text style={styles.eyebrow}>
+          CONFIANÇA PARA QUEM ANUNCIA E PARA QUEM BUSCA
+        </Text>
         <View style={styles.titleRow}>
           <Text accessibilityRole="header" style={styles.title}>
             Direito de anunciar
