@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 
-import { colors, radius, spacing, typeScale } from "@/theme/tokens";
+import { colors, fontFamily, radius, spacing, typeScale } from "@/theme/tokens";
 
 type BadgeTone = "neutral" | "primary" | "success" | "warning" | "danger";
 
@@ -45,8 +45,8 @@ const styles = StyleSheet.create({
   },
   label: {
     color: colors.textMuted,
+    fontFamily: fontFamily.extraBold,
     fontSize: typeScale.caption,
-    fontWeight: "800",
   },
   primary: { backgroundColor: colors.primarySoft },
   success: { backgroundColor: colors.successSoft },
