@@ -31,10 +31,7 @@ export function AppButton({
       {...props}
     >
       <Text
-        style={[
-          styles.label,
-          variant === "secondary" && styles.secondaryLabel,
-        ]}
+        style={[styles.label, variant === "secondary" && styles.secondaryLabel]}
       >
         {label}
       </Text>
