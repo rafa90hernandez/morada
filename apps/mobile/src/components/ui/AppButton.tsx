@@ -1,6 +1,13 @@
 import { Pressable, StyleSheet, Text, type PressableProps } from "react-native";
 
-import { colors, layout, radius, spacing, typeScale } from "@/theme/tokens";
+import {
+  colors,
+  fontFamily,
+  layout,
+  radius,
+  spacing,
+  typeScale,
+} from "@/theme/tokens";
 
 type AppButtonProps = PressableProps & {
   label: string;
@@ -71,8 +78,8 @@ const styles = StyleSheet.create({
   },
   label: {
     color: colors.surface,
+    fontFamily: fontFamily.extraBold,
     fontSize: typeScale.bodySmall,
-    fontWeight: "800",
   },
   secondaryLabel: {
     color: colors.text,
