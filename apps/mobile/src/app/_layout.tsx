@@ -1,12 +1,32 @@
+import {
+  Manrope_400Regular,
+  Manrope_500Medium,
+  Manrope_600SemiBold,
+  Manrope_700Bold,
+  Manrope_800ExtraBold,
+  useFonts,
+} from "@expo-google-fonts/manrope";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { View } from "react-native";
 
 import { AppTabBar } from "@/components/AppTabBar";
 import { SessionProvider } from "@/session/SessionContext";
-import { colors } from "@/theme/tokens";
+import { colors, fontFamily } from "@/theme/tokens";
 
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    Manrope_400Regular,
+    Manrope_500Medium,
+    Manrope_600SemiBold,
+    Manrope_700Bold,
+    Manrope_800ExtraBold,
+  });
+
+  if (!fontsLoaded) {
+    return null;
+  }
+
   return (
     <SessionProvider>
       <StatusBar style="dark" />
@@ -17,6 +37,7 @@ export default function RootLayout() {
             headerShadowVisible: false,
             headerStyle: { backgroundColor: colors.background },
             headerTintColor: colors.text,
+            headerTitleStyle: { fontFamily: fontFamily.semibold },
           }}
         >
           <Stack.Screen name="index" options={{ headerShown: false }} />
