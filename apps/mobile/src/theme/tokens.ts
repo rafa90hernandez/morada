@@ -62,6 +62,14 @@ export const typeScale = {
   display: 32,
 } as const;
 
+export const fontFamily = {
+  regular: "Manrope_400Regular",
+  medium: "Manrope_500Medium",
+  semibold: "Manrope_600SemiBold",
+  bold: "Manrope_700Bold",
+  extraBold: "Manrope_800ExtraBold",
+} as const;
+
 export const fontWeight = {
   regular: "400",
   medium: "500",
