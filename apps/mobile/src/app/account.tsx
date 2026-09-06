@@ -7,7 +7,6 @@ import {
 } from "react";
 import { router } from "expo-router";
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -23,7 +22,10 @@ import {
   type PrivateUser,
   type UpdatePrivateProfile,
 } from "@/api/account";
+import { AppBadge } from "@/components/ui/AppBadge";
 import { AppButton } from "@/components/ui/AppButton";
+import { AppCard } from "@/components/ui/AppCard";
+import { ProductState } from "@/components/ui/ProductState";
 import {
   brazilianDateToIso,
   formatBrazilianDateInput,
@@ -166,8 +168,11 @@ export default function AccountScreen() {
   if (loading) {
     return (
       <View style={styles.centerState}>
-        <ActivityIndicator color={colors.primary} size="large" />
-        <Text style={styles.muted}>Carregando sua conta...</Text>
+        <ProductState
+          description="Estamos carregando seus dados e verificações registradas."
+          kind="loading"
+          title="Carregando perfil"
+        />
       </View>
     );
   }
@@ -175,18 +180,23 @@ export default function AccountScreen() {
   if (!user) {
     return (
       <View style={styles.centerState}>
-        <Text style={styles.title}>Não foi possível abrir sua conta</Text>
-        <Text style={styles.muted}>{error ?? "Tente novamente."}</Text>
-        <AppButton label="Tentar novamente" onPress={() => void load()} />
+        <ProductState
+          actionLabel="Tentar novamente"
+          description={error ?? "Tente novamente."}
+          kind="error"
+          onAction={() => void load()}
+          title="Não foi possível abrir seu perfil"
+        />
       </View>
     );
   }
 
   return (
     <ScrollView contentContainerStyle={styles.content}>
-      <View style={styles.card}>
+      <AppCard tone="muted">
+        <Text style={styles.eyebrow}>SEU ESPAÇO NO MORADA</Text>
         <Text accessibilityRole="header" style={styles.title}>
-          Minha conta
+          Perfil
         </Text>
         <Text style={styles.muted}>{user.email}</Text>
 
@@ -196,22 +206,30 @@ export default function AccountScreen() {
         </View>
 
         <View style={styles.verificationRow}>
-          <Text style={styles.verificationText}>
-            E-mail: {user.emailVerified ? "verificado" : "não verificado"}
-          </Text>
-          <Text style={styles.verificationText}>
-            Telefone: {user.phoneVerified ? "verificado" : "não verificado"}
-          </Text>
+          <AppBadge
+            label={user.emailVerified ? "E-mail verificado" : "E-mail pendente"}
+            tone={user.emailVerified ? "success" : "neutral"}
+          />
+          <AppBadge
+            label={
+              user.phoneVerified ? "Telefone verificado" : "Telefone pendente"
+            }
+            tone={user.phoneVerified ? "success" : "neutral"}
+          />
         </View>
         <Text style={styles.helper}>
-          O aplicativo mostra o estado registrado pelo servidor. Ele não promete
-          envio de SMS ou e-mail enquanto um provedor de verificação não estiver
-          ativado para a Beta.
+          Estes estados mostram apenas verificações já registradas pelo servidor.
+          O Morada não promete envio de SMS ou e-mail enquanto um provedor de
+          verificação não estiver ativado para a Beta.
         </Text>
-      </View>
+      </AppCard>
 
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Perfil</Text>
+      <AppCard>
+        <Text style={styles.sectionTitle}>Sobre você</Text>
+        <Text style={styles.muted}>
+          Complete o perfil para dar mais contexto às suas interações na
+          comunidade.
+        </Text>
         <Field
           label="Nome exibido"
           onChangeText={setDisplayName}
@@ -281,10 +299,10 @@ export default function AccountScreen() {
           label={saving ? "Salvando..." : "Salvar perfil"}
           onPress={() => void save()}
         />
-      </View>
+      </AppCard>
 
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Atalhos</Text>
+      <AppCard>
+        <Text style={styles.sectionTitle}>Segurança e preferências</Text>
         <AppButton
           label="Verificação de identidade"
           onPress={() => router.push("/identity-verification")}
@@ -296,7 +314,7 @@ export default function AccountScreen() {
           variant="secondary"
         />
         <AppButton label="Sair" onPress={leave} variant="secondary" />
-      </View>
+      </AppCard>
     </ScrollView>
   );
 }
@@ -355,27 +373,24 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
+    backgroundColor: colors.background,
   },
   centerState: {
     flex: 1,
-    alignItems: "center",
     justifyContent: "center",
-    gap: spacing.md,
-    padding: spacing.xl,
     backgroundColor: colors.background,
   },
-  card: {
-    gap: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.xl,
-    backgroundColor: colors.surface,
-    padding: spacing.lg,
+  eyebrow: {
+    color: colors.primary,
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: 1.3,
   },
   title: {
     color: colors.text,
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: "900",
+    letterSpacing: -0.6,
   },
   sectionTitle: {
     color: colors.text,
@@ -406,11 +421,9 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   verificationRow: {
-    gap: spacing.xs,
-  },
-  verificationText: {
-    color: colors.text,
-    fontWeight: "700",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
   },
   field: {
     gap: spacing.xs,
@@ -459,7 +472,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   error: {
-    color: colors.danger ?? "#B42318",
+    color: colors.danger,
     lineHeight: 20,
   },
   success: {
