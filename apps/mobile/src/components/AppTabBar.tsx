@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   actionSymbol: {
-    color: colors.navy,
+    color: colors.deepNavy,
     fontSize: 22,
     fontWeight: "900",
   },
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   actionLabel: {
-    color: colors.navy,
+    color: colors.deepNavy,
     fontWeight: "800",
   },
 });
