@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { router } from "expo-router";
 import {
-  ActivityIndicator,
   FlatList,
   Pressable,
   RefreshControl,
@@ -12,9 +11,12 @@ import {
 
 import { listConversations } from "@/api/client";
 import type { Conversation } from "@/api/types";
+import { AppBadge } from "@/components/ui/AppBadge";
 import { AppButton } from "@/components/ui/AppButton";
+import { AppCard } from "@/components/ui/AppCard";
+import { ProductState } from "@/components/ui/ProductState";
 import { useSession } from "@/session/SessionContext";
-import { colors, radius, spacing } from "@/theme/tokens";
+import { colors, spacing } from "@/theme/tokens";
 
 function displayName(conversation: Conversation, currentUserId: string) {
   const other =
@@ -75,8 +77,11 @@ export default function ConversationsScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color={colors.primary} size="large" />
-        <Text style={styles.muted}>Carregando suas conversas...</Text>
+        <ProductState
+          description="Estamos buscando suas conversas mais recentes."
+          kind="loading"
+          title="Carregando conversas"
+        />
       </View>
     );
   }
@@ -84,7 +89,8 @@ export default function ConversationsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.topBar}>
-        <View>
+        <View style={styles.heading}>
+          <Text style={styles.eyebrow}>COMUNIDADE MORADA</Text>
           <Text accessibilityRole="header" style={styles.title}>
             Suas conversas
           </Text>
@@ -97,23 +103,29 @@ export default function ConversationsScreen() {
         />
       </View>
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? (
+        <View style={styles.errorState}>
+          <ProductState
+            actionLabel="Tentar novamente"
+            description={error}
+            kind="error"
+            onAction={() => void load()}
+            title="Não conseguimos atualizar agora"
+          />
+        </View>
+      ) : null}
 
       <FlatList
         contentContainerStyle={styles.list}
         data={items}
         keyExtractor={(item) => item.id}
         ListEmptyComponent={
-          <View style={styles.center}>
-            <Text style={styles.emptyTitle}>Nenhuma conversa ainda</Text>
-            <Text style={styles.muted}>
-              Abra um anúncio elegível e toque em “Falar com anunciante”.
-            </Text>
-            <AppButton
-              label="Explorar moradias"
-              onPress={() => router.push("/")}
-            />
-          </View>
+          <ProductState
+            actionLabel="Explorar moradias"
+            description="Quando você falar com um anunciante, a conversa aparecerá aqui."
+            onAction={() => router.push("/")}
+            title="Nenhuma conversa ainda"
+          />
         }
         refreshControl={
           <RefreshControl
@@ -131,24 +143,28 @@ export default function ConversationsScreen() {
                 params: { id: item.id },
               })
             }
-            style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+            style={({ pressed }) => [pressed && styles.pressed]}
           >
-            <View style={styles.cardHeader}>
-              <Text style={styles.person}>
-                {displayName(item, session.user.id)}
+            <AppCard style={styles.card}>
+              <View style={styles.cardHeader}>
+                <Text style={styles.person}>
+                  {displayName(item, session.user.id)}
+                </Text>
+                {item.status !== "ACTIVE" ? (
+                  <AppBadge label="Contato indisponível" tone="danger" />
+                ) : (
+                  <AppBadge label="Conversa ativa" tone="primary" />
+                )}
+              </View>
+              <Text numberOfLines={1} style={styles.listing}>
+                {item.listing.title}
               </Text>
-              {item.status !== "ACTIVE" ? (
-                <Text style={styles.blocked}>Contato indisponível</Text>
-              ) : null}
-            </View>
-            <Text numberOfLines={1} style={styles.listing}>
-              {item.listing.title}
-            </Text>
-            <Text style={styles.time}>
-              {item.lastMessageAt
-                ? `Atualizada ${new Date(item.lastMessageAt).toLocaleString("pt-BR")}`
-                : "Conversa iniciada"}
-            </Text>
+              <Text style={styles.time}>
+                {item.lastMessageAt
+                  ? `Atualizada ${new Date(item.lastMessageAt).toLocaleString("pt-BR")}`
+                  : "Conversa iniciada"}
+              </Text>
+            </AppCard>
           </Pressable>
         )}
       />
@@ -163,24 +179,33 @@ const styles = StyleSheet.create({
   },
   topBar: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-end",
     justifyContent: "space-between",
     gap: spacing.md,
     padding: spacing.lg,
   },
+  heading: {
+    flex: 1,
+    gap: spacing.xs,
+  },
+  eyebrow: {
+    color: colors.primary,
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: 1.3,
+  },
   title: {
     color: colors.text,
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: "900",
+    letterSpacing: -0.6,
   },
   muted: {
     color: colors.textMuted,
     lineHeight: 20,
-    textAlign: "center",
   },
-  error: {
+  errorState: {
     marginHorizontal: spacing.lg,
-    color: colors.danger,
   },
   list: {
     gap: spacing.md,
@@ -189,11 +214,6 @@ const styles = StyleSheet.create({
   },
   card: {
     gap: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.lg,
-    backgroundColor: colors.surface,
-    padding: spacing.md,
   },
   pressed: {
     opacity: 0.78,
@@ -210,28 +230,15 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "800",
   },
-  blocked: {
-    color: colors.danger,
-    fontSize: 12,
-    fontWeight: "700",
-  },
   listing: {
     color: colors.textMuted,
   },
   time: {
-    color: colors.textMuted,
+    color: colors.textSubtle,
     fontSize: 12,
   },
   center: {
     flex: 1,
-    alignItems: "center",
     justifyContent: "center",
-    gap: spacing.md,
-    padding: spacing.xl,
-  },
-  emptyTitle: {
-    color: colors.text,
-    fontSize: 21,
-    fontWeight: "800",
   },
 });
