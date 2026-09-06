@@ -2,7 +2,7 @@ import { router, usePathname } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { useSession } from "@/session/SessionContext";
-import { colors, radius, spacing } from "@/theme/tokens";
+import { colors, fontFamily, radius, spacing } from "@/theme/tokens";
 
 const tabs = [
   { label: "Explorar", path: "/", symbol: "⌂" },
@@ -143,14 +143,14 @@ const styles = StyleSheet.create({
   },
   label: {
     color: colors.textMuted,
+    fontFamily: fontFamily.bold,
     fontSize: 11,
-    fontWeight: "700",
   },
   labelSelected: {
     color: colors.primary,
   },
   actionLabel: {
     color: colors.deepNavy,
-    fontWeight: "800",
+    fontFamily: fontFamily.extraBold,
   },
 });
