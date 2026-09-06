@@ -31,7 +31,7 @@ export const colors = {
 
 export const brand = {
   name: "morada",
-  tagline: "Seu lugar seguro na Irlanda",
+  tagline: "Um recomeço, um novo lar.",
   audience: "Brasileiros na Irlanda",
 } as const;
 
