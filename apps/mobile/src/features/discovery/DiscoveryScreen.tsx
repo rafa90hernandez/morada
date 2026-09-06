@@ -203,7 +203,10 @@ export function DiscoveryScreen() {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
         <View style={styles.brandRow}>
-          <Text style={styles.brand}>MORADA</Text>
+          <View style={styles.brandLockup}>
+            <Text style={styles.brand}>morada</Text>
+            <Text style={styles.brandTagline}>SEU LUGAR SEGURO NA IRLANDA</Text>
+          </View>
           {!session ? (
             <View style={styles.headerActions}>
               <HeaderButton
@@ -214,11 +217,16 @@ export function DiscoveryScreen() {
           ) : null}
         </View>
         <Text accessibilityRole="header" style={styles.title}>
-          Encontre sua próxima moradia
+          Encontre um lugar para chamar de casa
+        </Text>
+        <Text style={styles.heroCopy}>
+          Moradias para brasileiros na Irlanda, com mais contexto, confiança e
+          segurança para decidir.
         </Text>
       </View>
 
       <View style={styles.filters}>
+        <Text style={styles.searchEyebrow}>ONDE VOCÊ QUER MORAR?</Text>
         <View style={styles.inlineInputs}>
           <TextInput
             accessibilityLabel="Cidade"
@@ -238,7 +246,7 @@ export function DiscoveryScreen() {
         </View>
         <View style={styles.filterActions}>
           <AppButton
-            label="Buscar"
+            label="Buscar moradias"
             onPress={() => setAppliedFilters(filters)}
           />
           <AppButton
@@ -427,6 +435,14 @@ export function DiscoveryScreen() {
             </View>
           </ScrollView>
         ) : null}
+      </View>
+
+      <View style={styles.resultsHeader}>
+        <Text style={styles.resultsLabel}>
+          {loading
+            ? "Buscando opções..."
+            : `${listings.length} moradia${listings.length === 1 ? "" : "s"} encontrada${listings.length === 1 ? "" : "s"}`}
+        </Text>
       </View>
 
       <View style={styles.modeSwitch}>
@@ -623,61 +639,122 @@ function StateMessage({
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.background },
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
   header: {
-    gap: spacing.sm,
+    gap: spacing.md,
+    backgroundColor: colors.deepNavy,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
+    paddingBottom: spacing.xl,
   },
   brandRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-between",
     gap: spacing.md,
   },
-  headerActions: { flexDirection: "row", gap: spacing.sm },
+  brandLockup: {
+    gap: 2,
+  },
+  headerActions: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
   brand: {
-    color: colors.primary,
-    fontSize: 13,
+    color: colors.surface,
+    fontSize: 25,
     fontWeight: "900",
-    letterSpacing: 2,
+    letterSpacing: -0.8,
+  },
+  brandTagline: {
+    color: colors.accent,
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 1.1,
   },
   accountButton: {
     minHeight: 44,
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.softGreen,
     borderRadius: radius.pill,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.deepNavy,
     paddingHorizontal: spacing.md,
   },
-  accountButtonText: { color: colors.text, fontWeight: "700" },
-  title: {
-    color: colors.text,
-    fontSize: 30,
-    fontWeight: "900",
-    letterSpacing: -0.8,
+  accountButtonText: {
+    color: colors.surface,
+    fontWeight: "800",
   },
-  filters: { gap: spacing.sm, padding: spacing.lg },
+  title: {
+    maxWidth: 560,
+    color: colors.surface,
+    fontSize: 31,
+    fontWeight: "900",
+    letterSpacing: -0.9,
+    lineHeight: 36,
+  },
+  heroCopy: {
+    maxWidth: 620,
+    color: colors.softGreen,
+    fontSize: 14,
+    lineHeight: 21,
+  },
+  filters: {
+    gap: spacing.sm,
+    marginHorizontal: spacing.lg,
+    marginTop: -spacing.md,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.xl,
+    backgroundColor: colors.surface,
+    padding: spacing.lg,
+  },
+  searchEyebrow: {
+    color: colors.primary,
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 1.2,
+  },
   advancedScroll: {
     maxHeight: 310,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.lg,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.background,
   },
-  advancedFilters: { gap: spacing.md, padding: spacing.md },
-  filterTitle: { color: colors.text, fontSize: 16, fontWeight: "800" },
-  filterLabel: { color: colors.text, fontWeight: "700" },
-  choiceSection: { gap: spacing.sm },
-  inlineInputs: { flexDirection: "row", gap: spacing.sm },
-  flexInput: { flex: 1 },
+  advancedFilters: {
+    gap: spacing.md,
+    padding: spacing.md,
+  },
+  filterTitle: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: "800",
+  },
+  filterLabel: {
+    color: colors.text,
+    fontWeight: "700",
+  },
+  choiceSection: {
+    gap: spacing.sm,
+  },
+  inlineInputs: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  flexInput: {
+    flex: 1,
+  },
   input: {
     minHeight: 48,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.md,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.background,
     color: colors.text,
     paddingHorizontal: spacing.md,
     fontSize: 16,
@@ -688,7 +765,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: spacing.sm,
   },
-  chipWrap: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
+  chipWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+  },
   chip: {
     minHeight: 44,
     justifyContent: "center",
@@ -702,14 +783,28 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
     backgroundColor: colors.primarySoft,
   },
-  chipText: { color: colors.text, fontWeight: "700" },
-  chipTextSelected: { color: colors.primary },
+  chipText: {
+    color: colors.text,
+    fontWeight: "700",
+  },
+  chipTextSelected: {
+    color: colors.primary,
+  },
+  resultsHeader: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
+  },
+  resultsLabel: {
+    color: colors.textMuted,
+    fontSize: 13,
+    fontWeight: "700",
+  },
   modeSwitch: {
     flexDirection: "row",
     marginHorizontal: spacing.lg,
     marginBottom: spacing.md,
     borderRadius: radius.pill,
-    backgroundColor: colors.surfaceMuted,
+    backgroundColor: colors.primarySoft,
     padding: spacing.xs,
   },
   modeButton: {
@@ -718,9 +813,16 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     paddingVertical: spacing.sm,
   },
-  modeButtonActive: { backgroundColor: colors.surface },
-  modeText: { color: colors.textMuted, fontWeight: "700" },
-  modeTextActive: { color: colors.text },
+  modeButtonActive: {
+    backgroundColor: colors.primary,
+  },
+  modeText: {
+    color: colors.primary,
+    fontWeight: "800",
+  },
+  modeTextActive: {
+    color: colors.surface,
+  },
   listContent: {
     gap: spacing.md,
     paddingHorizontal: spacing.lg,
@@ -732,7 +834,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.lg,
   },
-  mapFootnote: { color: colors.textMuted, fontSize: 12, lineHeight: 18 },
+  mapFootnote: {
+    color: colors.textMuted,
+    fontSize: 12,
+    lineHeight: 18,
+  },
   centerState: {
     flex: 1,
     alignItems: "center",
@@ -746,5 +852,9 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 22,
   },
-  errorTitle: { color: colors.text, fontSize: 20, fontWeight: "800" },
+  errorTitle: {
+    color: colors.text,
+    fontSize: 20,
+    fontWeight: "800",
+  },
 });
