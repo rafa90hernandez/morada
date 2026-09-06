@@ -30,7 +30,12 @@ export function AppButton({
       ]}
       {...props}
     >
-      <Text style={[styles.label, variant === "secondary" && styles.secondaryLabel]}>
+      <Text
+        style={[
+          styles.label,
+          variant === "secondary" && styles.secondaryLabel,
+        ]}
+      >
         {label}
       </Text>
     </Pressable>
