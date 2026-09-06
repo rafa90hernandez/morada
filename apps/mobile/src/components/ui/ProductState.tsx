@@ -1,6 +1,6 @@
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
-import { colors, spacing, typeScale } from "@/theme/tokens";
+import { colors, fontFamily, spacing, typeScale } from "@/theme/tokens";
 import { AppButton } from "./AppButton";
 
 type ProductStateProps = {
@@ -51,13 +51,14 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
+    fontFamily: fontFamily.extraBold,
     fontSize: typeScale.titleSmall,
-    fontWeight: "800",
     textAlign: "center",
   },
   description: {
     maxWidth: 520,
     color: colors.textMuted,
+    fontFamily: fontFamily.regular,
     fontSize: typeScale.bodySmall,
     lineHeight: 21,
     textAlign: "center",
