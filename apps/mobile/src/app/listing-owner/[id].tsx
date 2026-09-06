@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import * as ImagePicker from "expo-image-picker";
 import { router, useLocalSearchParams } from "expo-router";
 import {
-  ActivityIndicator,
   Image,
   Pressable,
   ScrollView,
@@ -21,7 +20,10 @@ import {
   uploadListingPhoto,
   type OwnerListing,
 } from "@/api/owner-listings";
+import { AppBadge } from "@/components/ui/AppBadge";
 import { AppButton } from "@/components/ui/AppButton";
+import { AppCard } from "@/components/ui/AppCard";
+import { ProductState } from "@/components/ui/ProductState";
 import { useSession } from "@/session/SessionContext";
 import { colors, radius, spacing } from "@/theme/tokens";
 
@@ -33,6 +35,13 @@ const statusLabels: Record<OwnerListing["status"], string> = {
   CLOSED: "Encerrado",
   REJECTED: "Correção necessária",
 };
+
+function statusTone(status: OwnerListing["status"]) {
+  if (status === "ACTIVE") return "success" as const;
+  if (status === "PENDING_REVIEW") return "warning" as const;
+  if (status === "REJECTED") return "danger" as const;
+  return "primary" as const;
+}
 
 export default function ListingOwnerScreen() {
   const params = useLocalSearchParams<{ id: string }>();
@@ -155,8 +164,11 @@ export default function ListingOwnerScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color={colors.primary} size="large" />
-        <Text style={styles.muted}>Carregando anúncio...</Text>
+        <ProductState
+          description="Estamos carregando as informações, fotos e status do anúncio."
+          kind="loading"
+          title="Carregando anúncio"
+        />
       </View>
     );
   }
@@ -164,22 +176,25 @@ export default function ListingOwnerScreen() {
   if (!item) {
     return (
       <View style={styles.center}>
-        <Text style={styles.title}>Anúncio indisponível</Text>
-        <Text style={styles.error}>{error ?? "Tente novamente."}</Text>
-        <AppButton label="Tentar novamente" onPress={() => void load()} />
+        <ProductState
+          actionLabel="Tentar novamente"
+          description={error ?? "Tente novamente."}
+          kind="error"
+          onAction={() => void load()}
+          title="Anúncio indisponível"
+        />
       </View>
     );
   }
 
   return (
     <ScrollView contentContainerStyle={styles.content}>
-      <View style={styles.card}>
+      <AppCard tone="muted">
+        <Text style={styles.eyebrow}>GESTÃO DO ANÚNCIO</Text>
         <Text accessibilityRole="header" style={styles.title}>
           {item.title}
         </Text>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{statusLabels[item.status]}</Text>
-        </View>
+        <AppBadge label={statusLabels[item.status]} tone={statusTone(item.status)} />
         <Text style={styles.muted}>
           {[item.location.area, item.location.city]
             .filter(Boolean)
@@ -195,15 +210,25 @@ export default function ListingOwnerScreen() {
             Pausa: {item.moderation.pausedReason}
           </Text>
         ) : null}
-      </View>
+      </AppCard>
 
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Fotos do anúncio</Text>
-        <Text style={styles.muted}>
-          {item.photos.length} foto{item.photos.length === 1 ? "" : "s"}{" "}
-          cadastrada
-          {item.photos.length === 1 ? "" : "s"}.
-        </Text>
+      <AppCard>
+        <View style={styles.sectionHeading}>
+          <View style={styles.sectionCopy}>
+            <Text style={styles.sectionTitle}>Fotos do anúncio</Text>
+            <Text style={styles.muted}>
+              {item.photos.length} foto{item.photos.length === 1 ? "" : "s"}{" "}
+              cadastrada
+              {item.photos.length === 1 ? "" : "s"}.
+            </Text>
+          </View>
+          {item.photos.length > 0 ? (
+            <AppBadge
+              label={`${item.photos.length} foto${item.photos.length === 1 ? "" : "s"}`}
+              tone="primary"
+            />
+          ) : null}
+        </View>
 
         {selectedPhoto ? (
           <View style={styles.gallery}>
@@ -216,7 +241,7 @@ export default function ListingOwnerScreen() {
               />
               {selectedPhoto.position === 0 ? (
                 <View style={styles.coverBadge}>
-                  <Text style={styles.coverBadgeText}>Capa</Text>
+                  <Text style={styles.coverBadgeText}>Capa atual</Text>
                 </View>
               ) : null}
             </View>
@@ -261,6 +286,12 @@ export default function ListingOwnerScreen() {
           </View>
         )}
 
+        <Text style={styles.helper}>
+          A capa segue a primeira posição registrada pelo servidor. Remover,
+          reordenar ou escolher outra capa ainda não está disponível na API, por
+          isso o app não exibe controles que não funcionariam.
+        </Text>
+
         <AppButton
           disabled={busy || item.status === "CLOSED"}
           label="Adicionar foto"
@@ -291,9 +322,9 @@ export default function ListingOwnerScreen() {
           }
           variant="secondary"
         />
-      </View>
+      </AppCard>
 
-      <View style={styles.card}>
+      <AppCard>
         <Text style={styles.sectionTitle}>Status do anúncio</Text>
         <Text style={styles.muted}>
           Moderação, reenvio e renovação são decididos pelo servidor. O app não
@@ -365,7 +396,7 @@ export default function ListingOwnerScreen() {
             {success}
           </Text>
         ) : null}
-      </View>
+      </AppCard>
     </ScrollView>
   );
 }
@@ -375,52 +406,78 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
+    backgroundColor: colors.background,
   },
   center: {
     flex: 1,
-    alignItems: "center",
     justifyContent: "center",
-    gap: spacing.md,
-    padding: spacing.xl,
+    backgroundColor: colors.background,
   },
-  card: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radius.xl,
-    borderWidth: 1,
-    gap: spacing.md,
-    padding: spacing.lg,
+  eyebrow: {
+    color: colors.primary,
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: 1.3,
   },
-  title: { color: colors.text, fontSize: 25, fontWeight: "900" },
-  sectionTitle: { color: colors.text, fontSize: 18, fontWeight: "800" },
-  muted: { color: colors.textMuted, lineHeight: 21 },
-  badge: {
-    alignSelf: "flex-start",
-    backgroundColor: colors.primarySoft,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
+  title: {
+    color: colors.text,
+    fontSize: 25,
+    fontWeight: "900",
+    letterSpacing: -0.5,
   },
-  badgeText: { color: colors.primary, fontWeight: "800" },
-  gallery: { gap: spacing.sm },
+  sectionHeading: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: spacing.sm,
+  },
+  sectionCopy: {
+    flex: 1,
+    gap: spacing.xs,
+  },
+  sectionTitle: {
+    color: colors.text,
+    fontSize: 18,
+    fontWeight: "800",
+  },
+  muted: {
+    color: colors.textMuted,
+    lineHeight: 21,
+  },
+  helper: {
+    color: colors.textMuted,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  gallery: {
+    gap: spacing.sm,
+  },
   coverWrap: {
     position: "relative",
     overflow: "hidden",
     borderRadius: radius.lg,
     backgroundColor: colors.background,
   },
-  coverImage: { width: "100%", aspectRatio: 4 / 3 },
+  coverImage: {
+    width: "100%",
+    aspectRatio: 4 / 3,
+  },
   coverBadge: {
     position: "absolute",
     left: spacing.sm,
     top: spacing.sm,
     borderRadius: radius.pill,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.accent,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
   },
-  coverBadgeText: { color: colors.text, fontWeight: "800" },
-  thumbnailRow: { gap: spacing.sm },
+  coverBadgeText: {
+    color: colors.deepNavy,
+    fontWeight: "900",
+  },
+  thumbnailRow: {
+    gap: spacing.sm,
+  },
   thumbnailButton: {
     overflow: "hidden",
     width: 76,
@@ -429,8 +486,13 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
     borderRadius: radius.md,
   },
-  thumbnailButtonSelected: { borderColor: colors.primary },
-  thumbnailImage: { width: "100%", height: "100%" },
+  thumbnailButtonSelected: {
+    borderColor: colors.primary,
+  },
+  thumbnailImage: {
+    width: "100%",
+    height: "100%",
+  },
   emptyPhotos: {
     minHeight: 110,
     alignItems: "center",
@@ -438,9 +500,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.lg,
+    backgroundColor: colors.surfaceMuted,
     padding: spacing.lg,
   },
-  error: { color: colors.danger, lineHeight: 20 },
-  warning: { color: colors.warning, lineHeight: 20 },
-  success: { color: colors.success, fontWeight: "700" },
+  error: {
+    color: colors.danger,
+    lineHeight: 20,
+  },
+  warning: {
+    color: colors.warning,
+    lineHeight: 20,
+  },
+  success: {
+    color: colors.success,
+    fontWeight: "700",
+  },
 });
