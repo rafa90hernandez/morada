@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="houseGreen" x1="190" y1="520" x2="520" y2="230" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#006853"/>
+      <stop offset="1" stop-color="#00C879"/>
+    </linearGradient>
+    <linearGradient id="houseGold" x1="520" y1="235" x2="835" y2="560" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFD43B"/>
+      <stop offset="1" stop-color="#F4B400"/>
+    </linearGradient>
+    <linearGradient id="journey" x1="280" y1="650" x2="700" y2="710" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00A66A"/>
+      <stop offset="0.58" stop-color="#A7D781"/>
+      <stop offset="1" stop-color="#F4B400"/>
+    </linearGradient>
+  </defs>
+  <path d="M208 585V390Q208 350 239 325L452 153Q487 125 522 153L589 207" fill="none" stroke="url(#houseGreen)" stroke-width="94" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M589 207L788 365Q816 388 816 425V593" fill="none" stroke="url(#houseGold)" stroke-width="94" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M225 597C347 536 499 518 613 544C698 563 736 611 716 664C692 728 574 748 480 782C426 802 382 829 344 861C385 801 445 760 504 726C558 695 596 672 589 645C581 616 522 607 463 611C372 616 291 640 225 676" fill="none" stroke="url(#journey)" stroke-width="78" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
