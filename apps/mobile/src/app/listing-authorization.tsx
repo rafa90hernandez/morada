@@ -1,13 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import * as DocumentPicker from "expo-document-picker";
 import { router, useLocalSearchParams } from "expo-router";
-import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 import {
   getLatestListingAuthorization,
@@ -16,9 +10,12 @@ import {
   type ListingAuthorizationStatus,
   type LocalEvidenceFile,
 } from "@/api/owner-listings";
+import { AppBadge } from "@/components/ui/AppBadge";
 import { AppButton } from "@/components/ui/AppButton";
+import { AppCard } from "@/components/ui/AppCard";
+import { ProductState } from "@/components/ui/ProductState";
 import { useSession } from "@/session/SessionContext";
-import { colors, radius, spacing } from "@/theme/tokens";
+import { colors, spacing } from "@/theme/tokens";
 
 type EvidenceSelection = {
   field: ListingAuthorizationEvidenceField;
@@ -63,6 +60,36 @@ function statusCopy(status: ListingAuthorizationStatus | null | undefined) {
     default:
       return "Nenhuma comprovação foi enviada para este anúncio.";
   }
+}
+
+function statusLabel(status: ListingAuthorizationStatus | null | undefined) {
+  switch (status) {
+    case "SUBMITTED":
+      return "Enviada";
+    case "UNDER_REVIEW":
+      return "Em análise";
+    case "CORRECTION_REQUIRED":
+      return "Correção necessária";
+    case "APPROVED":
+      return "Aprovada";
+    case "REJECTED":
+      return "Não aprovada";
+    case "CANCELLED":
+      return "Cancelada";
+    default:
+      return "Não iniciada";
+  }
+}
+
+function statusTone(status: ListingAuthorizationStatus | null | undefined) {
+  if (status === "APPROVED") return "success" as const;
+  if (status === "REJECTED" || status === "CORRECTION_REQUIRED") {
+    return "danger" as const;
+  }
+  if (status === "SUBMITTED" || status === "UNDER_REVIEW") {
+    return "warning" as const;
+  }
+  return "neutral" as const;
 }
 
 function canSubmit(status: ListingAuthorizationStatus | null | undefined) {
@@ -210,8 +237,11 @@ export default function ListingAuthorizationScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color={colors.primary} size="large" />
-        <Text style={styles.muted}>Carregando comprovação...</Text>
+        <ProductState
+          description="Estamos carregando o estado mais recente da comprovação deste anúncio."
+          kind="loading"
+          title="Carregando comprovação"
+        />
       </View>
     );
   }
@@ -220,34 +250,39 @@ export default function ListingAuthorizationScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.content}>
-      <View style={styles.card}>
-        <Text accessibilityRole="header" style={styles.title}>
-          Direito de anunciar
-        </Text>
+      <AppCard tone="muted">
+        <Text style={styles.eyebrow}>CONFIANÇA PARA QUEM ANUNCIA E PARA QUEM BUSCA</Text>
+        <View style={styles.titleRow}>
+          <Text accessibilityRole="header" style={styles.title}>
+            Direito de anunciar
+          </Text>
+          <AppBadge label={statusLabel(status)} tone={statusTone(status)} />
+        </View>
         <Text style={styles.muted}>{statusCopy(status)}</Text>
         {reviewReason ? (
           <Text style={styles.warning}>Revisão: {reviewReason}</Text>
         ) : null}
         <Text style={styles.helper}>
-          Esses arquivos são evidências privadas. O app mostra apenas tipo, nome
-          e estado da análise — nunca object keys, hashes ou URLs privadas de
-          armazenamento.
+          Esses arquivos são evidências privadas usadas para confirmar que o
+          anunciante tem autorização para oferecer a moradia. O app mostra
+          apenas nome, tipo e estado da análise — nunca object keys, hashes ou
+          URLs privadas de armazenamento.
         </Text>
-      </View>
+      </AppCard>
 
       {submittedFiles.length > 0 ? (
-        <View style={styles.card}>
+        <AppCard>
           <Text style={styles.sectionTitle}>Arquivos da última tentativa</Text>
           {submittedFiles.map((name, index) => (
             <Text key={`${name}-${index}`} style={styles.muted}>
               • {name}
             </Text>
           ))}
-        </View>
+        </AppCard>
       ) : null}
 
       {submissionAllowed ? (
-        <View style={styles.card}>
+        <AppCard>
           <Text style={styles.sectionTitle}>Selecione os comprovantes</Text>
           <Text style={styles.helper}>
             PDF, JPEG, PNG ou WebP. Até 5 arquivos no total e 10 MB por arquivo.
@@ -282,9 +317,9 @@ export default function ListingAuthorizationScreen() {
             label={submitting ? "Enviando..." : "Enviar comprovação"}
             onPress={() => void submit()}
           />
-        </View>
+        </AppCard>
       ) : (
-        <View style={styles.card}>
+        <AppCard>
           <Text style={styles.sectionTitle}>Nenhum envio necessário agora</Text>
           <Text style={styles.muted}>{statusCopy(status)}</Text>
           <AppButton
@@ -292,42 +327,84 @@ export default function ListingAuthorizationScreen() {
             onPress={() => void load()}
             variant="secondary"
           />
-        </View>
+        </AppCard>
       )}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { gap: spacing.md, padding: spacing.lg, paddingBottom: spacing.xxl },
-  center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.md,
-    padding: spacing.xl,
-  },
-  card: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radius.xl,
-    borderWidth: 1,
+  content: {
     gap: spacing.md,
     padding: spacing.lg,
+    paddingBottom: spacing.xxl,
+    backgroundColor: colors.background,
   },
-  title: { color: colors.text, fontSize: 25, fontWeight: "900" },
-  sectionTitle: { color: colors.text, fontSize: 18, fontWeight: "800" },
-  muted: { color: colors.textMuted, lineHeight: 21 },
-  helper: { color: colors.textMuted, fontSize: 13, lineHeight: 19 },
-  warning: { color: colors.warning, lineHeight: 20 },
-  evidenceRow: {
-    alignItems: "center",
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    backgroundColor: colors.background,
+  },
+  eyebrow: {
+    color: colors.primary,
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 1.1,
+  },
+  titleRow: {
     flexDirection: "row",
-    gap: spacing.md,
+    alignItems: "flex-start",
     justifyContent: "space-between",
+    gap: spacing.sm,
   },
-  evidenceCopy: { flex: 1, gap: 2 },
-  evidenceLabel: { color: colors.text, fontWeight: "700" },
-  error: { color: colors.danger, lineHeight: 20 },
-  success: { color: colors.success, fontWeight: "700" },
+  title: {
+    flex: 1,
+    color: colors.text,
+    fontSize: 25,
+    fontWeight: "900",
+    letterSpacing: -0.5,
+  },
+  sectionTitle: {
+    color: colors.text,
+    fontSize: 18,
+    fontWeight: "800",
+  },
+  muted: {
+    color: colors.textMuted,
+    lineHeight: 21,
+  },
+  helper: {
+    color: colors.textMuted,
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  warning: {
+    color: colors.warning,
+    lineHeight: 20,
+  },
+  evidenceRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+    paddingTop: spacing.md,
+  },
+  evidenceCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  evidenceLabel: {
+    color: colors.text,
+    fontWeight: "700",
+  },
+  error: {
+    color: colors.danger,
+    lineHeight: 20,
+  },
+  success: {
+    color: colors.success,
+    fontWeight: "700",
+  },
 });
