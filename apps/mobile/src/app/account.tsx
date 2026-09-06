@@ -218,9 +218,9 @@ export default function AccountScreen() {
           />
         </View>
         <Text style={styles.helper}>
-          Estes estados mostram apenas verificações já registradas pelo servidor.
-          O Morada não promete envio de SMS ou e-mail enquanto um provedor de
-          verificação não estiver ativado para a Beta.
+          Estes estados mostram apenas verificações já registradas pelo
+          servidor. O Morada não promete envio de SMS ou e-mail enquanto um
+          provedor de verificação não estiver ativado para a Beta.
         </Text>
       </AppCard>
 
