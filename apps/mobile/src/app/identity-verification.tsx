@@ -1,14 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import {
   getMyProfile,
@@ -18,7 +11,10 @@ import {
   type IdentityVerificationStatus,
   type PrivateUser,
 } from "@/api/account";
+import { AppBadge } from "@/components/ui/AppBadge";
 import { AppButton } from "@/components/ui/AppButton";
+import { AppCard } from "@/components/ui/AppCard";
+import { ProductState } from "@/components/ui/ProductState";
 import { useSession } from "@/session/SessionContext";
 import { colors, radius, spacing } from "@/theme/tokens";
 
@@ -45,6 +41,36 @@ function statusCopy(status: IdentityVerificationStatus | null | undefined) {
       return "A última verificação foi cancelada. Você pode iniciar uma nova.";
     default:
       return "Você ainda não enviou evidências de identidade.";
+  }
+}
+
+function statusTone(status: IdentityVerificationStatus | null | undefined) {
+  if (status === "APPROVED") return "success" as const;
+  if (status === "REJECTED" || status === "CORRECTION_REQUIRED") {
+    return "danger" as const;
+  }
+  if (status === "SUBMITTED" || status === "UNDER_REVIEW") {
+    return "warning" as const;
+  }
+  return "neutral" as const;
+}
+
+function statusLabel(status: IdentityVerificationStatus | null | undefined) {
+  switch (status) {
+    case "SUBMITTED":
+      return "Enviada";
+    case "UNDER_REVIEW":
+      return "Em análise";
+    case "CORRECTION_REQUIRED":
+      return "Correção necessária";
+    case "APPROVED":
+      return "Verificada";
+    case "REJECTED":
+      return "Não aprovada";
+    case "CANCELLED":
+      return "Cancelada";
+    default:
+      return "Não iniciada";
   }
 }
 
@@ -183,8 +209,11 @@ export default function IdentityVerificationScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color={colors.primary} size="large" />
-        <Text style={styles.muted}>Carregando verificação...</Text>
+        <ProductState
+          description="Estamos verificando o estado mais recente da sua conta."
+          kind="loading"
+          title="Carregando verificação"
+        />
       </View>
     );
   }
@@ -192,9 +221,13 @@ export default function IdentityVerificationScreen() {
   if (!user) {
     return (
       <View style={styles.center}>
-        <Text style={styles.title}>Verificação indisponível</Text>
-        <Text style={styles.muted}>{error ?? "Tente novamente."}</Text>
-        <AppButton label="Tentar novamente" onPress={() => void load()} />
+        <ProductState
+          actionLabel="Tentar novamente"
+          description={error ?? "Tente novamente."}
+          kind="error"
+          onAction={() => void load()}
+          title="Verificação indisponível"
+        />
       </View>
     );
   }
@@ -205,34 +238,41 @@ export default function IdentityVerificationScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.content}>
-      <View style={styles.card}>
-        <Text accessibilityRole="header" style={styles.title}>
-          Verificação de identidade
-        </Text>
+      <AppCard tone="muted">
+        <Text style={styles.eyebrow}>SEGURANÇA MORADA</Text>
+        <View style={styles.titleRow}>
+          <Text accessibilityRole="header" style={styles.title}>
+            Verificação de identidade
+          </Text>
+          <AppBadge
+            label={statusLabel(currentStatus)}
+            tone={statusTone(currentStatus)}
+          />
+        </View>
         <Text style={styles.muted}>{statusCopy(currentStatus)}</Text>
         <Text style={styles.helper}>
           Suas evidências são privadas e usadas apenas para verificação. O app
-          não mostra endereços de armazenamento, hashes ou links permanentes
+          não expõe endereços de armazenamento, hashes nem links permanentes
           desses arquivos.
         </Text>
-      </View>
+      </AppCard>
 
       {!user.eligibility.isEligible ? (
-        <View style={styles.warning}>
+        <AppCard tone="warm">
           <Text style={styles.warningTitle}>Elegibilidade 18+ necessária</Text>
           <Text style={styles.muted}>
-            Atualize sua data de nascimento em Minha conta antes de continuar.
+            Atualize sua data de nascimento em Perfil antes de continuar.
           </Text>
           <AppButton
-            label="Abrir Minha conta"
+            label="Abrir Perfil"
             onPress={() => router.push("/account")}
             variant="secondary"
           />
-        </View>
+        </AppCard>
       ) : null}
 
       {submissionAllowed ? (
-        <View style={styles.card}>
+        <AppCard>
           <Text style={styles.sectionTitle}>1. Escolha o documento</Text>
           <View style={styles.options}>
             {documentTypes.map((option) => (
@@ -294,11 +334,11 @@ export default function IdentityVerificationScreen() {
             label={submitting ? "Enviando..." : "Enviar para verificação"}
             onPress={() => void submit()}
           />
-        </View>
+        </AppCard>
       ) : null}
 
       {!submissionAllowed && user.eligibility.isEligible ? (
-        <View style={styles.card}>
+        <AppCard>
           <Text style={styles.sectionTitle}>Nenhuma ação necessária agora</Text>
           <Text style={styles.muted}>{statusCopy(currentStatus)}</Text>
           <AppButton
@@ -306,7 +346,7 @@ export default function IdentityVerificationScreen() {
             onPress={() => void load()}
             variant="secondary"
           />
-        </View>
+        </AppCard>
       ) : null}
     </ScrollView>
   );
@@ -339,36 +379,65 @@ function EvidenceRow({
 }
 
 const styles = StyleSheet.create({
-  content: { gap: spacing.md, padding: spacing.lg, paddingBottom: spacing.xxl },
+  content: {
+    gap: spacing.md,
+    padding: spacing.lg,
+    paddingBottom: spacing.xxl,
+    backgroundColor: colors.background,
+  },
   center: {
     flex: 1,
-    alignItems: "center",
     justifyContent: "center",
-    gap: spacing.md,
-    padding: spacing.xl,
+    backgroundColor: colors.background,
   },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    gap: spacing.md,
-    padding: spacing.lg,
+  eyebrow: {
+    color: colors.primary,
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: 1.3,
   },
-  warning: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    gap: spacing.md,
-    padding: spacing.lg,
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: spacing.sm,
   },
-  title: { color: colors.text, fontSize: 24, fontWeight: "800" },
-  sectionTitle: { color: colors.text, fontSize: 17, fontWeight: "800" },
-  warningTitle: { color: colors.text, fontSize: 17, fontWeight: "800" },
-  muted: { color: colors.textMuted, lineHeight: 21 },
-  helper: { color: colors.textMuted, fontSize: 13, lineHeight: 19 },
-  options: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
+  title: {
+    flex: 1,
+    color: colors.text,
+    fontSize: 24,
+    fontWeight: "900",
+    letterSpacing: -0.5,
+  },
+  sectionTitle: {
+    color: colors.text,
+    fontSize: 17,
+    fontWeight: "800",
+  },
+  warningTitle: {
+    color: colors.text,
+    fontSize: 17,
+    fontWeight: "800",
+  },
+  muted: {
+    color: colors.textMuted,
+    lineHeight: 21,
+  },
+  helper: {
+    color: colors.textMuted,
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  options: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+  },
   option: {
     borderColor: colors.border,
     borderRadius: radius.full,
     borderWidth: 1,
+    backgroundColor: colors.surface,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },
@@ -376,16 +445,37 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     borderColor: colors.primary,
   },
-  optionText: { color: colors.text, fontWeight: "700" },
-  optionTextSelected: { color: colors.surface, fontWeight: "800" },
-  evidenceRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: spacing.md,
-    justifyContent: "space-between",
+  optionText: {
+    color: colors.text,
+    fontWeight: "700",
   },
-  evidenceText: { flex: 1, gap: 2 },
-  evidenceLabel: { color: colors.text, fontWeight: "700" },
-  error: { color: colors.danger, lineHeight: 20 },
-  success: { color: colors.success, fontWeight: "700" },
+  optionTextSelected: {
+    color: colors.surface,
+    fontWeight: "800",
+  },
+  evidenceRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+    paddingTop: spacing.md,
+  },
+  evidenceText: {
+    flex: 1,
+    gap: 2,
+  },
+  evidenceLabel: {
+    color: colors.text,
+    fontWeight: "700",
+  },
+  error: {
+    color: colors.danger,
+    lineHeight: 20,
+  },
+  success: {
+    color: colors.success,
+    fontWeight: "700",
+  },
 });
