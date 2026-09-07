@@ -205,7 +205,7 @@ export function DiscoveryScreen() {
         <View style={styles.brandRow}>
           <View style={styles.brandLockup}>
             <Text style={styles.brand}>morada</Text>
-            <Text style={styles.brandTagline}>SEU LUGAR SEGURO NA IRLANDA</Text>
+            <Text style={styles.brandTagline}>UM RECOMEÇO, UM NOVO LAR.</Text>
           </View>
           {!session ? (
             <View style={styles.headerActions}>
