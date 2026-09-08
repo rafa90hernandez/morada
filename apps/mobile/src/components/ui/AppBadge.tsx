@@ -20,6 +20,15 @@ export function AppBadge({ label, tone = "neutral" }: AppBadgeProps) {
         tone === "danger" && styles.danger,
       ]}
     >
+      <View
+        style={[
+          styles.dot,
+          tone === "primary" && styles.primaryDot,
+          tone === "success" && styles.successDot,
+          tone === "warning" && styles.warningDot,
+          tone === "danger" && styles.dangerDot,
+        ]}
+      />
       <Text
         style={[
           styles.label,
@@ -37,21 +46,49 @@ export function AppBadge({ label, tone = "neutral" }: AppBadgeProps) {
 
 const styles = StyleSheet.create({
   badge: {
+    minHeight: 28,
+    flexDirection: "row",
+    alignItems: "center",
     alignSelf: "flex-start",
+    gap: 6,
+    borderWidth: 1,
+    borderColor: colors.border,
     borderRadius: radius.pill,
     backgroundColor: colors.surfaceMuted,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
   },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: radius.pill,
+    backgroundColor: colors.textSubtle,
+  },
   label: {
     color: colors.textMuted,
-    fontFamily: fontFamily.extraBold,
+    fontFamily: fontFamily.bold,
     fontSize: typeScale.caption,
   },
-  primary: { backgroundColor: colors.primarySoft },
-  success: { backgroundColor: colors.successSoft },
-  warning: { backgroundColor: colors.warningSoft },
-  danger: { backgroundColor: colors.dangerSoft },
+  primary: {
+    borderColor: colors.primarySoft,
+    backgroundColor: colors.primarySoft,
+  },
+  success: {
+    borderColor: colors.successSoft,
+    backgroundColor: colors.successSoft,
+  },
+  warning: {
+    borderColor: colors.warningSoft,
+    backgroundColor: colors.warningSoft,
+  },
+  danger: {
+    borderColor: colors.dangerSoft,
+    backgroundColor: colors.dangerSoft,
+  },
+  primaryDot: { backgroundColor: colors.primary },
+  successDot: { backgroundColor: colors.success },
+  warningDot: { backgroundColor: colors.warning },
+  dangerDot: { backgroundColor: colors.danger },
   primaryLabel: { color: colors.primary },
   successLabel: { color: colors.success },
   warningLabel: { color: colors.warning },
