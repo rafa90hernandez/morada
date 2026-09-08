@@ -38,7 +38,10 @@ export function AppButton({
       {...props}
     >
       <Text
-        style={[styles.label, variant === "secondary" && styles.secondaryLabel]}
+        style={[
+          styles.label,
+          variant === "secondary" && styles.secondaryLabel,
+        ]}
       >
         {label}
       </Text>
@@ -54,7 +57,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     backgroundColor: colors.primary,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
+    paddingVertical: 11,
   },
   secondary: {
     borderWidth: 1,
@@ -66,6 +69,7 @@ const styles = StyleSheet.create({
   },
   primaryPressed: {
     backgroundColor: colors.primaryPressed,
+    transform: [{ scale: 0.995 }],
   },
   secondaryPressed: {
     backgroundColor: colors.surfaceMuted,
@@ -80,6 +84,7 @@ const styles = StyleSheet.create({
     color: colors.surface,
     fontFamily: fontFamily.extraBold,
     fontSize: typeScale.bodySmall,
+    letterSpacing: -0.1,
   },
   secondaryLabel: {
     color: colors.text,
