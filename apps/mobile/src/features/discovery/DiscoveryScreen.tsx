@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import {
   ActivityIndicator,
   FlatList,
+  Keyboard,
   Pressable,
   RefreshControl,
   SafeAreaView,
@@ -10,6 +11,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  TouchableWithoutFeedback,
   View,
 } from "react-native";
 
@@ -21,16 +23,24 @@ import type {
   MapMarker,
 } from "@/api/types";
 import { ApproximateMap } from "@/components/ApproximateMap";
+import { BrandHeader } from "@/components/BrandHeader";
 import { ListingCard } from "@/components/ListingCard";
 import { AppButton } from "@/components/ui/AppButton";
 import { boundsFromCards } from "@/features/discovery/discovery-utils";
 import { useDiscoverySearch } from "@/features/discovery/useDiscoverySearch";
 import {
+  brazilianCurrencyToCents,
   brazilianDateToIso,
+  digitsOnly,
+  formatBrazilianCurrencyInput,
   formatBrazilianDateInput,
 } from "@/features/listings/input-formatters";
+import {
+  irelandCitySuggestions,
+  matchingSuggestions,
+} from "@/features/listings/location-suggestions";
 import { useSession } from "@/session/SessionContext";
-import { colors, radius, spacing } from "@/theme/tokens";
+import { colors, fontFamily, radius, spacing } from "@/theme/tokens";
 
 type ViewMode = "list" | "map";
 type SortMode = ListingSearchResponse["sort"];
@@ -68,9 +78,11 @@ export function DiscoveryScreen() {
   const [mode, setMode] = useState<ViewMode>("list");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [city, setCity] = useState("Dublin");
+  const [cityFocused, setCityFocused] = useState(false);
   const [county, setCounty] = useState("");
   const [area, setArea] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [priceFocused, setPriceFocused] = useState(false);
   const [availableOn, setAvailableOn] = useState("");
   const [bedrooms, setBedrooms] = useState("");
   const [bathrooms, setBathrooms] = useState("");
@@ -101,37 +113,39 @@ export function DiscoveryScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const filters = useMemo<ListingSearchFilters>(() => {
-    const parsedPrice = positiveInteger(maxPrice);
-    return {
-      city: city.trim() || undefined,
-      county: county.trim() || undefined,
-      area: area.trim() || undefined,
-      listingType,
-      propertyType,
-      propertyOccupancyType: occupancyType,
-      advertisedSpaceType: spaceType,
-      bathroomType,
-      billsIncludedType: billsIncluded,
-      maxPriceCents: parsedPrice ? parsedPrice * 100 : undefined,
-      availableOn: availableOn.trim()
-        ? brazilianDateToIso(availableOn.trim())
-        : undefined,
-      bedroomCountMin: positiveInteger(bedrooms),
-      bathroomCountMin: positiveInteger(bathrooms),
-      currentResidentCount: positiveInteger(currentResidents),
-      peopleSharingSpace: positiveInteger(peopleSharingSpace),
-      peopleSharingBathroom: positiveInteger(peopleSharingBathroom),
-      maxMinimumStayDays: positiveInteger(minimumStayDays),
-      furnished: furnished ? true : undefined,
-      couplesAllowed: couples ? true : undefined,
-      petsAllowed: pets ? true : undefined,
-      smokingAllowed: smoking ? true : undefined,
-      childrenFamiliesAllowed: families ? true : undefined,
-      studentsAllowed: students ? true : undefined,
-      sort,
-    };
-  }, [
+  const citySuggestions = useMemo(
+    () => matchingSuggestions(city, irelandCitySuggestions),
+    [city],
+  );
+
+  const filters = useMemo<ListingSearchFilters>(() => ({
+    city: city.trim() || undefined,
+    county: county.trim() || undefined,
+    area: area.trim() || undefined,
+    listingType,
+    propertyType,
+    propertyOccupancyType: occupancyType,
+    advertisedSpaceType: spaceType,
+    bathroomType,
+    billsIncludedType: billsIncluded,
+    maxPriceCents: brazilianCurrencyToCents(maxPrice),
+    availableOn: availableOn.trim()
+      ? brazilianDateToIso(availableOn.trim())
+      : undefined,
+    bedroomCountMin: positiveInteger(bedrooms),
+    bathroomCountMin: positiveInteger(bathrooms),
+    currentResidentCount: positiveInteger(currentResidents),
+    peopleSharingSpace: positiveInteger(peopleSharingSpace),
+    peopleSharingBathroom: positiveInteger(peopleSharingBathroom),
+    maxMinimumStayDays: positiveInteger(minimumStayDays),
+    furnished: furnished ? true : undefined,
+    couplesAllowed: couples ? true : undefined,
+    petsAllowed: pets ? true : undefined,
+    smokingAllowed: smoking ? true : undefined,
+    childrenFamiliesAllowed: families ? true : undefined,
+    studentsAllowed: students ? true : undefined,
+    sort,
+  }), [
     area,
     availableOn,
     bathroomType,
@@ -200,304 +214,375 @@ export function DiscoveryScreen() {
     router.push({ pathname: "/listing/[id]", params: { id: listingId } });
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.header}>
-        <View style={styles.brandRow}>
-          <View style={styles.brandLockup}>
-            <Text style={styles.brand}>morada</Text>
-            <Text style={styles.brandTagline}>UM RECOMEÇO, UM NOVO LAR.</Text>
+    <TouchableWithoutFeedback
+      accessible={false}
+      onPress={Keyboard.dismiss}
+      touchSoundDisabled
+    >
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.header}>
+          <View style={styles.brandRow}>
+            <BrandHeader compact />
+            {!session ? (
+              <HeaderButton label="Entrar" onPress={() => router.push("/login")} />
+            ) : (
+              <View style={styles.profileDot}>
+                <Text style={styles.profileDotText}>👤</Text>
+              </View>
+            )}
           </View>
-          {!session ? (
-            <View style={styles.headerActions}>
-              <HeaderButton
-                label="Entrar"
-                onPress={() => router.push("/login")}
-              />
-            </View>
-          ) : null}
-        </View>
-        <Text accessibilityRole="header" style={styles.title}>
-          Encontre um lugar para chamar de casa
-        </Text>
-        <Text style={styles.heroCopy}>
-          Moradias para brasileiros na Irlanda, com mais contexto, confiança e
-          segurança para decidir.
-        </Text>
-      </View>
-
-      <View style={styles.filters}>
-        <Text style={styles.searchEyebrow}>ONDE VOCÊ QUER MORAR?</Text>
-        <View style={styles.inlineInputs}>
-          <TextInput
-            accessibilityLabel="Cidade"
-            autoCapitalize="words"
-            onChangeText={setCity}
-            placeholder="Cidade"
-            placeholderTextColor={colors.textMuted}
-            style={[styles.input, styles.flexInput]}
-            value={city}
-          />
-          <NumericInput
-            label="Preço máximo mensal em euros"
-            placeholder="Máx. €/mês"
-            value={maxPrice}
-            onChangeText={setMaxPrice}
-          />
-        </View>
-        <View style={styles.filterActions}>
-          <AppButton
-            label="Buscar moradias"
-            onPress={() => setAppliedFilters(filters)}
-          />
-          <AppButton
-            label={showAdvanced ? "Menos filtros" : "Mais filtros"}
-            onPress={() => setShowAdvanced((value) => !value)}
-            variant="secondary"
-          />
-        </View>
-
-        {showAdvanced ? (
-          <ScrollView style={styles.advancedScroll}>
-            <View style={styles.advancedFilters}>
-              <Text style={styles.filterTitle}>
-                Localização e disponibilidade
-              </Text>
-              <TextInput
-                accessibilityLabel="Condado"
-                onChangeText={setCounty}
-                placeholder="Condado"
-                placeholderTextColor={colors.textMuted}
-                style={styles.input}
-                value={county}
-              />
-              <TextInput
-                accessibilityLabel="Área ou bairro"
-                onChangeText={setArea}
-                placeholder="Área ou bairro"
-                placeholderTextColor={colors.textMuted}
-                style={styles.input}
-                value={area}
-              />
-              <TextInput
-                accessibilityLabel="Disponível em"
-                inputMode="numeric"
-                maxLength={10}
-                onChangeText={(value) =>
-                  setAvailableOn(formatBrazilianDateInput(value))
-                }
-                placeholder="Disponível em DD/MM/AAAA"
-                placeholderTextColor={colors.textMuted}
-                style={styles.input}
-                value={availableOn}
-              />
-              <ChoiceRow
-                label="Tipo de anúncio"
-                options={[
-                  { value: "RENTAL", label: "Aluguel" },
-                  { value: "TRANSFER", label: "Transferência" },
-                ]}
-                selected={listingType}
-                setSelected={setListingType}
-              />
-              <ChoiceRow
-                label="Tipo de imóvel"
-                options={propertyTypes}
-                selected={propertyType}
-                setSelected={setPropertyType}
-              />
-              <ChoiceRow
-                label="Imóvel"
-                options={[
-                  { value: "ENTIRE_PROPERTY", label: "Inteiro" },
-                  { value: "SHARED_PROPERTY", label: "Compartilhado" },
-                ]}
-                selected={occupancyType}
-                setSelected={setOccupancyType}
-              />
-              <ChoiceRow
-                label="Espaço anunciado"
-                options={[
-                  { value: "PRIVATE", label: "Privado" },
-                  { value: "SHARED", label: "Compartilhado" },
-                ]}
-                selected={spaceType}
-                setSelected={setSpaceType}
-              />
-              <ChoiceRow
-                label="Banheiro"
-                options={[
-                  { value: "PRIVATE", label: "Privado" },
-                  { value: "SHARED", label: "Compartilhado" },
-                ]}
-                selected={bathroomType}
-                setSelected={setBathroomType}
-              />
-              <ChoiceRow
-                label="Contas incluídas"
-                options={[
-                  { value: "YES", label: "Sim" },
-                  { value: "NO", label: "Não" },
-                  { value: "PARTIAL", label: "Parcial" },
-                ]}
-                selected={billsIncluded}
-                setSelected={setBillsIncluded}
-              />
-
-              <Text style={styles.filterTitle}>Configuração da casa</Text>
-              <View style={styles.inlineInputs}>
-                <NumericInput
-                  label="Mínimo de quartos"
-                  placeholder="Quartos mín."
-                  value={bedrooms}
-                  onChangeText={setBedrooms}
-                />
-                <NumericInput
-                  label="Mínimo de banheiros"
-                  placeholder="Banheiros mín."
-                  value={bathrooms}
-                  onChangeText={setBathrooms}
-                />
-              </View>
-              <NumericInput
-                label="Moradores atuais"
-                placeholder="Moradores atuais"
-                value={currentResidents}
-                onChangeText={setCurrentResidents}
-              />
-              <NumericInput
-                label="Pessoas compartilhando o quarto ou espaço"
-                placeholder="Compartilhando espaço"
-                value={peopleSharingSpace}
-                onChangeText={setPeopleSharingSpace}
-              />
-              <NumericInput
-                label="Pessoas compartilhando o banheiro"
-                placeholder="Compartilhando banheiro"
-                value={peopleSharingBathroom}
-                onChangeText={setPeopleSharingBathroom}
-              />
-              <NumericInput
-                label="Estadia mínima máxima em dias"
-                placeholder="Aceitar estadia mínima de até X dias"
-                value={minimumStayDays}
-                onChangeText={setMinimumStayDays}
-              />
-
-              <Text style={styles.filterTitle}>Preferências objetivas</Text>
-              <View style={styles.chipWrap}>
-                <ToggleChip
-                  label="Mobilado"
-                  selected={furnished}
-                  setSelected={setFurnished}
-                />
-                <ToggleChip
-                  label="Casais"
-                  selected={couples}
-                  setSelected={setCouples}
-                />
-                <ToggleChip
-                  label="Pets"
-                  selected={pets}
-                  setSelected={setPets}
-                />
-                <ToggleChip
-                  label="Fumar"
-                  selected={smoking}
-                  setSelected={setSmoking}
-                />
-                <ToggleChip
-                  label="Famílias"
-                  selected={families}
-                  setSelected={setFamilies}
-                />
-                <ToggleChip
-                  label="Estudantes"
-                  selected={students}
-                  setSelected={setStudents}
-                />
-              </View>
-              <ChoiceRow
-                label="Ordenar"
-                options={sortModes}
-                selected={sort}
-                setSelected={(value) => {
-                  if (value) setSort(value);
-                }}
-                allowClear={false}
-              />
-              <AppButton
-                label="Aplicar filtros"
-                onPress={() => {
-                  setAppliedFilters(filters);
-                  setShowAdvanced(false);
-                }}
-              />
-            </View>
-          </ScrollView>
-        ) : null}
-      </View>
-
-      <View style={styles.resultsHeader}>
-        <Text style={styles.resultsLabel}>
-          {loading
-            ? "Buscando opções..."
-            : `${listings.length} moradia${listings.length === 1 ? "" : "s"} encontrada${listings.length === 1 ? "" : "s"}`}
-        </Text>
-      </View>
-
-      <View style={styles.modeSwitch}>
-        {(["list", "map"] as const).map((value) => (
-          <Pressable
-            accessibilityRole="button"
-            key={value}
-            onPress={() => setMode(value)}
-            style={[
-              styles.modeButton,
-              mode === value && styles.modeButtonActive,
-            ]}
-          >
-            <Text
-              style={[styles.modeText, mode === value && styles.modeTextActive]}
-            >
-              {value === "list" ? "Lista" : "Mapa"}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-
-      {loading ? (
-        <StateMessage loading text="Buscando moradias..." />
-      ) : error ? (
-        <StateMessage error text={error} retry={() => void load()} />
-      ) : mode === "map" ? (
-        <View style={styles.mapContainer}>
-          <ApproximateMap markers={markers} onMarkerPress={openListing} />
-          <Text style={styles.mapFootnote}>
-            Os pontos mostram áreas aproximadas. Para usuários autenticados, o
-            mapa respeita os resultados filtrados por bloqueios.
+          <Text accessibilityRole="header" style={styles.title}>
+            Encontre seu novo lar na Irlanda
+          </Text>
+          <Text style={styles.heroCopy}>
+            Busque, compare e converse com mais contexto, confiança e segurança.
           </Text>
         </View>
-      ) : (
-        <FlatList
-          contentContainerStyle={styles.listContent}
-          data={listings}
-          keyExtractor={(item) => item.id}
-          ListEmptyComponent={
-            <StateMessage text="Nenhuma moradia encontrada. Tente remover alguns filtros ou ampliar a localização." />
-          }
-          refreshControl={
-            <RefreshControl
-              onRefresh={() => void load(true)}
-              refreshing={refreshing}
-              tintColor={colors.primary}
+
+        <View style={styles.filters}>
+          <Text style={styles.searchEyebrow}>ONDE VOCÊ QUER MORAR?</Text>
+          <View style={styles.inlineInputs}>
+            <View style={styles.cityFieldWrap}>
+              <TextInput
+                accessibilityLabel="Cidade"
+                autoCapitalize="words"
+                onBlur={() => setCityFocused(false)}
+                onChangeText={setCity}
+                onFocus={() => setCityFocused(true)}
+                placeholder="Cidade"
+                placeholderTextColor={colors.textSubtle}
+                style={[styles.input, styles.flexInput]}
+                value={city}
+              />
+              {cityFocused && citySuggestions.length > 0 ? (
+                <View style={styles.suggestionList}>
+                  {citySuggestions.map((suggestion) => (
+                    <Pressable
+                      accessibilityRole="button"
+                      key={suggestion}
+                      onPress={() => {
+                        setCity(suggestion);
+                        setCityFocused(false);
+                      }}
+                      style={styles.suggestionItem}
+                    >
+                      <Text style={styles.suggestionText}>{suggestion}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              ) : null}
+            </View>
+
+            <View style={styles.priceFieldWrap}>
+              <TextInput
+                accessibilityLabel="Preço máximo mensal em euros"
+                keyboardType="number-pad"
+                onBlur={() => setPriceFocused(false)}
+                onChangeText={(value) => setMaxPrice(digitsOnly(value))}
+                onFocus={() => setPriceFocused(true)}
+                placeholder="Máx. €/mês"
+                placeholderTextColor={colors.textSubtle}
+                style={styles.input}
+                value={
+                  maxPrice
+                    ? `€ ${
+                        priceFocused
+                          ? formatBrazilianCurrencyInput(maxPrice).replace(/,00$/, "")
+                          : formatBrazilianCurrencyInput(maxPrice)
+                      }`
+                    : ""
+                }
+              />
+            </View>
+          </View>
+
+          <View style={styles.quickTypeRow}>
+            {["SINGLE_ROOM", "HOUSE", "APARTMENT"].map((value) => {
+              const option = propertyTypes.find((item) => item.value === value);
+              if (!option) return null;
+              const selected = propertyType === option.value;
+              return (
+                <Pressable
+                  accessibilityRole="button"
+                  key={option.value}
+                  onPress={() =>
+                    setPropertyType(selected ? undefined : option.value)
+                  }
+                  style={[styles.quickChip, selected && styles.quickChipSelected]}
+                >
+                  <Text
+                    style={[
+                      styles.quickChipText,
+                      selected && styles.quickChipTextSelected,
+                    ]}
+                  >
+                    {option.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <View style={styles.filterActions}>
+            <AppButton
+              label="Buscar moradias"
+              onPress={() => setAppliedFilters(filters)}
             />
-          }
-          renderItem={({ item }) => (
-            <ListingCard listing={item} onPress={() => openListing(item.id)} />
-          )}
-        />
-      )}
-    </SafeAreaView>
+            <AppButton
+              label={showAdvanced ? "Menos filtros" : "Mais filtros"}
+              onPress={() => setShowAdvanced((value) => !value)}
+              variant="secondary"
+            />
+          </View>
+
+          {showAdvanced ? (
+            <ScrollView style={styles.advancedScroll}>
+              <View style={styles.advancedFilters}>
+                <Text style={styles.filterTitle}>
+                  Localização e disponibilidade
+                </Text>
+                <TextInput
+                  accessibilityLabel="Condado"
+                  onChangeText={setCounty}
+                  placeholder="Condado"
+                  placeholderTextColor={colors.textMuted}
+                  style={styles.input}
+                  value={county}
+                />
+                <TextInput
+                  accessibilityLabel="Área ou bairro"
+                  onChangeText={setArea}
+                  placeholder="Área ou bairro"
+                  placeholderTextColor={colors.textMuted}
+                  style={styles.input}
+                  value={area}
+                />
+                <TextInput
+                  accessibilityLabel="Disponível em"
+                  inputMode="numeric"
+                  maxLength={10}
+                  onChangeText={(value) =>
+                    setAvailableOn(formatBrazilianDateInput(value))
+                  }
+                  placeholder="Disponível em DD/MM/AAAA"
+                  placeholderTextColor={colors.textMuted}
+                  style={styles.input}
+                  value={availableOn}
+                />
+                <ChoiceRow
+                  label="Tipo de anúncio"
+                  options={[
+                    { value: "RENTAL", label: "Aluguel" },
+                    { value: "TRANSFER", label: "Transferência" },
+                  ]}
+                  selected={listingType}
+                  setSelected={setListingType}
+                />
+                <ChoiceRow
+                  label="Tipo de imóvel"
+                  options={propertyTypes}
+                  selected={propertyType}
+                  setSelected={setPropertyType}
+                />
+                <ChoiceRow
+                  label="Imóvel"
+                  options={[
+                    { value: "ENTIRE_PROPERTY", label: "Inteiro" },
+                    { value: "SHARED_PROPERTY", label: "Compartilhado" },
+                  ]}
+                  selected={occupancyType}
+                  setSelected={setOccupancyType}
+                />
+                <ChoiceRow
+                  label="Espaço anunciado"
+                  options={[
+                    { value: "PRIVATE", label: "Privado" },
+                    { value: "SHARED", label: "Compartilhado" },
+                  ]}
+                  selected={spaceType}
+                  setSelected={setSpaceType}
+                />
+                <ChoiceRow
+                  label="Banheiro"
+                  options={[
+                    { value: "PRIVATE", label: "Privado" },
+                    { value: "SHARED", label: "Compartilhado" },
+                  ]}
+                  selected={bathroomType}
+                  setSelected={setBathroomType}
+                />
+                <ChoiceRow
+                  label="Contas incluídas"
+                  options={[
+                    { value: "YES", label: "Sim" },
+                    { value: "NO", label: "Não" },
+                    { value: "PARTIAL", label: "Parcial" },
+                  ]}
+                  selected={billsIncluded}
+                  setSelected={setBillsIncluded}
+                />
+
+                <Text style={styles.filterTitle}>Configuração da casa</Text>
+                <View style={styles.inlineInputs}>
+                  <NumericInput
+                    label="Mínimo de quartos"
+                    placeholder="Quartos mín."
+                    value={bedrooms}
+                    onChangeText={setBedrooms}
+                  />
+                  <NumericInput
+                    label="Mínimo de banheiros"
+                    placeholder="Banheiros mín."
+                    value={bathrooms}
+                    onChangeText={setBathrooms}
+                  />
+                </View>
+                <NumericInput
+                  label="Moradores atuais"
+                  placeholder="Moradores atuais"
+                  value={currentResidents}
+                  onChangeText={setCurrentResidents}
+                />
+                <NumericInput
+                  label="Pessoas compartilhando o quarto ou espaço"
+                  placeholder="Compartilhando espaço"
+                  value={peopleSharingSpace}
+                  onChangeText={setPeopleSharingSpace}
+                />
+                <NumericInput
+                  label="Pessoas compartilhando o banheiro"
+                  placeholder="Compartilhando banheiro"
+                  value={peopleSharingBathroom}
+                  onChangeText={setPeopleSharingBathroom}
+                />
+                <NumericInput
+                  label="Estadia mínima máxima em dias"
+                  placeholder="Aceitar estadia mínima de até X dias"
+                  value={minimumStayDays}
+                  onChangeText={setMinimumStayDays}
+                />
+
+                <Text style={styles.filterTitle}>Preferências objetivas</Text>
+                <View style={styles.chipWrap}>
+                  <ToggleChip
+                    label="Mobilado"
+                    selected={furnished}
+                    setSelected={setFurnished}
+                  />
+                  <ToggleChip
+                    label="Casais"
+                    selected={couples}
+                    setSelected={setCouples}
+                  />
+                  <ToggleChip
+                    label="Pets"
+                    selected={pets}
+                    setSelected={setPets}
+                  />
+                  <ToggleChip
+                    label="Fumar"
+                    selected={smoking}
+                    setSelected={setSmoking}
+                  />
+                  <ToggleChip
+                    label="Famílias"
+                    selected={families}
+                    setSelected={setFamilies}
+                  />
+                  <ToggleChip
+                    label="Estudantes"
+                    selected={students}
+                    setSelected={setStudents}
+                  />
+                </View>
+                <ChoiceRow
+                  label="Ordenar"
+                  options={sortModes}
+                  selected={sort}
+                  setSelected={(value) => {
+                    if (value) setSort(value);
+                  }}
+                  allowClear={false}
+                />
+                <AppButton
+                  label="Aplicar filtros"
+                  onPress={() => {
+                    setAppliedFilters(filters);
+                    setShowAdvanced(false);
+                  }}
+                />
+              </View>
+            </ScrollView>
+          ) : null}
+        </View>
+
+        <View style={styles.resultsHeader}>
+          <Text style={styles.resultsLabel}>
+            {loading
+              ? "Buscando opções..."
+              : `${listings.length} moradia${listings.length === 1 ? "" : "s"} encontrada${listings.length === 1 ? "" : "s"}`}
+          </Text>
+        </View>
+
+        <View style={styles.modeSwitch}>
+          {(["list", "map"] as const).map((value) => (
+            <Pressable
+              accessibilityRole="button"
+              key={value}
+              onPress={() => setMode(value)}
+              style={[
+                styles.modeButton,
+                mode === value && styles.modeButtonActive,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.modeText,
+                  mode === value && styles.modeTextActive,
+                ]}
+              >
+                {value === "list" ? "Lista" : "Mapa"}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+
+        {loading ? (
+          <StateMessage loading text="Buscando moradias..." />
+        ) : error ? (
+          <StateMessage error text={error} retry={() => void load()} />
+        ) : mode === "map" ? (
+          <View style={styles.mapContainer}>
+            <ApproximateMap markers={markers} onMarkerPress={openListing} />
+            <Text style={styles.mapFootnote}>
+              Os pontos mostram áreas aproximadas. Para usuários autenticados, o
+              mapa respeita os resultados filtrados por bloqueios.
+            </Text>
+          </View>
+        ) : (
+          <FlatList
+            contentContainerStyle={styles.listContent}
+            data={listings}
+            keyboardDismissMode="on-drag"
+            keyboardShouldPersistTaps="handled"
+            keyExtractor={(item) => item.id}
+            ListEmptyComponent={
+              <StateMessage text="Nenhuma moradia encontrada. Tente remover alguns filtros ou ampliar a localização." />
+            }
+            refreshControl={
+              <RefreshControl
+                onRefresh={() => void load(true)}
+                refreshing={refreshing}
+                tintColor={colors.primary}
+              />
+            }
+            renderItem={({ item }) => (
+              <ListingCard listing={item} onPress={() => openListing(item.id)} />
+            )}
+          />
+        )}
+      </SafeAreaView>
+    </TouchableWithoutFeedback>
   );
 }
 
@@ -630,7 +715,11 @@ function StateMessage({
     <View style={styles.centerState}>
       {loading ? (
         <ActivityIndicator color={colors.primary} size="large" />
-      ) : null}
+      ) : (
+        <View style={styles.emptyIcon}>
+          <Text style={styles.emptyIconText}>⌂</Text>
+        </View>
+      )}
       {error ? <Text style={styles.errorTitle}>Algo deu errado</Text> : null}
       <Text style={styles.stateText}>{text}</Text>
       {retry ? <AppButton label="Tentar novamente" onPress={retry} /> : null}
@@ -644,80 +733,165 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    gap: spacing.md,
-    backgroundColor: colors.deepNavy,
+    gap: spacing.sm,
+    backgroundColor: colors.background,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
-    paddingBottom: spacing.xl,
+    paddingBottom: spacing.md,
   },
   brandRow: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     justifyContent: "space-between",
     gap: spacing.md,
+    marginBottom: spacing.sm,
   },
-  brandLockup: {
-    gap: 2,
+  profileDot: {
+    width: 42,
+    height: 42,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 21,
+    backgroundColor: colors.primarySoft,
   },
-  headerActions: {
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-  brand: {
-    color: colors.surface,
-    fontSize: 25,
-    fontWeight: "900",
-    letterSpacing: -0.8,
-  },
-  brandTagline: {
-    color: colors.accent,
-    fontSize: 9,
-    fontWeight: "900",
-    letterSpacing: 1.1,
+  profileDotText: {
+    fontSize: 20,
   },
   accountButton: {
-    minHeight: 44,
+    minHeight: 42,
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: colors.softGreen,
+    borderColor: colors.primary,
     borderRadius: radius.pill,
-    backgroundColor: colors.deepNavy,
+    backgroundColor: colors.surface,
     paddingHorizontal: spacing.md,
   },
   accountButtonText: {
-    color: colors.surface,
-    fontWeight: "800",
+    color: colors.primary,
+    fontFamily: fontFamily.bold,
   },
   title: {
     maxWidth: 560,
-    color: colors.surface,
-    fontSize: 31,
-    fontWeight: "900",
-    letterSpacing: -0.9,
-    lineHeight: 36,
+    color: colors.text,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 29,
+    letterSpacing: -0.8,
+    lineHeight: 35,
   },
   heroCopy: {
     maxWidth: 620,
-    color: colors.softGreen,
+    color: colors.textMuted,
+    fontFamily: fontFamily.regular,
     fontSize: 14,
     lineHeight: 21,
   },
   filters: {
     gap: spacing.sm,
     marginHorizontal: spacing.lg,
-    marginTop: -spacing.md,
+    marginTop: spacing.sm,
     marginBottom: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.xl,
     backgroundColor: colors.surface,
     padding: spacing.lg,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 2,
   },
   searchEyebrow: {
     color: colors.primary,
+    fontFamily: fontFamily.extraBold,
     fontSize: 11,
-    fontWeight: "900",
     letterSpacing: 1.2,
+  },
+  inlineInputs: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  cityFieldWrap: {
+    flex: 1,
+    position: "relative",
+    zIndex: 2,
+  },
+  priceFieldWrap: {
+    flex: 1,
+  },
+  flexInput: {
+    flex: 1,
+  },
+  input: {
+    minHeight: 50,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    backgroundColor: colors.background,
+    color: colors.text,
+    paddingHorizontal: spacing.md,
+    fontFamily: fontFamily.medium,
+    fontSize: 15,
+  },
+  suggestionList: {
+    position: "absolute",
+    top: 54,
+    left: 0,
+    right: 0,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  suggestionItem: {
+    minHeight: 44,
+    justifyContent: "center",
+    paddingHorizontal: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  suggestionText: {
+    color: colors.text,
+    fontFamily: fontFamily.semibold,
+    fontSize: 13,
+  },
+  quickTypeRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+  },
+  quickChip: {
+    minHeight: 38,
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing.md,
+  },
+  quickChipSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primarySoft,
+  },
+  quickChipText: {
+    color: colors.textMuted,
+    fontFamily: fontFamily.semibold,
+    fontSize: 12,
+  },
+  quickChipTextSelected: {
+    color: colors.primary,
+  },
+  filterActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.sm,
   },
   advancedScroll: {
     maxHeight: 310,
@@ -732,37 +906,14 @@ const styles = StyleSheet.create({
   },
   filterTitle: {
     color: colors.text,
+    fontFamily: fontFamily.extraBold,
     fontSize: 16,
-    fontWeight: "800",
   },
   filterLabel: {
     color: colors.text,
-    fontWeight: "700",
+    fontFamily: fontFamily.bold,
   },
   choiceSection: {
-    gap: spacing.sm,
-  },
-  inlineInputs: {
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-  flexInput: {
-    flex: 1,
-  },
-  input: {
-    minHeight: 48,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    backgroundColor: colors.background,
-    color: colors.text,
-    paddingHorizontal: spacing.md,
-    fontSize: 16,
-  },
-  filterActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
     gap: spacing.sm,
   },
   chipWrap: {
@@ -771,7 +922,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   chip: {
-    minHeight: 44,
+    minHeight: 42,
     justifyContent: "center",
     borderWidth: 1,
     borderColor: colors.border,
@@ -785,7 +936,7 @@ const styles = StyleSheet.create({
   },
   chipText: {
     color: colors.text,
-    fontWeight: "700",
+    fontFamily: fontFamily.bold,
   },
   chipTextSelected: {
     color: colors.primary,
@@ -796,8 +947,8 @@ const styles = StyleSheet.create({
   },
   resultsLabel: {
     color: colors.textMuted,
+    fontFamily: fontFamily.bold,
     fontSize: 13,
-    fontWeight: "700",
   },
   modeSwitch: {
     flexDirection: "row",
@@ -818,7 +969,7 @@ const styles = StyleSheet.create({
   },
   modeText: {
     color: colors.primary,
-    fontWeight: "800",
+    fontFamily: fontFamily.extraBold,
   },
   modeTextActive: {
     color: colors.surface,
@@ -836,6 +987,7 @@ const styles = StyleSheet.create({
   },
   mapFootnote: {
     color: colors.textMuted,
+    fontFamily: fontFamily.regular,
     fontSize: 12,
     lineHeight: 18,
   },
@@ -846,15 +998,29 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     padding: spacing.xl,
   },
+  emptyIcon: {
+    width: 58,
+    height: 58,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 29,
+    backgroundColor: colors.primarySoft,
+  },
+  emptyIconText: {
+    color: colors.primary,
+    fontSize: 30,
+    fontWeight: "900",
+  },
   stateText: {
     maxWidth: 320,
     color: colors.textMuted,
+    fontFamily: fontFamily.regular,
     textAlign: "center",
     lineHeight: 22,
   },
   errorTitle: {
     color: colors.text,
+    fontFamily: fontFamily.extraBold,
     fontSize: 20,
-    fontWeight: "800",
   },
 });
