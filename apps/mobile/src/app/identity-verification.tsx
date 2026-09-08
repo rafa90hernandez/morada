@@ -11,18 +11,33 @@ import {
   type IdentityVerificationStatus,
   type PrivateUser,
 } from "@/api/account";
+import { BrandHeader } from "@/components/BrandHeader";
 import { AppBadge } from "@/components/ui/AppBadge";
 import { AppButton } from "@/components/ui/AppButton";
-import { AppCard } from "@/components/ui/AppCard";
 import { ProductState } from "@/components/ui/ProductState";
 import { useSession } from "@/session/SessionContext";
-import { colors, radius, spacing } from "@/theme/tokens";
+import { colors, fontFamily, radius, spacing } from "@/theme/tokens";
 
-const documentTypes: Array<{ value: IdentityDocumentType; label: string }> = [
-  { value: "PASSPORT", label: "Passaporte" },
-  { value: "EU_EEA_NATIONAL_ID", label: "Documento nacional UE/EEE" },
-  { value: "DRIVING_LICENCE", label: "Carta de condução" },
-  { value: "IRP", label: "IRP" },
+const documentTypes: Array<{
+  value: IdentityDocumentType;
+  label: string;
+  detail?: string;
+  symbol: string;
+}> = [
+  { value: "PASSPORT", label: "Passaporte", symbol: "◎" },
+  {
+    value: "EU_EEA_NATIONAL_ID",
+    label: "Cartão UE/EEE",
+    detail: "Documento nacional",
+    symbol: "▣",
+  },
+  { value: "IRP", label: "IRP", detail: "Irish Residence Permit", symbol: "▤" },
+  {
+    value: "DRIVING_LICENCE",
+    label: "Carta de condução",
+    detail: "Irish Driving Licence",
+    symbol: "▰",
+  },
 ];
 
 function statusCopy(status: IdentityVerificationStatus | null | undefined) {
@@ -238,27 +253,29 @@ export default function IdentityVerificationScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.content}>
-      <AppCard tone="muted">
-        <Text style={styles.eyebrow}>SEGURANÇA MORADA</Text>
-        <View style={styles.titleRow}>
-          <Text accessibilityRole="header" style={styles.title}>
-            Verificação de identidade
-          </Text>
-          <AppBadge
-            label={statusLabel(currentStatus)}
-            tone={statusTone(currentStatus)}
-          />
-        </View>
-        <Text style={styles.muted}>{statusCopy(currentStatus)}</Text>
-        <Text style={styles.helper}>
-          Suas evidências são privadas e usadas apenas para verificação. O app
-          não expõe endereços de armazenamento, hashes nem links permanentes
-          desses arquivos.
+      <View style={styles.topBar}>
+        <BrandHeader compact />
+        <AppBadge
+          label={statusLabel(currentStatus)}
+          tone={statusTone(currentStatus)}
+        />
+      </View>
+
+      <View style={styles.progressHeader}>
+        <Text accessibilityRole="header" style={styles.title}>
+          Verificação de identidade
         </Text>
-      </AppCard>
+        <Text style={styles.step}>1 de 3</Text>
+      </View>
+      <View style={styles.progressTrack}>
+        <View style={styles.progressFill} />
+      </View>
+      <Text style={styles.muted}>
+        Para mais segurança na comunidade, precisamos confirmar sua identidade.
+      </Text>
 
       {!user.eligibility.isEligible ? (
-        <AppCard tone="warm">
+        <View style={styles.warningCard}>
           <Text style={styles.warningTitle}>Elegibilidade 18+ necessária</Text>
           <Text style={styles.muted}>
             Atualize sua data de nascimento em Perfil antes de continuar.
@@ -268,57 +285,71 @@ export default function IdentityVerificationScreen() {
             onPress={() => router.push("/account")}
             variant="secondary"
           />
-        </AppCard>
+        </View>
       ) : null}
 
       {submissionAllowed ? (
-        <AppCard>
-          <Text style={styles.sectionTitle}>1. Escolha o documento</Text>
-          <View style={styles.options}>
-            {documentTypes.map((option) => (
-              <Pressable
-                accessibilityRole="radio"
-                accessibilityState={{ checked: documentType === option.value }}
-                key={option.value}
-                onPress={() => setDocumentType(option.value)}
-                style={[
-                  styles.option,
-                  documentType === option.value && styles.optionSelected,
-                ]}
-              >
-                <Text
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>
+            Selecione o documento que você vai enviar
+          </Text>
+          <View style={styles.documentList}>
+            {documentTypes.map((option) => {
+              const selected = documentType === option.value;
+              return (
+                <Pressable
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: selected }}
+                  key={option.value}
+                  onPress={() => setDocumentType(option.value)}
                   style={[
-                    styles.optionText,
-                    documentType === option.value && styles.optionTextSelected,
+                    styles.documentRow,
+                    selected && styles.documentRowSelected,
                   ]}
                 >
-                  {option.label}
-                </Text>
-              </Pressable>
-            ))}
+                  <View style={styles.documentIcon}>
+                    <Text style={styles.documentIconText}>{option.symbol}</Text>
+                  </View>
+                  <View style={styles.documentCopy}>
+                    <Text style={styles.documentLabel}>{option.label}</Text>
+                    {option.detail ? (
+                      <Text style={styles.documentDetail}>{option.detail}</Text>
+                    ) : null}
+                  </View>
+                  <Text style={styles.chevron}>{selected ? "✓" : "›"}</Text>
+                </Pressable>
+              );
+            })}
           </View>
 
-          <Text style={styles.sectionTitle}>2. Selecione as evidências</Text>
+          <Text style={styles.sectionTitle}>Envie as imagens</Text>
           <EvidenceRow
-            label="Frente do documento · obrigatória"
+            label="Frente do documento"
+            detail="Obrigatória"
             selected={Boolean(front)}
             onPress={() => void pick("front")}
           />
           <EvidenceRow
-            label="Verso do documento · opcional"
+            label="Verso do documento"
+            detail="Opcional"
             selected={Boolean(back)}
             onPress={() => void pick("back")}
           />
           <EvidenceRow
-            label="Selfie segurando o documento · obrigatória"
+            label="Selfie com o documento"
+            detail="Obrigatória · mantenha o documento ao lado do rosto"
             selected={Boolean(selfie)}
             onPress={() => void pick("selfie")}
           />
 
-          <Text style={styles.helper}>
-            As imagens selecionadas ficam apenas em memória nesta tela e são
-            removidas do estado após o envio ou ao sair.
-          </Text>
+          <View style={styles.privacyNote}>
+            <Text style={styles.privacyIcon}>✓</Text>
+            <Text style={styles.privacyText}>
+              Seus dados são privados e usados apenas para verificação de
+              identidade.
+            </Text>
+          </View>
+
           {error ? (
             <Text accessibilityLiveRegion="polite" style={styles.error}>
               {error}
@@ -334,19 +365,19 @@ export default function IdentityVerificationScreen() {
             label={submitting ? "Enviando..." : "Enviar para verificação"}
             onPress={() => void submit()}
           />
-        </AppCard>
+        </View>
       ) : null}
 
       {!submissionAllowed && user.eligibility.isEligible ? (
-        <AppCard>
-          <Text style={styles.sectionTitle}>Nenhuma ação necessária agora</Text>
+        <View style={styles.statusCard}>
+          <Text style={styles.sectionTitle}>Estado da verificação</Text>
           <Text style={styles.muted}>{statusCopy(currentStatus)}</Text>
           <AppButton
             label="Atualizar estado"
             onPress={() => void load()}
             variant="secondary"
           />
-        </AppCard>
+        </View>
       ) : null}
     </ScrollView>
   );
@@ -354,27 +385,32 @@ export default function IdentityVerificationScreen() {
 
 function EvidenceRow({
   label,
+  detail,
   selected,
   onPress,
 }: {
   label: string;
+  detail: string;
   selected: boolean;
   onPress: () => void;
 }) {
   return (
-    <View style={styles.evidenceRow}>
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={[styles.evidenceRow, selected && styles.evidenceRowSelected]}
+    >
+      <View style={styles.evidenceIcon}>
+        <Text style={styles.evidenceIconText}>{selected ? "✓" : "+"}</Text>
+      </View>
       <View style={styles.evidenceText}>
         <Text style={styles.evidenceLabel}>{label}</Text>
-        <Text style={styles.muted}>
-          {selected ? "Imagem selecionada" : "Nenhuma imagem selecionada"}
+        <Text style={styles.evidenceDetail}>
+          {selected ? "Imagem selecionada" : detail}
         </Text>
       </View>
-      <AppButton
-        label={selected ? "Trocar" : "Selecionar"}
-        onPress={onPress}
-        variant="secondary"
-      />
-    </View>
+      <Text style={styles.chevron}>›</Text>
+    </Pressable>
   );
 }
 
@@ -390,77 +426,137 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: colors.background,
   },
-  eyebrow: {
-    color: colors.primary,
-    fontSize: 12,
-    fontWeight: "900",
-    letterSpacing: 1.3,
-  },
-  titleRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: spacing.sm,
-  },
-  title: {
-    flex: 1,
-    color: colors.text,
-    fontSize: 24,
-    fontWeight: "900",
-    letterSpacing: -0.5,
-  },
-  sectionTitle: {
-    color: colors.text,
-    fontSize: 17,
-    fontWeight: "800",
-  },
-  warningTitle: {
-    color: colors.text,
-    fontSize: 17,
-    fontWeight: "800",
-  },
-  muted: {
-    color: colors.textMuted,
-    lineHeight: 21,
-  },
-  helper: {
-    color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 19,
-  },
-  options: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  option: {
-    borderColor: colors.border,
-    borderRadius: radius.full,
-    borderWidth: 1,
-    backgroundColor: colors.surface,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  optionSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  optionText: {
-    color: colors.text,
-    fontWeight: "700",
-  },
-  optionTextSelected: {
-    color: colors.surface,
-    fontWeight: "800",
-  },
-  evidenceRow: {
+  topBar: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: spacing.md,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.border,
-    paddingTop: spacing.md,
+  },
+  progressHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    marginTop: spacing.sm,
+  },
+  title: {
+    flex: 1,
+    color: colors.text,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 26,
+    letterSpacing: -0.5,
+  },
+  step: {
+    color: colors.textMuted,
+    fontFamily: fontFamily.bold,
+    fontSize: 12,
+  },
+  progressTrack: {
+    height: 5,
+    overflow: "hidden",
+    borderRadius: radius.pill,
+    backgroundColor: colors.primarySoft,
+  },
+  progressFill: {
+    width: "34%",
+    height: "100%",
+    backgroundColor: colors.primary,
+  },
+  sectionTitle: {
+    color: colors.text,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 17,
+  },
+  muted: {
+    color: colors.textMuted,
+    fontFamily: fontFamily.regular,
+    lineHeight: 21,
+  },
+  card: {
+    gap: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.xl,
+    backgroundColor: colors.surface,
+    padding: spacing.lg,
+  },
+  documentList: {
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+  },
+  documentRow: {
+    minHeight: 64,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing.md,
+  },
+  documentRowSelected: {
+    backgroundColor: colors.primarySoft,
+  },
+  documentIcon: {
+    width: 38,
+    height: 38,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 19,
+    backgroundColor: colors.background,
+  },
+  documentIconText: {
+    color: colors.primary,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 17,
+  },
+  documentCopy: {
+    flex: 1,
+    gap: 1,
+  },
+  documentLabel: {
+    color: colors.text,
+    fontFamily: fontFamily.bold,
+    fontSize: 14,
+  },
+  documentDetail: {
+    color: colors.textMuted,
+    fontFamily: fontFamily.regular,
+    fontSize: 11,
+  },
+  chevron: {
+    color: colors.primary,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 20,
+  },
+  evidenceRow: {
+    minHeight: 66,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing.md,
+  },
+  evidenceRowSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primarySoft,
+  },
+  evidenceIcon: {
+    width: 38,
+    height: 38,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 19,
+    backgroundColor: colors.successSoft,
+  },
+  evidenceIconText: {
+    color: colors.primary,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 18,
   },
   evidenceText: {
     flex: 1,
@@ -468,14 +564,59 @@ const styles = StyleSheet.create({
   },
   evidenceLabel: {
     color: colors.text,
-    fontWeight: "700",
+    fontFamily: fontFamily.bold,
+    fontSize: 13,
+  },
+  evidenceDetail: {
+    color: colors.textMuted,
+    fontFamily: fontFamily.regular,
+    fontSize: 11,
+    lineHeight: 16,
+  },
+  privacyNote: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    borderRadius: radius.md,
+    backgroundColor: colors.successSoft,
+    padding: spacing.md,
+  },
+  privacyIcon: {
+    color: colors.primary,
+    fontFamily: fontFamily.extraBold,
+  },
+  privacyText: {
+    flex: 1,
+    color: colors.primaryPressed,
+    fontFamily: fontFamily.medium,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  warningCard: {
+    gap: spacing.md,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surfaceWarm,
+    padding: spacing.md,
+  },
+  warningTitle: {
+    color: colors.warning,
+    fontFamily: fontFamily.bold,
+    fontSize: 16,
+  },
+  statusCard: {
+    gap: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.xl,
+    backgroundColor: colors.surface,
+    padding: spacing.lg,
   },
   error: {
     color: colors.danger,
+    fontFamily: fontFamily.medium,
     lineHeight: 20,
   },
   success: {
     color: colors.success,
-    fontWeight: "700",
+    fontFamily: fontFamily.bold,
   },
 });
