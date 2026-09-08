@@ -1,6 +1,6 @@
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
-import { colors, fontFamily, spacing, typeScale } from "@/theme/tokens";
+import { colors, fontFamily, radius, spacing, typeScale } from "@/theme/tokens";
 import { AppButton } from "./AppButton";
 
 type ProductStateProps = {
@@ -18,11 +18,33 @@ export function ProductState({
   actionLabel,
   onAction,
 }: ProductStateProps) {
+  const symbol = kind === "error" ? "!" : kind === "success" ? "✓" : "⌂";
+
   return (
     <View accessibilityLiveRegion="polite" style={styles.container}>
       {kind === "loading" ? (
-        <ActivityIndicator color={colors.primary} size="large" />
-      ) : null}
+        <View style={styles.iconCircle}>
+          <ActivityIndicator color={colors.primary} size="small" />
+        </View>
+      ) : (
+        <View
+          style={[
+            styles.iconCircle,
+            kind === "error" && styles.errorCircle,
+            kind === "success" && styles.successCircle,
+          ]}
+        >
+          <Text
+            style={[
+              styles.icon,
+              kind === "error" && styles.errorIcon,
+              kind === "success" && styles.successIcon,
+            ]}
+          >
+            {symbol}
+          </Text>
+        </View>
+      )}
       <Text accessibilityRole="header" style={styles.title}>
         {title}
       </Text>
@@ -31,11 +53,7 @@ export function ProductState({
       ) : null}
       {actionLabel && onAction ? (
         <View style={styles.action}>
-          <AppButton
-            label={actionLabel}
-            onPress={onAction}
-            variant="secondary"
-          />
+          <AppButton label={actionLabel} onPress={onAction} />
         </View>
       ) : null}
     </View>
@@ -47,7 +65,35 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: spacing.sm,
-    padding: spacing.xl,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.xxl,
+  },
+  iconCircle: {
+    width: 58,
+    height: 58,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.xs,
+    borderRadius: radius.pill,
+    backgroundColor: colors.primarySoft,
+  },
+  errorCircle: {
+    backgroundColor: colors.dangerSoft,
+  },
+  successCircle: {
+    backgroundColor: colors.successSoft,
+  },
+  icon: {
+    color: colors.primary,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 28,
+    lineHeight: 30,
+  },
+  errorIcon: {
+    color: colors.danger,
+  },
+  successIcon: {
+    color: colors.success,
   },
   title: {
     color: colors.text,
@@ -56,7 +102,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   description: {
-    maxWidth: 520,
+    maxWidth: 420,
     color: colors.textMuted,
     fontFamily: fontFamily.regular,
     fontSize: typeScale.bodySmall,
@@ -64,7 +110,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   action: {
-    minWidth: 180,
+    minWidth: 190,
     marginTop: spacing.sm,
   },
 });
