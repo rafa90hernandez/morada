@@ -8,7 +8,7 @@ import {
   View,
 } from "react-native";
 
-import { colors, radius, spacing } from "@/theme/tokens";
+import { colors, fontFamily, radius, spacing } from "@/theme/tokens";
 import {
   brazilianDateToIso,
   digitsOnly,
@@ -169,7 +169,9 @@ export function CurrencyField({
   value: string;
   onChangeText: (value: string) => void;
 }) {
+  const [focused, setFocused] = useState(false);
   const formatted = value ? formatBrazilianCurrencyInput(value) : "";
+  const displayValue = focused ? formatted.replace(/,00$/, "") : formatted;
 
   return (
     <View style={styles.field}>
@@ -179,14 +181,13 @@ export function CurrencyField({
         <TextInput
           accessibilityLabel={label}
           keyboardType="number-pad"
-          onChangeText={(next) => {
-            const integerPart = next.split(",")[0] ?? "";
-            onChangeText(digitsOnly(integerPart));
-          }}
+          onBlur={() => setFocused(false)}
+          onChangeText={(next) => onChangeText(digitsOnly(next))}
+          onFocus={() => setFocused(true)}
           placeholder="0,00"
           placeholderTextColor={colors.textMuted}
           style={[styles.input, styles.currencyInput]}
-          value={formatted}
+          value={displayValue}
         />
       </View>
     </View>
@@ -264,7 +265,12 @@ export function Toggle({
   return (
     <View style={styles.toggleRow}>
       <Text style={styles.toggleLabel}>{label}</Text>
-      <Switch value={value} onValueChange={onValueChange} />
+      <Switch
+        onValueChange={onValueChange}
+        thumbColor={value ? colors.primary : undefined}
+        trackColor={{ true: colors.primarySoft }}
+        value={value}
+      />
     </View>
   );
 }
@@ -364,24 +370,33 @@ export function MultiChoice<T extends string>({
 const styles = StyleSheet.create({
   sectionTitle: {
     color: colors.text,
+    fontFamily: fontFamily.extraBold,
     fontSize: 17,
-    fontWeight: "800",
     marginTop: spacing.sm,
   },
   field: { gap: spacing.xs },
-  label: { color: colors.text, fontWeight: "700" },
+  label: {
+    color: colors.text,
+    fontFamily: fontFamily.bold,
+    fontSize: 13,
+  },
   input: {
-    minHeight: 48,
+    minHeight: 50,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.md,
     backgroundColor: colors.surface,
     color: colors.text,
     paddingHorizontal: spacing.md,
+    fontFamily: fontFamily.medium,
     fontSize: 16,
   },
   inputInvalid: { borderColor: colors.danger },
-  error: { color: colors.danger, fontSize: 12, fontWeight: "600" },
+  error: {
+    color: colors.danger,
+    fontFamily: fontFamily.semibold,
+    fontSize: 12,
+  },
   multiline: {
     minHeight: 96,
     paddingTop: spacing.md,
@@ -401,7 +416,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border,
   },
-  suggestionText: { color: colors.text, fontWeight: "600" },
+  suggestionText: {
+    color: colors.text,
+    fontFamily: fontFamily.semibold,
+  },
   toggleRow: {
     minHeight: 48,
     flexDirection: "row",
@@ -409,7 +427,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: spacing.md,
   },
-  toggleLabel: { flex: 1, color: colors.text, fontWeight: "600" },
+  toggleLabel: {
+    flex: 1,
+    color: colors.text,
+    fontFamily: fontFamily.semibold,
+  },
   choiceWrap: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
   choice: {
     minHeight: 42,
@@ -424,7 +446,10 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
     backgroundColor: colors.primarySoft,
   },
-  choiceText: { color: colors.text, fontWeight: "700" },
+  choiceText: {
+    color: colors.text,
+    fontFamily: fontFamily.bold,
+  },
   choiceTextSelected: { color: colors.primary },
   stepperRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
   stepperButton: {
@@ -438,9 +463,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   stepperButtonDisabled: { opacity: 0.4 },
-  stepperText: { color: colors.primary, fontSize: 24, fontWeight: "800" },
+  stepperText: {
+    color: colors.primary,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 24,
+  },
   stepperInput: { flex: 1, textAlign: "center" },
   currencyRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  currencyPrefix: { color: colors.text, fontSize: 18, fontWeight: "800" },
+  currencyPrefix: {
+    color: colors.text,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 18,
+  },
   currencyInput: { flex: 1 },
 });
