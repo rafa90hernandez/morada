@@ -22,6 +22,7 @@ import {
   type PrivateUser,
   type UpdatePrivateProfile,
 } from "@/api/account";
+import { BrandHeader } from "@/components/BrandHeader";
 import { AppBadge } from "@/components/ui/AppBadge";
 import { AppButton } from "@/components/ui/AppButton";
 import { AppCard } from "@/components/ui/AppCard";
@@ -37,7 +38,7 @@ import {
   matchingSuggestions,
 } from "@/features/listings/location-suggestions";
 import { useSession } from "@/session/SessionContext";
-import { colors, radius, spacing } from "@/theme/tokens";
+import { colors, fontFamily, radius, spacing } from "@/theme/tokens";
 
 function statusLabel(user: PrivateUser) {
   if (user.eligibility.isEligible) {
@@ -51,6 +52,17 @@ function statusLabel(user: PrivateUser) {
   }
 
   return "A Beta 1 do Morada é destinada somente a pessoas com 18 anos ou mais.";
+}
+
+function initials(name: string) {
+  return (
+    name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join("") || "M"
+  );
 }
 
 export default function AccountScreen() {
@@ -191,20 +203,45 @@ export default function AccountScreen() {
     );
   }
 
+  const profileName = user.profile?.displayName || displayName || "Morador";
+
   return (
     <ScrollView contentContainerStyle={styles.content}>
-      <AppCard tone="muted">
-        <Text style={styles.eyebrow}>SEU ESPAÇO NO MORADA</Text>
-        <Text accessibilityRole="header" style={styles.title}>
-          Perfil
-        </Text>
-        <Text style={styles.muted}>{user.email}</Text>
+      <View style={styles.brandRow}>
+        <BrandHeader compact />
+        <Text style={styles.settingsIcon}>⚙</Text>
+      </View>
 
-        <View style={styles.statusBox}>
-          <Text style={styles.statusTitle}>Elegibilidade</Text>
-          <Text style={styles.statusText}>{statusLabel(user)}</Text>
+      <View style={styles.profileCard}>
+        <View style={styles.avatar}>
+          <Text style={styles.avatarText}>{initials(profileName)}</Text>
         </View>
+        <View style={styles.profileCopy}>
+          <Text accessibilityRole="header" style={styles.profileName}>
+            {profileName}
+          </Text>
+          <Text style={styles.profileEmail}>{user.email}</Text>
+          <Text style={styles.profileMeta}>{statusLabel(user)}</Text>
+        </View>
+      </View>
 
+      <AppCard style={styles.statusCard}>
+        <View style={styles.statusLine}>
+          <View style={styles.statusIconWrap}>
+            <Text style={styles.statusIcon}>✓</Text>
+          </View>
+          <View style={styles.statusCopy}>
+            <Text style={styles.statusTitle}>Verificação de identidade</Text>
+            <Text style={styles.statusText}>
+              Proteja sua conta e aumente a confiança na comunidade.
+            </Text>
+          </View>
+          <AppButton
+            label="Abrir"
+            onPress={() => router.push("/identity-verification")}
+            variant="secondary"
+          />
+        </View>
         <View style={styles.verificationRow}>
           <AppBadge
             label={user.emailVerified ? "E-mail verificado" : "E-mail pendente"}
@@ -217,18 +254,12 @@ export default function AccountScreen() {
             tone={user.phoneVerified ? "success" : "neutral"}
           />
         </View>
-        <Text style={styles.helper}>
-          Estes estados mostram apenas verificações já registradas pelo
-          servidor. O Morada não promete envio de SMS ou e-mail enquanto um
-          provedor de verificação não estiver ativado para a Beta.
-        </Text>
       </AppCard>
 
       <AppCard>
         <Text style={styles.sectionTitle}>Sobre você</Text>
         <Text style={styles.muted}>
-          Complete o perfil para dar mais contexto às suas interações na
-          comunidade.
+          Complete seu perfil para dar mais contexto às suas interações no Morada.
         </Text>
         <Field
           label="Nome exibido"
@@ -275,10 +306,15 @@ export default function AccountScreen() {
         <Field label="Sobre você" multiline onChangeText={setBio} value={bio} />
 
         <View style={styles.switchRow}>
-          <Text style={styles.label}>Sou estudante</Text>
+          <View style={styles.switchCopy}>
+            <Text style={styles.label}>Sou estudante</Text>
+            <Text style={styles.helper}>Essa informação ajuda a contextualizar seu perfil.</Text>
+          </View>
           <Switch
             accessibilityLabel="Sou estudante"
             onValueChange={setIsStudent}
+            trackColor={{ true: colors.primarySoft }}
+            thumbColor={isStudent ? colors.primary : undefined}
             value={isStudent}
           />
         </View>
@@ -302,18 +338,22 @@ export default function AccountScreen() {
       </AppCard>
 
       <AppCard>
-        <Text style={styles.sectionTitle}>Segurança e preferências</Text>
-        <AppButton
-          label="Verificação de identidade"
-          onPress={() => router.push("/identity-verification")}
-          variant="secondary"
-        />
-        <AppButton
+        <Text style={styles.sectionTitle}>Conta e segurança</Text>
+        <MenuRow
           label="Notificações"
           onPress={() => router.push("/notifications")}
-          variant="secondary"
+          symbol="♢"
         />
-        <AppButton label="Sair" onPress={leave} variant="secondary" />
+        <MenuRow label="Usuários bloqueados" symbol="⊘" />
+        <MenuRow label="Suporte" symbol="?" />
+        <MenuRow label="Termos de uso e privacidade" symbol="▤" />
+        <View style={styles.menuDivider} />
+        <Pressable accessibilityRole="button" onPress={leave} style={styles.menuRow}>
+          <View style={[styles.menuSymbol, styles.dangerSymbol]}>
+            <Text style={styles.dangerSymbolText}>↪</Text>
+          </View>
+          <Text style={styles.dangerMenuText}>Sair da conta</Text>
+        </Pressable>
       </AppCard>
     </ScrollView>
   );
@@ -343,7 +383,7 @@ function Field({ label, suggestions, ...props }: FieldProps) {
           setFocused(true);
           props.onFocus?.(event);
         }}
-        placeholderTextColor={colors.textMuted}
+        placeholderTextColor={colors.textSubtle}
         style={[styles.input, props.multiline && styles.multiline]}
         {...props}
       />
@@ -368,6 +408,31 @@ function Field({ label, suggestions, ...props }: FieldProps) {
   );
 }
 
+function MenuRow({
+  label,
+  symbol,
+  onPress,
+}: {
+  label: string;
+  symbol: string;
+  onPress?: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      disabled={!onPress}
+      onPress={onPress}
+      style={styles.menuRow}
+    >
+      <View style={styles.menuSymbol}>
+        <Text style={styles.menuSymbolText}>{symbol}</Text>
+      </View>
+      <Text style={styles.menuText}>{label}</Text>
+      <Text style={styles.chevron}>›</Text>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   content: {
     gap: spacing.md,
@@ -380,67 +445,128 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: colors.background,
   },
-  eyebrow: {
-    color: colors.primary,
-    fontSize: 12,
-    fontWeight: "900",
-    letterSpacing: 1.3,
+  brandRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
-  title: {
-    color: colors.text,
-    fontSize: 28,
-    fontWeight: "900",
-    letterSpacing: -0.6,
-  },
-  sectionTitle: {
-    color: colors.text,
-    fontSize: 19,
-    fontWeight: "800",
-  },
-  muted: {
+  settingsIcon: {
     color: colors.textMuted,
-    lineHeight: 21,
+    fontSize: 22,
   },
-  helper: {
-    color: colors.textMuted,
-    fontSize: 12,
-    lineHeight: 18,
+  profileCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    paddingVertical: spacing.sm,
   },
-  statusBox: {
-    gap: spacing.xs,
-    borderRadius: radius.md,
+  avatar: {
+    width: 68,
+    height: 68,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 34,
     backgroundColor: colors.primarySoft,
-    padding: spacing.md,
+  },
+  avatarText: {
+    color: colors.primary,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 22,
+  },
+  profileCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  profileName: {
+    color: colors.text,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 22,
+  },
+  profileEmail: {
+    color: colors.textMuted,
+    fontFamily: fontFamily.medium,
+    fontSize: 13,
+  },
+  profileMeta: {
+    color: colors.primary,
+    fontFamily: fontFamily.semibold,
+    fontSize: 12,
+  },
+  statusCard: {
+    gap: spacing.md,
+  },
+  statusLine: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  statusIconWrap: {
+    width: 42,
+    height: 42,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 21,
+    backgroundColor: colors.primarySoft,
+  },
+  statusIcon: {
+    color: colors.primary,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 18,
+  },
+  statusCopy: {
+    flex: 1,
+    gap: 2,
   },
   statusTitle: {
-    color: colors.primary,
-    fontWeight: "800",
+    color: colors.text,
+    fontFamily: fontFamily.bold,
+    fontSize: 14,
   },
   statusText: {
-    color: colors.text,
-    lineHeight: 20,
+    color: colors.textMuted,
+    fontFamily: fontFamily.regular,
+    fontSize: 12,
+    lineHeight: 17,
   },
   verificationRow: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing.sm,
   },
+  sectionTitle: {
+    color: colors.text,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 19,
+  },
+  muted: {
+    color: colors.textMuted,
+    fontFamily: fontFamily.regular,
+    lineHeight: 21,
+  },
+  helper: {
+    color: colors.textSubtle,
+    fontFamily: fontFamily.regular,
+    fontSize: 11,
+    lineHeight: 16,
+  },
   field: {
     gap: spacing.xs,
   },
   label: {
     color: colors.text,
-    fontWeight: "700",
+    fontFamily: fontFamily.bold,
+    fontSize: 13,
   },
   input: {
-    minHeight: 48,
+    minHeight: 50,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.md,
     backgroundColor: colors.background,
     color: colors.text,
     paddingHorizontal: spacing.md,
-    fontSize: 16,
+    fontFamily: fontFamily.medium,
+    fontSize: 15,
   },
   multiline: {
     minHeight: 100,
@@ -463,20 +589,73 @@ const styles = StyleSheet.create({
   },
   suggestionText: {
     color: colors.text,
-    fontWeight: "600",
+    fontFamily: fontFamily.semibold,
   },
   switchRow: {
-    minHeight: 48,
+    minHeight: 52,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    gap: spacing.md,
+  },
+  switchCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  menuRow: {
+    minHeight: 50,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  menuSymbol: {
+    width: 34,
+    height: 34,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 17,
+    backgroundColor: colors.primarySoft,
+  },
+  menuSymbolText: {
+    color: colors.primary,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 16,
+  },
+  menuText: {
+    flex: 1,
+    color: colors.text,
+    fontFamily: fontFamily.semibold,
+    fontSize: 14,
+  },
+  chevron: {
+    color: colors.textSubtle,
+    fontSize: 24,
+  },
+  menuDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.border,
+  },
+  dangerSymbol: {
+    backgroundColor: colors.dangerSoft,
+  },
+  dangerSymbolText: {
+    color: colors.danger,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 16,
+  },
+  dangerMenuText: {
+    flex: 1,
+    color: colors.danger,
+    fontFamily: fontFamily.bold,
+    fontSize: 14,
   },
   error: {
     color: colors.danger,
+    fontFamily: fontFamily.medium,
     lineHeight: 20,
   },
   success: {
     color: colors.primary,
-    fontWeight: "700",
+    fontFamily: fontFamily.bold,
   },
 });
