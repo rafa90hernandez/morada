@@ -22,7 +22,7 @@ import type { ListingDetail } from "@/api/types";
 import { AppButton } from "@/components/ui/AppButton";
 import { isoToBrazilianDate } from "@/features/listings/input-formatters";
 import { useSession } from "@/session/SessionContext";
-import { colors, radius, spacing } from "@/theme/tokens";
+import { colors, fontFamily, radius, spacing } from "@/theme/tokens";
 
 const propertyLabels: Record<string, string> = {
   SINGLE_ROOM: "Quarto individual",
@@ -239,124 +239,163 @@ export default function ListingDetailScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.content}>
-      {selectedPhoto ? (
-        <View style={styles.gallery}>
-          <Image
-            accessibilityLabel={`Foto de ${listing.title}`}
-            resizeMode="cover"
-            source={{ uri: resolveMediaUrl(selectedPhoto.url) }}
-            style={styles.hero}
-          />
-          {listing.photos.length > 1 ? (
-            <ScrollView
-              contentContainerStyle={styles.thumbnailRow}
-              horizontal
-              showsHorizontalScrollIndicator={false}
+      <View style={styles.galleryWrap}>
+        {selectedPhoto ? (
+          <View style={styles.gallery}>
+            <Image
+              accessibilityLabel={`Foto de ${listing.title}`}
+              resizeMode="cover"
+              source={{ uri: resolveMediaUrl(selectedPhoto.url) }}
+              style={styles.hero}
+            />
+            <View style={styles.heroControls}>
+              <Pressable
+                accessibilityLabel="Voltar"
+                accessibilityRole="button"
+                onPress={() => router.back()}
+                style={({ pressed }) => [
+                  styles.heroControl,
+                  pressed && styles.heroControlPressed,
+                ]}
+              >
+                <Text style={styles.backSymbol}>‹</Text>
+              </Pressable>
+              <Pressable
+                accessibilityLabel={favorite ? "Remover dos favoritos" : "Favoritar"}
+                accessibilityRole="button"
+                disabled={favoriteLoading}
+                onPress={() => void toggleFavorite()}
+                style={({ pressed }) => [
+                  styles.heroControl,
+                  pressed && styles.heroControlPressed,
+                ]}
+              >
+                <Text style={[styles.favoriteSymbol, favorite && styles.favoriteSymbolActive]}>
+                  {favorite ? "♥" : "♡"}
+                </Text>
+              </Pressable>
+            </View>
+            <View style={styles.photoCounter}>
+              <Text style={styles.photoCounterText}>
+                {Math.max(
+                  1,
+                  listing.photos.findIndex((photo) => photo.id === selectedPhoto.id) + 1,
+                )}
+                /{listing.photos.length}
+              </Text>
+            </View>
+            {listing.photos.length > 1 ? (
+              <ScrollView
+                contentContainerStyle={styles.thumbnailRow}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+              >
+                {listing.photos.map((photo, index) => {
+                  const selected = photo.id === selectedPhoto.id;
+                  return (
+                    <Pressable
+                      accessibilityLabel={`Visualizar foto ${index + 1}`}
+                      accessibilityRole="button"
+                      key={photo.id}
+                      onPress={() => setSelectedPhotoId(photo.id)}
+                      style={[
+                        styles.thumbnailButton,
+                        selected && styles.thumbnailButtonSelected,
+                      ]}
+                    >
+                      <Image
+                        resizeMode="cover"
+                        source={{ uri: resolveMediaUrl(photo.url) }}
+                        style={styles.thumbnail}
+                      />
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            ) : null}
+          </View>
+        ) : (
+          <View style={[styles.hero, styles.heroPlaceholder]}>
+            <Pressable
+              accessibilityLabel="Voltar"
+              accessibilityRole="button"
+              onPress={() => router.back()}
+              style={styles.placeholderBack}
             >
-              {listing.photos.map((photo, index) => {
-                const selected = photo.id === selectedPhoto.id;
-                return (
-                  <Pressable
-                    accessibilityLabel={`Visualizar foto ${index + 1}`}
-                    accessibilityRole="button"
-                    key={photo.id}
-                    onPress={() => setSelectedPhotoId(photo.id)}
-                    style={[
-                      styles.thumbnailButton,
-                      selected && styles.thumbnailButtonSelected,
-                    ]}
-                  >
-                    <Image
-                      resizeMode="cover"
-                      source={{ uri: resolveMediaUrl(photo.url) }}
-                      style={styles.thumbnail}
-                    />
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-          ) : null}
-        </View>
-      ) : (
-        <View style={[styles.hero, styles.heroPlaceholder]}>
-          <Text style={styles.muted}>Fotos ainda não disponíveis.</Text>
-        </View>
-      )}
+              <Text style={styles.backSymbol}>‹</Text>
+            </Pressable>
+            <Text style={styles.muted}>Fotos ainda não disponíveis.</Text>
+          </View>
+        )}
+      </View>
 
-      <View style={styles.section}>
+      <View style={styles.summaryCard}>
         <View style={styles.badgeRow}>
-          {propertyLabel ? (
-            <Text style={styles.badge}>{propertyLabel}</Text>
-          ) : null}
-          <Text style={styles.trustBadge}>Confiança {listing.trustScore}</Text>
+          {propertyLabel ? <Text style={styles.badge}>{propertyLabel}</Text> : null}
+          <Text style={styles.trustBadge}>✓ Confiança {listing.trustScore}</Text>
         </View>
-        <Text style={styles.eyebrow}>
-          {location || "Localização aproximada"}
-        </Text>
         <Text accessibilityRole="header" style={styles.title}>
           {listing.title}
         </Text>
         <View style={styles.priceRow}>
-          <Text style={styles.price}>
-            {price(listing.pricing.monthlyPriceCents)}
-          </Text>
+          <Text style={styles.price}>{price(listing.pricing.monthlyPriceCents)}</Text>
           {listing.pricing.monthlyPriceCents !== null ? (
-            <Text style={styles.perMonth}>/ mês</Text>
+            <Text style={styles.perMonth}>/mês</Text>
           ) : null}
         </View>
+        <Text style={styles.locationText}>
+          ⌖ {location || "Localização aproximada"}
+        </Text>
         {availableFrom ? (
-          <Text style={styles.availability}>
-            Disponível a partir de {availableFrom}
-          </Text>
+          <Text style={styles.availability}>Disponível a partir de {availableFrom}</Text>
         ) : null}
-        <Text style={styles.description}>{listing.description}</Text>
 
+        <View style={styles.quickFacts}>
+          <QuickFact
+            icon="▣"
+            label={
+              listing.accommodation.advertisedSpaceType === "PRIVATE"
+                ? "Quarto privado"
+                : listing.accommodation.advertisedSpaceType === "SHARED"
+                  ? "Compartilhado"
+                  : "Moradia"
+            }
+          />
+          <QuickFact
+            icon="◉"
+            label={
+              listing.accommodation.bathroomType === "PRIVATE"
+                ? "Banheiro privado"
+                : listing.accommodation.bathroomType === "SHARED"
+                  ? "Banheiro compartilhado"
+                  : "Banheiro"
+            }
+          />
+          <QuickFact
+            icon="♙"
+            label={
+              listing.household.currentResidentCount !== null
+                ? `${listing.household.currentResidentCount} moradores`
+                : "Moradores"
+            }
+          />
+        </View>
+
+        <Text style={styles.description}>{listing.description}</Text>
         {favoriteError ? (
           <Text accessibilityLiveRegion="polite" style={styles.error}>
             {favoriteError}
           </Text>
         ) : null}
-        <View style={styles.actionRow}>
-          <View style={styles.actionButton}>
-            <AppButton
-              disabled={favoriteLoading}
-              label={
-                favoriteLoading
-                  ? "Atualizando..."
-                  : favorite
-                    ? "Favoritado"
-                    : session
-                      ? "Favoritar"
-                      : "Entrar para favoritar"
-              }
-              onPress={() => void toggleFavorite()}
-              variant="secondary"
-            />
-          </View>
-          <View style={styles.actionButton}>
-            <AppButton
-              label={session ? "Denunciar" : "Entrar para denunciar"}
-              onPress={() => {
-                if (!session) {
-                  router.push({
-                    pathname: "/login",
-                    params: { returnTo: `/listing/${params.id}` },
-                  });
-                  return;
-                }
-                router.push({
-                  pathname: "/report",
-                  params: { listingId: params.id, context: "este anúncio" },
-                });
-              }}
-              variant="secondary"
-            />
-          </View>
-        </View>
       </View>
 
       <View style={styles.trustCard}>
-        <Text style={styles.sectionTitle}>Confiança e verificações</Text>
+        <View style={styles.sectionHeadingRow}>
+          <View style={styles.trustIcon}>
+            <Text style={styles.trustIconText}>✓</Text>
+          </View>
+          <Text style={styles.sectionTitle}>Confiança e verificações</Text>
+        </View>
         <TrustRow
           label="Identidade do anunciante"
           value={listing.trust.identityVerified}
@@ -379,10 +418,7 @@ export default function ListingDetailScreen() {
         <Text style={styles.sectionTitle}>Sobre a moradia</Text>
         <InfoRow label="Tipo" value={propertyLabel} />
         <InfoRow label="Quartos" value={listing.accommodation.bedroomCount} />
-        <InfoRow
-          label="Banheiros"
-          value={listing.accommodation.bathroomCount}
-        />
+        <InfoRow label="Banheiros" value={listing.accommodation.bathroomCount} />
         <InfoRow
           label="Espaço"
           value={
@@ -403,25 +439,13 @@ export default function ListingDetailScreen() {
                 : null
           }
         />
-        <InfoRow
-          label="Tipo de quarto"
-          value={humanize(listing.space.roomType)}
-        />
+        <InfoRow label="Tipo de quarto" value={humanize(listing.space.roomType)} />
         <InfoRow label="Tipo de cama" value={humanize(listing.space.bedType)} />
-        <InfoRow
-          label="Máximo de ocupantes"
-          value={listing.space.maxOccupants}
-        />
-        <InfoRow
-          label="Mobiliado"
-          value={yesNo(listing.accommodation.furnished)}
-        />
+        <InfoRow label="Máximo de ocupantes" value={listing.space.maxOccupants} />
+        <InfoRow label="Mobiliado" value={yesNo(listing.accommodation.furnished)} />
         <InfoRow label="Andar" value={listing.property.floorNumber} />
         <InfoRow label="Elevador" value={yesNo(listing.property.hasLift)} />
-        <InfoRow
-          label="Aquecimento"
-          value={humanize(listing.property.heatingType)}
-        />
+        <InfoRow label="Aquecimento" value={humanize(listing.property.heatingType)} />
         <InfoRow
           label="Estadia mínima"
           value={
@@ -435,14 +459,8 @@ export default function ListingDetailScreen() {
 
       <View style={styles.sectionCard}>
         <Text style={styles.sectionTitle}>Casa e convivência</Text>
-        <InfoRow
-          label="Moradores atuais"
-          value={listing.household.currentResidentCount}
-        />
-        <InfoRow
-          label="Compartilham o espaço"
-          value={listing.space.peopleSharingSpace}
-        />
+        <InfoRow label="Moradores atuais" value={listing.household.currentResidentCount} />
+        <InfoRow label="Compartilham o espaço" value={listing.space.peopleSharingSpace} />
         <InfoRow
           label="Compartilham o banheiro"
           value={listing.space.peopleSharingBathroom}
@@ -455,10 +473,7 @@ export default function ListingDetailScreen() {
           label="Landlord mora no imóvel"
           value={yesNo(listing.household.landlordLivesHere)}
         />
-        <InfoRow
-          label="Aceita casais"
-          value={yesNo(listing.suitability.couplesAllowed)}
-        />
+        <InfoRow label="Aceita casais" value={yesNo(listing.suitability.couplesAllowed)} />
         <InfoRow
           label="Aceita famílias"
           value={yesNo(listing.household.childrenFamiliesAllowed)}
@@ -467,10 +482,7 @@ export default function ListingDetailScreen() {
           label="Aceita estudantes"
           value={yesNo(listing.household.studentsAllowed)}
         />
-        <InfoRow
-          label="Aceita pets"
-          value={yesNo(listing.suitability.petsAllowed)}
-        />
+        <InfoRow label="Aceita pets" value={yesNo(listing.suitability.petsAllowed)} />
         <InfoRow
           label="Permite fumar"
           value={yesNo(listing.suitability.smokingAllowed)}
@@ -479,14 +491,8 @@ export default function ListingDetailScreen() {
 
       <View style={styles.sectionCard}>
         <Text style={styles.sectionTitle}>Custos e condições</Text>
-        <InfoRow
-          label="Aluguel mensal"
-          value={money(listing.pricing.monthlyPriceCents)}
-        />
-        <InfoRow
-          label="Depósito"
-          value={money(listing.pricingDetail.depositAmountCents)}
-        />
+        <InfoRow label="Aluguel mensal" value={money(listing.pricing.monthlyPriceCents)} />
+        <InfoRow label="Depósito" value={money(listing.pricingDetail.depositAmountCents)} />
         <InfoRow
           label="Contas mensais estimadas"
           value={money(listing.pricingDetail.estimatedMonthlyBillsCents)}
@@ -496,18 +502,13 @@ export default function ListingDetailScreen() {
           value={money(listing.pricingDetail.firstRentAdvanceCents)}
         />
         {listing.pricingDetail.extraCostsNote ? (
-          <Text style={styles.note}>
-            {listing.pricingDetail.extraCostsNote}
-          </Text>
+          <Text style={styles.note}>{listing.pricingDetail.extraCostsNote}</Text>
         ) : null}
       </View>
 
       <View style={styles.sectionCard}>
         <Text style={styles.sectionTitle}>Requisitos</Text>
-        <InfoRow
-          label="Contrato formal"
-          value={yesNo(listing.requirements.formalContract)}
-        />
+        <InfoRow label="Contrato formal" value={yesNo(listing.requirements.formalContract)} />
         <InfoRow
           label="Aprovação do landlord"
           value={yesNo(listing.requirements.landlordApprovalRequired)}
@@ -525,22 +526,14 @@ export default function ListingDetailScreen() {
           value={yesNo(listing.requirements.priorReferenceRequired)}
         />
         {listing.requirements.otherRequirementsNote ? (
-          <Text style={styles.note}>
-            {listing.requirements.otherRequirementsNote}
-          </Text>
+          <Text style={styles.note}>{listing.requirements.otherRequirementsNote}</Text>
         ) : null}
       </View>
 
       <View style={styles.sectionCard}>
         <Text style={styles.sectionTitle}>Comodidades</Text>
-        <InfoRow
-          label="Internet"
-          value={yesNo(listing.connectivity.internetAvailable)}
-        />
-        <InfoRow
-          label="Wi-Fi"
-          value={yesNo(listing.connectivity.wifiAvailable)}
-        />
+        <InfoRow label="Internet" value={yesNo(listing.connectivity.internetAvailable)} />
+        <InfoRow label="Wi-Fi" value={yesNo(listing.connectivity.wifiAvailable)} />
         <InfoRow
           label="Internet incluída"
           value={yesNo(listing.connectivity.internetIncludedInBills)}
@@ -553,15 +546,9 @@ export default function ListingDetailScreen() {
               : null
           }
         />
-        <InfoRow
-          label="Máquina de lavar"
-          value={yesNo(listing.laundry.washingMachine)}
-        />
+        <InfoRow label="Máquina de lavar" value={yesNo(listing.laundry.washingMachine)} />
         <InfoRow label="Secadora" value={yesNo(listing.laundry.dryer)} />
-        <InfoRow
-          label="Estacionamento para carro"
-          value={yesNo(listing.parking.car)}
-        />
+        <InfoRow label="Estacionamento para carro" value={yesNo(listing.parking.car)} />
         <InfoRow
           label="Estacionamento para bicicleta"
           value={yesNo(listing.parking.bicycle)}
@@ -580,18 +567,11 @@ export default function ListingDetailScreen() {
       <View style={styles.sectionCard}>
         <Text style={styles.sectionTitle}>Regras da casa</Text>
         <InfoRow label="Festas" value={yesNo(listing.rules.partiesAllowed)} />
-        <InfoRow
-          label="Visitantes"
-          value={yesNo(listing.rules.visitorsAllowed)}
-        />
+        <InfoRow label="Visitantes" value={yesNo(listing.rules.visitorsAllowed)} />
         {listing.rules.quietHoursNote ? (
-          <Text style={styles.note}>
-            Horário de silêncio: {listing.rules.quietHoursNote}
-          </Text>
+          <Text style={styles.note}>Horário de silêncio: {listing.rules.quietHoursNote}</Text>
         ) : null}
-        {listing.rules.houseRules ? (
-          <Text style={styles.note}>{listing.rules.houseRules}</Text>
-        ) : null}
+        {listing.rules.houseRules ? <Text style={styles.note}>{listing.rules.houseRules}</Text> : null}
       </View>
 
       <View style={styles.sectionCard}>
@@ -624,19 +604,22 @@ export default function ListingDetailScreen() {
       {listing.advertiser ? (
         <View style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>Quem está anunciando</Text>
-          <Text style={styles.advertiserName}>
-            {listing.advertiser.displayName}
-          </Text>
-          {listing.advertiser.nationality ? (
-            <Text style={styles.mutedLeft}>
-              Nacionalidade: {listing.advertiser.nationality}
-            </Text>
-          ) : null}
-          {listing.advertiser.hometown ? (
-            <Text style={styles.mutedLeft}>
-              Cidade de origem: {listing.advertiser.hometown}
-            </Text>
-          ) : null}
+          <View style={styles.advertiserRow}>
+            <View style={styles.avatarPlaceholder}>
+              <Text style={styles.avatarText}>
+                {listing.advertiser.displayName.slice(0, 1).toUpperCase()}
+              </Text>
+            </View>
+            <View style={styles.advertiserCopy}>
+              <Text style={styles.advertiserName}>{listing.advertiser.displayName}</Text>
+              {listing.advertiser.nationality ? (
+                <Text style={styles.mutedLeft}>{listing.advertiser.nationality}</Text>
+              ) : null}
+              {listing.advertiser.hometown ? (
+                <Text style={styles.mutedLeft}>{listing.advertiser.hometown}</Text>
+              ) : null}
+            </View>
+          </View>
         </View>
       ) : null}
 
@@ -648,9 +631,7 @@ export default function ListingDetailScreen() {
               <Text style={styles.transportMode}>{option.mode}</Text>
               <View style={styles.transportText}>
                 <Text style={styles.rowValue}>
-                  {[option.stopName, option.lineName]
-                    .filter(Boolean)
-                    .join(" · ")}
+                  {[option.stopName, option.lineName].filter(Boolean).join(" · ")}
                 </Text>
                 {option.walkingMinutes !== null ? (
                   <Text style={styles.mutedLeft}>
@@ -671,18 +652,19 @@ export default function ListingDetailScreen() {
         </Text>
         {listing.location.approximate ? (
           <Text style={styles.locationHint}>
-            Área aproximada em um raio de{" "}
-            {listing.location.approximate.radiusMeters} m
+            Área aproximada em um raio de {listing.location.approximate.radiusMeters} m
           </Text>
         ) : null}
       </View>
 
       <View style={styles.contactCard}>
-        <Text style={styles.sectionTitle}>Interessado nesta moradia?</Text>
-        <Text style={styles.mutedLeft}>
-          Fale com o anunciante sem sair do Morada. A conversa permanece ligada
-          a este anúncio e pode ser usada para combinar uma visita.
-        </Text>
+        <View style={styles.contactCopy}>
+          <Text style={styles.sectionTitle}>Interessado nesta moradia?</Text>
+          <Text style={styles.mutedLeft}>
+            Converse com o anunciante dentro do Morada e, se fizer sentido,
+            combine uma visita com segurança.
+          </Text>
+        </View>
         {contactError ? <Text style={styles.error}>{contactError}</Text> : null}
         <AppButton
           disabled={contacting}
@@ -690,13 +672,45 @@ export default function ListingDetailScreen() {
             contacting
               ? "Abrindo conversa..."
               : session
-                ? "Falar com anunciante"
-                : "Entrar para falar com anunciante"
+                ? "Conversar com anunciante"
+                : "Entrar para conversar"
           }
           onPress={() => void contactAdvertiser()}
         />
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => {
+            if (!session) {
+              router.push({
+                pathname: "/login",
+                params: { returnTo: `/listing/${params.id}` },
+              });
+              return;
+            }
+            router.push({
+              pathname: "/report",
+              params: { listingId: params.id, context: "este anúncio" },
+            });
+          }}
+          style={styles.reportButton}
+        >
+          <Text style={styles.reportButtonText}>
+            {session ? "Denunciar anúncio" : "Entrar para denunciar"}
+          </Text>
+        </Pressable>
       </View>
     </ScrollView>
+  );
+}
+
+function QuickFact({ icon, label }: { icon: string; label: string }) {
+  return (
+    <View style={styles.quickFact}>
+      <Text style={styles.quickFactIcon}>{icon}</Text>
+      <Text numberOfLines={2} style={styles.quickFactLabel}>
+        {label}
+      </Text>
+    </View>
   );
 }
 
@@ -704,10 +718,8 @@ function TrustRow({ label, value }: { label: string; value: boolean }) {
   return (
     <View style={styles.row}>
       <Text style={styles.rowLabel}>{label}</Text>
-      <Text
-        style={[styles.rowValue, value ? styles.verified : styles.notVerified]}
-      >
-        {value ? "Verificado" : "Não verificado"}
+      <Text style={[styles.rowValue, value ? styles.verified : styles.notVerified]}>
+        {value ? "✓ Verificado" : "Não verificado"}
       </Text>
     </View>
   );
@@ -732,8 +744,8 @@ function InfoRow({
 const styles = StyleSheet.create({
   content: {
     gap: spacing.md,
-    padding: spacing.lg,
     paddingBottom: spacing.xxl,
+    backgroundColor: colors.background,
   },
   center: {
     flex: 1,
@@ -743,15 +755,94 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     backgroundColor: colors.background,
   },
-  gallery: { gap: spacing.sm },
+  galleryWrap: {
+    backgroundColor: colors.surface,
+  },
+  gallery: {
+    position: "relative",
+    gap: spacing.sm,
+  },
   hero: {
     width: "100%",
-    aspectRatio: 1.35,
-    borderRadius: radius.xl,
+    aspectRatio: 1.25,
     backgroundColor: colors.surfaceMuted,
   },
-  heroPlaceholder: { alignItems: "center", justifyContent: "center" },
-  thumbnailRow: { gap: spacing.sm, paddingRight: spacing.md },
+  heroPlaceholder: {
+    minHeight: 280,
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+  },
+  heroControls: {
+    position: "absolute",
+    top: spacing.md,
+    left: spacing.md,
+    right: spacing.md,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  heroControl: {
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.pill,
+    backgroundColor: "rgba(255,255,255,0.94)",
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  heroControlPressed: {
+    opacity: 0.75,
+  },
+  placeholderBack: {
+    position: "absolute",
+    top: spacing.md,
+    left: spacing.md,
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.pill,
+    backgroundColor: colors.surface,
+  },
+  backSymbol: {
+    marginTop: -3,
+    color: colors.text,
+    fontFamily: fontFamily.medium,
+    fontSize: 32,
+    lineHeight: 34,
+  },
+  favoriteSymbol: {
+    color: colors.text,
+    fontSize: 27,
+    lineHeight: 30,
+  },
+  favoriteSymbolActive: {
+    color: colors.danger,
+  },
+  photoCounter: {
+    position: "absolute",
+    right: spacing.md,
+    bottom: 72,
+    borderRadius: radius.pill,
+    backgroundColor: "rgba(13,27,43,0.72)",
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 5,
+  },
+  photoCounterText: {
+    color: colors.surface,
+    fontFamily: fontFamily.bold,
+    fontSize: 12,
+  },
+  thumbnailRow: {
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.sm,
+  },
   thumbnailButton: {
     overflow: "hidden",
     width: 76,
@@ -760,13 +851,21 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
     borderRadius: radius.md,
   },
-  thumbnailButtonSelected: { borderColor: colors.primary },
+  thumbnailButtonSelected: {
+    borderColor: colors.primary,
+  },
   thumbnail: {
     width: "100%",
     height: "100%",
     backgroundColor: colors.surfaceMuted,
   },
-  section: { gap: spacing.sm },
+  summaryCard: {
+    gap: spacing.sm,
+    marginHorizontal: spacing.lg,
+    borderRadius: radius.xl,
+    backgroundColor: colors.surface,
+    padding: spacing.lg,
+  },
   badgeRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -780,87 +879,259 @@ const styles = StyleSheet.create({
     color: colors.primary,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
+    fontFamily: fontFamily.bold,
     fontSize: 12,
-    fontWeight: "800",
   },
-  trustBadge: { color: colors.primary, fontSize: 12, fontWeight: "800" },
-  eyebrow: { color: colors.textMuted, fontWeight: "700" },
+  trustBadge: {
+    color: colors.primary,
+    fontFamily: fontFamily.bold,
+    fontSize: 12,
+  },
   title: {
     color: colors.text,
-    fontSize: 30,
-    fontWeight: "900",
+    fontFamily: fontFamily.extraBold,
+    fontSize: 27,
+    lineHeight: 32,
     letterSpacing: -0.7,
   },
-  priceRow: { flexDirection: "row", alignItems: "baseline" },
-  price: { color: colors.text, fontSize: 24, fontWeight: "900" },
-  perMonth: { color: colors.textMuted, fontSize: 14, fontWeight: "600" },
-  availability: { color: colors.primary, fontWeight: "800" },
-  description: { color: colors.textMuted, fontSize: 16, lineHeight: 24 },
-  actionRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
-  actionButton: { flexGrow: 1, minWidth: 150 },
+  priceRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+  },
+  price: {
+    color: colors.text,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 26,
+  },
+  perMonth: {
+    color: colors.textMuted,
+    fontFamily: fontFamily.semibold,
+    fontSize: 14,
+  },
+  locationText: {
+    color: colors.primary,
+    fontFamily: fontFamily.semibold,
+    fontSize: 14,
+  },
+  availability: {
+    color: colors.text,
+    fontFamily: fontFamily.semibold,
+    fontSize: 13,
+  },
+  description: {
+    color: colors.textMuted,
+    fontFamily: fontFamily.regular,
+    fontSize: 15,
+    lineHeight: 23,
+    marginTop: spacing.xs,
+  },
+  quickFacts: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
+  },
+  quickFact: {
+    flex: 1,
+    alignItems: "center",
+    gap: 5,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    backgroundColor: colors.surfaceMuted,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing.sm,
+  },
+  quickFactIcon: {
+    color: colors.primary,
+    fontSize: 18,
+  },
+  quickFactLabel: {
+    color: colors.text,
+    fontFamily: fontFamily.semibold,
+    fontSize: 11,
+    textAlign: "center",
+    lineHeight: 15,
+  },
+  sectionHeadingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  trustIcon: {
+    width: 32,
+    height: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.pill,
+    backgroundColor: colors.surface,
+  },
+  trustIconText: {
+    color: colors.primary,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 16,
+  },
   trustCard: {
     gap: spacing.sm,
-    borderRadius: radius.lg,
+    marginHorizontal: spacing.lg,
+    borderRadius: radius.xl,
     backgroundColor: colors.primarySoft,
-    padding: spacing.md,
+    padding: spacing.lg,
   },
   sectionCard: {
     gap: spacing.sm,
+    marginHorizontal: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radius.lg,
+    borderRadius: radius.xl,
     backgroundColor: colors.surface,
-    padding: spacing.md,
+    padding: spacing.lg,
   },
-  contactCard: {
+  sectionTitle: {
+    color: colors.text,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 18,
+  },
+  advertiserRow: {
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    borderRadius: radius.lg,
-    backgroundColor: colors.surface,
-    padding: spacing.md,
   },
-  sectionTitle: { color: colors.text, fontSize: 18, fontWeight: "800" },
-  advertiserName: { color: colors.text, fontSize: 17, fontWeight: "800" },
+  avatarPlaceholder: {
+    width: 52,
+    height: 52,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.pill,
+    backgroundColor: colors.primarySoft,
+  },
+  avatarText: {
+    color: colors.primary,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 20,
+  },
+  advertiserCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  advertiserName: {
+    color: colors.text,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 17,
+  },
   row: {
+    minHeight: 34,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: spacing.md,
-    minHeight: 32,
   },
-  rowLabel: { flex: 1, color: colors.textMuted },
-  rowValue: { color: colors.text, fontWeight: "700", textAlign: "right" },
-  verified: { color: colors.primary },
-  notVerified: { color: colors.textMuted },
+  rowLabel: {
+    flex: 1,
+    color: colors.textMuted,
+    fontFamily: fontFamily.regular,
+  },
+  rowValue: {
+    color: colors.text,
+    fontFamily: fontFamily.semibold,
+    textAlign: "right",
+  },
+  verified: {
+    color: colors.primary,
+  },
+  notVerified: {
+    color: colors.textMuted,
+  },
   trustNote: {
     marginTop: spacing.sm,
     color: colors.textMuted,
+    fontFamily: fontFamily.regular,
     fontSize: 12,
     lineHeight: 18,
   },
-  note: { color: colors.textMuted, lineHeight: 21 },
-  chipRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.xs },
+  note: {
+    color: colors.textMuted,
+    fontFamily: fontFamily.regular,
+    lineHeight: 21,
+  },
+  chipRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.xs,
+  },
   amenityChip: {
     borderRadius: radius.pill,
     backgroundColor: colors.primarySoft,
     color: colors.primary,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
+    fontFamily: fontFamily.bold,
     fontSize: 12,
-    fontWeight: "700",
   },
-  muted: { color: colors.textMuted, textAlign: "center", lineHeight: 22 },
-  mutedLeft: { color: colors.textMuted, lineHeight: 22 },
-  stateTitle: { color: colors.text, fontSize: 22, fontWeight: "800" },
-  locationHint: { color: colors.text, fontWeight: "700" },
+  muted: {
+    color: colors.textMuted,
+    fontFamily: fontFamily.regular,
+    textAlign: "center",
+    lineHeight: 22,
+  },
+  mutedLeft: {
+    color: colors.textMuted,
+    fontFamily: fontFamily.regular,
+    lineHeight: 21,
+  },
+  stateTitle: {
+    color: colors.text,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 22,
+  },
+  locationHint: {
+    color: colors.primary,
+    fontFamily: fontFamily.bold,
+  },
   transportRow: {
     flexDirection: "row",
     alignItems: "flex-start",
     gap: spacing.sm,
     paddingVertical: spacing.xs,
   },
-  transportMode: { minWidth: 58, color: colors.primary, fontWeight: "800" },
-  transportText: { flex: 1, gap: 2 },
-  error: { color: colors.danger, lineHeight: 20 },
+  transportMode: {
+    minWidth: 58,
+    color: colors.primary,
+    fontFamily: fontFamily.extraBold,
+  },
+  transportText: {
+    flex: 1,
+    gap: 2,
+  },
+  contactCard: {
+    gap: spacing.md,
+    marginHorizontal: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.primarySoft,
+    borderRadius: radius.xl,
+    backgroundColor: colors.surface,
+    padding: spacing.lg,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.07,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  contactCopy: {
+    gap: spacing.xs,
+  },
+  reportButton: {
+    minHeight: 42,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  reportButtonText: {
+    color: colors.danger,
+    fontFamily: fontFamily.bold,
+    fontSize: 13,
+  },
+  error: {
+    color: colors.danger,
+    fontFamily: fontFamily.semibold,
+    lineHeight: 20,
+  },
 });
