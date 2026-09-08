@@ -3,7 +3,7 @@ import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { resolveMediaUrl } from "@/api/media";
 import type { ListingCard as ListingCardType } from "@/api/types";
 import { isoToBrazilianDate } from "@/features/listings/input-formatters";
-import { colors, radius, spacing } from "@/theme/tokens";
+import { colors, fontFamily, radius, spacing } from "@/theme/tokens";
 
 type Props = {
   listing: ListingCardType;
@@ -78,6 +78,7 @@ export function ListingCard({ listing, onPress }: Props) {
           />
         ) : (
           <View style={[styles.image, styles.imagePlaceholder]}>
+            <Text style={styles.placeholderIcon}>⌂</Text>
             <Text style={styles.placeholderText}>Foto em breve</Text>
           </View>
         )}
@@ -86,36 +87,34 @@ export function ListingCard({ listing, onPress }: Props) {
             <Text style={styles.photoBadgeText}>{propertyLabel}</Text>
           </View>
         ) : null}
+        <View style={styles.trustBadge}>
+          <Text style={styles.trustBadgeText}>✓ {listing.trustScore}</Text>
+        </View>
       </View>
 
       <View style={styles.body}>
-        <View style={styles.titleRow}>
-          <View style={styles.titleBlock}>
-            <Text numberOfLines={2} style={styles.title}>
-              {listing.title}
-            </Text>
-            <Text style={styles.location}>
-              {location || "Localização aproximada"}
-            </Text>
-          </View>
-          <Text style={styles.trust}>Confiança {listing.trustScore}</Text>
-        </View>
+        <Text numberOfLines={2} style={styles.title}>
+          {listing.title}
+        </Text>
 
         <View style={styles.priceRow}>
           <Text style={styles.price}>
             {formatPrice(listing.pricing.monthlyPriceCents)}
           </Text>
           {listing.pricing.monthlyPriceCents !== null ? (
-            <Text style={styles.perMonth}>/ mês</Text>
+            <Text style={styles.perMonth}>/mês</Text>
           ) : null}
         </View>
 
-        {configuration ? (
-          <Text style={styles.detail}>{configuration}</Text>
-        ) : null}
-        {availableFrom ? (
-          <Text style={styles.detail}>
-            Disponível a partir de {availableFrom}
+        <Text numberOfLines={1} style={styles.location}>
+          ⌖ {location || "Localização aproximada"}
+        </Text>
+
+        {configuration || availableFrom ? (
+          <Text numberOfLines={1} style={styles.detail}>
+            {[configuration, availableFrom ? `Disponível ${availableFrom}` : null]
+              .filter(Boolean)
+              .join(" · ")}
           </Text>
         ) : null}
 
@@ -141,100 +140,116 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radius.xl,
+    borderRadius: radius.lg,
     backgroundColor: colors.surface,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.07,
+    shadowRadius: 10,
+    elevation: 2,
   },
   pressed: {
-    opacity: 0.88,
+    opacity: 0.9,
+    transform: [{ scale: 0.995 }],
   },
   imageWrap: {
     position: "relative",
   },
   image: {
     width: "100%",
-    aspectRatio: 1.45,
+    aspectRatio: 1.7,
     backgroundColor: colors.surfaceMuted,
   },
   imagePlaceholder: {
     alignItems: "center",
     justifyContent: "center",
+    gap: spacing.xs,
+  },
+  placeholderIcon: {
+    color: colors.primary,
+    fontSize: 28,
   },
   placeholderText: {
     color: colors.textMuted,
-    fontWeight: "600",
+    fontFamily: fontFamily.semibold,
   },
   photoBadge: {
     position: "absolute",
     left: spacing.sm,
     bottom: spacing.sm,
     borderRadius: radius.pill,
-    backgroundColor: colors.surface,
+    backgroundColor: "rgba(255,255,255,0.94)",
     paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
+    paddingVertical: 5,
   },
   photoBadgeText: {
     color: colors.text,
-    fontSize: 12,
-    fontWeight: "800",
+    fontFamily: fontFamily.bold,
+    fontSize: 11,
+  },
+  trustBadge: {
+    position: "absolute",
+    right: spacing.sm,
+    top: spacing.sm,
+    borderRadius: radius.pill,
+    backgroundColor: colors.successSoft,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 5,
+  },
+  trustBadgeText: {
+    color: colors.primary,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 11,
   },
   body: {
-    gap: spacing.sm,
+    gap: 6,
     padding: spacing.md,
-  },
-  titleRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: spacing.sm,
-  },
-  titleBlock: {
-    flex: 1,
-    gap: 2,
   },
   title: {
     color: colors.text,
-    fontSize: 18,
-    fontWeight: "800",
-  },
-  location: {
-    color: colors.textMuted,
-    fontSize: 14,
-  },
-  trust: {
-    color: colors.primary,
-    fontSize: 11,
-    fontWeight: "800",
+    fontFamily: fontFamily.bold,
+    fontSize: 17,
+    lineHeight: 22,
   },
   priceRow: {
     flexDirection: "row",
     alignItems: "baseline",
+    gap: 2,
   },
   price: {
     color: colors.text,
-    fontSize: 20,
-    fontWeight: "900",
+    fontFamily: fontFamily.extraBold,
+    fontSize: 19,
   },
   perMonth: {
     color: colors.textMuted,
+    fontFamily: fontFamily.semibold,
+    fontSize: 12,
+  },
+  location: {
+    color: colors.primary,
+    fontFamily: fontFamily.semibold,
     fontSize: 13,
-    fontWeight: "600",
   },
   detail: {
     color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 18,
+    fontFamily: fontFamily.regular,
+    fontSize: 12,
+    lineHeight: 17,
   },
   metaRow: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing.xs,
+    marginTop: 2,
   },
   badge: {
     borderRadius: radius.pill,
-    backgroundColor: colors.primarySoft,
-    color: colors.primary,
+    backgroundColor: colors.surfaceMuted,
+    color: colors.textMuted,
     paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    fontSize: 12,
-    fontWeight: "700",
+    paddingVertical: 5,
+    fontFamily: fontFamily.semibold,
+    fontSize: 11,
   },
 });
