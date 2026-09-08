@@ -10,9 +10,10 @@ import {
   View,
 } from "react-native";
 
+import { BrandHeader } from "@/components/BrandHeader";
 import { AppButton } from "@/components/ui/AppButton";
 import { useSession } from "@/session/SessionContext";
-import { colors, radius, spacing } from "@/theme/tokens";
+import { colors, fontFamily, radius, spacing } from "@/theme/tokens";
 
 export default function SignupScreen() {
   const { registering, signUp } = useSession();
@@ -60,57 +61,95 @@ export default function SignupScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       style={styles.container}
     >
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.card}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.topBar}>
+          <BrandHeader compact />
+          <Text
+            onPress={() => router.replace("/login")}
+            style={styles.topAction}
+          >
+            Entrar
+          </Text>
+        </View>
+
+        <View style={styles.heading}>
           <Text accessibilityRole="header" style={styles.title}>
-            Criar conta
+            Crie sua conta
           </Text>
           <Text style={styles.subtitle}>
-            Comece com seus dados básicos. A confirmação de elegibilidade 18+ e
-            os dados privados do perfil podem ser concluídos depois, na sua
-            conta.
+            Junte-se a brasileiros na Irlanda e encontre um novo lugar para
+            chamar de casa.
           </Text>
+        </View>
 
-          <TextInput
-            accessibilityLabel="Nome exibido"
-            autoCapitalize="words"
-            onChangeText={setDisplayName}
-            placeholder="Como quer ser chamado"
-            placeholderTextColor={colors.textMuted}
-            style={styles.input}
-            value={displayName}
-          />
-          <TextInput
-            accessibilityLabel="E-mail"
-            autoCapitalize="none"
-            autoComplete="email"
-            keyboardType="email-address"
-            onChangeText={setEmail}
-            placeholder="seu@email.com"
-            placeholderTextColor={colors.textMuted}
-            style={styles.input}
-            value={email}
-          />
-          <TextInput
-            accessibilityLabel="Telefone opcional"
-            autoCapitalize="none"
-            keyboardType="phone-pad"
-            onChangeText={setPhone}
-            placeholder="Telefone (opcional)"
-            placeholderTextColor={colors.textMuted}
-            style={styles.input}
-            value={phone}
-          />
-          <TextInput
-            accessibilityLabel="Senha"
-            autoCapitalize="none"
-            onChangeText={setPassword}
-            placeholder="Senha (mínimo 8 caracteres)"
-            placeholderTextColor={colors.textMuted}
-            secureTextEntry
-            style={styles.input}
-            value={password}
-          />
+        <View style={styles.form}>
+          <View style={styles.fieldGroup}>
+            <Text style={styles.fieldLabel}>Nome completo</Text>
+            <TextInput
+              accessibilityLabel="Nome exibido"
+              autoCapitalize="words"
+              onChangeText={setDisplayName}
+              placeholder="Ex.: Rafael Silva"
+              placeholderTextColor={colors.textSubtle}
+              style={styles.input}
+              value={displayName}
+            />
+          </View>
+
+          <View style={styles.fieldGroup}>
+            <Text style={styles.fieldLabel}>E-mail</Text>
+            <TextInput
+              accessibilityLabel="E-mail"
+              autoCapitalize="none"
+              autoComplete="email"
+              keyboardType="email-address"
+              onChangeText={setEmail}
+              placeholder="seu@email.com"
+              placeholderTextColor={colors.textSubtle}
+              style={styles.input}
+              value={email}
+            />
+          </View>
+
+          <View style={styles.fieldGroup}>
+            <Text style={styles.fieldLabel}>Telefone</Text>
+            <TextInput
+              accessibilityLabel="Telefone opcional"
+              autoCapitalize="none"
+              keyboardType="phone-pad"
+              onChangeText={setPhone}
+              placeholder="+353 87 123 4567"
+              placeholderTextColor={colors.textSubtle}
+              style={styles.input}
+              value={phone}
+            />
+            <Text style={styles.fieldHint}>Opcional. Você pode completar depois.</Text>
+          </View>
+
+          <View style={styles.fieldGroup}>
+            <Text style={styles.fieldLabel}>Senha</Text>
+            <TextInput
+              accessibilityLabel="Senha"
+              autoCapitalize="none"
+              onChangeText={setPassword}
+              placeholder="Mínimo de 8 caracteres"
+              placeholderTextColor={colors.textSubtle}
+              secureTextEntry
+              style={styles.input}
+              value={password}
+            />
+          </View>
+
+          <View style={styles.trustNote}>
+            <Text style={styles.trustIcon}>✓</Text>
+            <Text style={styles.trustText}>
+              Seus dados privados ficam protegidos. Verificações de identidade e
+              autorização podem ser concluídas na sua conta.
+            </Text>
+          </View>
 
           {error ? (
             <Text accessibilityLiveRegion="polite" style={styles.error}>
@@ -123,11 +162,11 @@ export default function SignupScreen() {
             label={registering ? "Criando conta..." : "Criar conta"}
             onPress={() => void submit()}
           />
-          <AppButton
-            label="Já tenho uma conta"
-            onPress={() => router.replace("/login")}
-            variant="secondary"
-          />
+
+          <Text style={styles.legalCopy}>
+            Ao criar sua conta, você confirma que leu os termos e informações de
+            privacidade disponibilizados pelo Morada.
+          </Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -141,39 +180,94 @@ const styles = StyleSheet.create({
   },
   content: {
     flexGrow: 1,
-    justifyContent: "center",
-    padding: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.xxl,
+    gap: spacing.lg,
   },
-  card: {
-    gap: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.xl,
-    backgroundColor: colors.surface,
-    padding: spacing.lg,
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  topAction: {
+    color: colors.primary,
+    fontFamily: fontFamily.bold,
+    fontSize: 14,
+    padding: spacing.sm,
+  },
+  heading: {
+    gap: spacing.xs,
   },
   title: {
     color: colors.text,
-    fontSize: 26,
-    fontWeight: "900",
-    lineHeight: 32,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 30,
+    lineHeight: 36,
+    letterSpacing: -0.7,
   },
   subtitle: {
     color: colors.textMuted,
-    lineHeight: 21,
+    fontFamily: fontFamily.regular,
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  form: {
+    gap: spacing.md,
+  },
+  fieldGroup: {
+    gap: spacing.xs,
+  },
+  fieldLabel: {
+    color: colors.text,
+    fontFamily: fontFamily.bold,
+    fontSize: 13,
+  },
+  fieldHint: {
+    color: colors.textSubtle,
+    fontFamily: fontFamily.regular,
+    fontSize: 12,
   },
   input: {
-    minHeight: 50,
+    minHeight: 54,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.md,
-    backgroundColor: colors.background,
+    backgroundColor: colors.surface,
     color: colors.text,
     paddingHorizontal: spacing.md,
+    fontFamily: fontFamily.medium,
     fontSize: 16,
   },
+  trustNote: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    borderRadius: radius.md,
+    backgroundColor: colors.successSoft,
+    padding: spacing.md,
+  },
+  trustIcon: {
+    color: colors.primary,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 18,
+  },
+  trustText: {
+    flex: 1,
+    color: colors.primaryPressed,
+    fontFamily: fontFamily.medium,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  legalCopy: {
+    color: colors.textSubtle,
+    fontFamily: fontFamily.regular,
+    fontSize: 11,
+    lineHeight: 17,
+    textAlign: "center",
+  },
   error: {
-    color: colors.danger ?? "#B42318",
+    color: colors.danger,
+    fontFamily: fontFamily.medium,
     lineHeight: 20,
   },
 });
