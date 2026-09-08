@@ -10,35 +10,49 @@ import {
   type ListingAuthorizationStatus,
   type LocalEvidenceFile,
 } from "@/api/owner-listings";
+import { BrandHeader } from "@/components/BrandHeader";
 import { AppBadge } from "@/components/ui/AppBadge";
 import { AppButton } from "@/components/ui/AppButton";
-import { AppCard } from "@/components/ui/AppCard";
 import { ProductState } from "@/components/ui/ProductState";
 import { useSession } from "@/session/SessionContext";
-import { colors, spacing } from "@/theme/tokens";
+import { colors, fontFamily, radius, spacing } from "@/theme/tokens";
 
 type EvidenceSelection = {
   field: ListingAuthorizationEvidenceField;
   label: string;
+  symbol: string;
   file: LocalEvidenceFile | null;
 };
 
 const initialEvidence: EvidenceSelection[] = [
-  { field: "tenancyAgreement", label: "Contrato de aluguel", file: null },
+  {
+    field: "tenancyAgreement",
+    label: "Contrato de arrendamento",
+    symbol: "▤",
+    file: null,
+  },
   {
     field: "landlordAuthorization",
-    label: "Autorização do landlord",
+    label: "Autorização do proprietário",
+    symbol: "⌂",
     file: null,
   },
   {
     field: "proofOfOwnership",
     label: "Comprovante de propriedade",
+    symbol: "✓",
     file: null,
   },
-  { field: "agencyMandate", label: "Mandato da agência", file: null },
+  {
+    field: "agencyMandate",
+    label: "Autorização da agência ou gestora",
+    symbol: "▣",
+    file: null,
+  },
   {
     field: "otherSupportingDocument",
     label: "Outro documento de apoio",
+    symbol: "+",
     file: null,
   },
 ];
@@ -250,50 +264,62 @@ export default function ListingAuthorizationScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.content}>
-      <AppCard tone="muted">
-        <Text style={styles.eyebrow}>
-          CONFIANÇA PARA QUEM ANUNCIA E PARA QUEM BUSCA
+      <View style={styles.topBar}>
+        <BrandHeader compact />
+        <AppBadge label={statusLabel(status)} tone={statusTone(status)} />
+      </View>
+
+      <View style={styles.heroIcon}>
+        <Text style={styles.heroIconText}>▤</Text>
+      </View>
+      <View style={styles.heading}>
+        <Text accessibilityRole="header" style={styles.title}>
+          Autorização do anúncio
         </Text>
-        <View style={styles.titleRow}>
-          <Text accessibilityRole="header" style={styles.title}>
-            Direito de anunciar
-          </Text>
-          <AppBadge label={statusLabel(status)} tone={statusTone(status)} />
-        </View>
         <Text style={styles.muted}>{statusCopy(status)}</Text>
-        {reviewReason ? (
-          <Text style={styles.warning}>Revisão: {reviewReason}</Text>
-        ) : null}
-        <Text style={styles.helper}>
-          Esses arquivos são evidências privadas usadas para confirmar que o
-          anunciante tem autorização para oferecer a moradia. O app mostra
-          apenas nome, tipo e estado da análise — nunca object keys, hashes ou
-          URLs privadas de armazenamento.
+      </View>
+
+      <View style={styles.trustNote}>
+        <Text style={styles.trustShield}>✓</Text>
+        <Text style={styles.trustText}>
+          Envie um comprovativo para confirmar que você tem autorização para
+          anunciar esta moradia. Os documentos permanecem privados.
         </Text>
-      </AppCard>
+      </View>
+
+      {reviewReason ? (
+        <View style={styles.reviewBox}>
+          <Text style={styles.reviewTitle}>Ajuste solicitado</Text>
+          <Text style={styles.reviewText}>{reviewReason}</Text>
+        </View>
+      ) : null}
 
       {submittedFiles.length > 0 ? (
-        <AppCard>
-          <Text style={styles.sectionTitle}>Arquivos da última tentativa</Text>
+        <View style={styles.submittedCard}>
+          <Text style={styles.sectionTitle}>Último envio</Text>
           {submittedFiles.map((name, index) => (
-            <Text key={`${name}-${index}`} style={styles.muted}>
-              • {name}
+            <Text key={`${name}-${index}`} style={styles.submittedFile}>
+              ✓ {name}
             </Text>
           ))}
-        </AppCard>
+        </View>
       ) : null}
 
       {submissionAllowed ? (
-        <AppCard>
-          <Text style={styles.sectionTitle}>Selecione os comprovantes</Text>
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Escolha o comprovativo</Text>
           <Text style={styles.helper}>
-            PDF, JPEG, PNG ou WebP. Até 5 arquivos no total e 10 MB por arquivo.
+            PDF, JPEG, PNG ou WebP. Até 5 arquivos e 10 MB por arquivo.
           </Text>
+
           {evidence.map((item) => (
             <View key={item.field} style={styles.evidenceRow}>
+              <View style={styles.evidenceSymbol}>
+                <Text style={styles.evidenceSymbolText}>{item.symbol}</Text>
+              </View>
               <View style={styles.evidenceCopy}>
                 <Text style={styles.evidenceLabel}>{item.label}</Text>
-                <Text style={styles.muted}>
+                <Text numberOfLines={1} style={styles.evidenceFile}>
                   {item.file?.name ?? "Nenhum arquivo selecionado"}
                 </Text>
               </View>
@@ -304,6 +330,7 @@ export default function ListingAuthorizationScreen() {
               />
             </View>
           ))}
+
           {error ? (
             <Text accessibilityLiveRegion="polite" style={styles.error}>
               {error}
@@ -316,20 +343,20 @@ export default function ListingAuthorizationScreen() {
           ) : null}
           <AppButton
             disabled={submitting}
-            label={submitting ? "Enviando..." : "Enviar comprovação"}
+            label={submitting ? "Enviando..." : "Enviar documento"}
             onPress={() => void submit()}
           />
-        </AppCard>
+        </View>
       ) : (
-        <AppCard>
-          <Text style={styles.sectionTitle}>Nenhum envio necessário agora</Text>
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Nenhuma ação necessária agora</Text>
           <Text style={styles.muted}>{statusCopy(status)}</Text>
           <AppButton
             label="Atualizar estado"
             onPress={() => void load()}
             variant="secondary"
           />
-        </AppCard>
+        </View>
       )}
     </ScrollView>
   );
@@ -347,51 +374,131 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: colors.background,
   },
-  eyebrow: {
-    color: colors.primary,
-    fontSize: 11,
-    fontWeight: "900",
-    letterSpacing: 1.1,
-  },
-  titleRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: spacing.sm,
-  },
-  title: {
-    flex: 1,
-    color: colors.text,
-    fontSize: 25,
-    fontWeight: "900",
-    letterSpacing: -0.5,
-  },
-  sectionTitle: {
-    color: colors.text,
-    fontSize: 18,
-    fontWeight: "800",
-  },
-  muted: {
-    color: colors.textMuted,
-    lineHeight: 21,
-  },
-  helper: {
-    color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 19,
-  },
-  warning: {
-    color: colors.warning,
-    lineHeight: 20,
-  },
-  evidenceRow: {
+  topBar: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: spacing.md,
+  },
+  heroIcon: {
+    width: 70,
+    height: 70,
+    alignSelf: "center",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 35,
+    backgroundColor: colors.successSoft,
+    marginTop: spacing.sm,
+  },
+  heroIconText: {
+    color: colors.primary,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 30,
+  },
+  heading: {
+    alignItems: "center",
+    gap: spacing.xs,
+  },
+  title: {
+    color: colors.text,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 26,
+    letterSpacing: -0.5,
+    textAlign: "center",
+  },
+  muted: {
+    color: colors.textMuted,
+    fontFamily: fontFamily.regular,
+    lineHeight: 21,
+    textAlign: "center",
+  },
+  trustNote: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    borderRadius: radius.lg,
+    backgroundColor: colors.successSoft,
+    padding: spacing.md,
+  },
+  trustShield: {
+    color: colors.primary,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 18,
+  },
+  trustText: {
+    flex: 1,
+    color: colors.primaryPressed,
+    fontFamily: fontFamily.medium,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  reviewBox: {
+    gap: spacing.xs,
+    borderRadius: radius.md,
+    backgroundColor: colors.surfaceWarm,
+    padding: spacing.md,
+  },
+  reviewTitle: {
+    color: colors.warning,
+    fontFamily: fontFamily.bold,
+  },
+  reviewText: {
+    color: colors.text,
+    fontFamily: fontFamily.regular,
+    lineHeight: 20,
+  },
+  submittedCard: {
+    gap: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
+    padding: spacing.md,
+  },
+  submittedFile: {
+    color: colors.primary,
+    fontFamily: fontFamily.semibold,
+    fontSize: 12,
+  },
+  card: {
+    gap: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.xl,
+    backgroundColor: colors.surface,
+    padding: spacing.lg,
+  },
+  sectionTitle: {
+    color: colors.text,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 18,
+  },
+  helper: {
+    color: colors.textMuted,
+    fontFamily: fontFamily.regular,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  evidenceRow: {
+    minHeight: 68,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.border,
     paddingTop: spacing.md,
+  },
+  evidenceSymbol: {
+    width: 38,
+    height: 38,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 19,
+    backgroundColor: colors.primarySoft,
+  },
+  evidenceSymbolText: {
+    color: colors.primary,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 16,
   },
   evidenceCopy: {
     flex: 1,
@@ -399,14 +506,21 @@ const styles = StyleSheet.create({
   },
   evidenceLabel: {
     color: colors.text,
-    fontWeight: "700",
+    fontFamily: fontFamily.bold,
+    fontSize: 13,
+  },
+  evidenceFile: {
+    color: colors.textMuted,
+    fontFamily: fontFamily.regular,
+    fontSize: 11,
   },
   error: {
     color: colors.danger,
+    fontFamily: fontFamily.medium,
     lineHeight: 20,
   },
   success: {
     color: colors.success,
-    fontWeight: "700",
+    fontFamily: fontFamily.bold,
   },
 });
