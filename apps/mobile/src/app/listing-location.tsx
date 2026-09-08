@@ -1,7 +1,14 @@
-import { useCallback, useEffect, useState, type ComponentProps } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ComponentProps,
+} from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import {
   ActivityIndicator,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,9 +20,14 @@ import {
   getListingOwnerLocation,
   setListingPrivateLocation,
 } from "@/api/owner-listings";
+import { BrandHeader } from "@/components/BrandHeader";
 import { AppButton } from "@/components/ui/AppButton";
+import {
+  irelandCitySuggestions,
+  matchingSuggestions,
+} from "@/features/listings/location-suggestions";
 import { useSession } from "@/session/SessionContext";
-import { colors, radius, spacing } from "@/theme/tokens";
+import { colors, fontFamily, radius, spacing } from "@/theme/tokens";
 
 export default function ListingLocationScreen() {
   const params = useLocalSearchParams<{ id?: string }>();
@@ -26,6 +38,7 @@ export default function ListingLocationScreen() {
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [city, setCity] = useState("");
+  const [cityFocused, setCityFocused] = useState(false);
   const [area, setArea] = useState("");
   const [county, setCounty] = useState("");
   const [postalDistrict, setPostalDistrict] = useState("");
@@ -35,6 +48,11 @@ export default function ListingLocationScreen() {
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
   const [approximateText, setApproximateText] = useState<string | null>(null);
+
+  const citySuggestions = useMemo(
+    () => matchingSuggestions(city, irelandCitySuggestions),
+    [city],
+  );
 
   const load = useCallback(async () => {
     if (!session || !id) {
@@ -151,22 +169,69 @@ export default function ListingLocationScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.content}>
-      <View style={styles.card}>
+      <View style={styles.topBar}>
+        <BrandHeader compact />
+        <Text style={styles.stepLabel}>2 de 2</Text>
+      </View>
+      <View style={styles.progressTrack}>
+        <View style={styles.progressFill} />
+      </View>
+
+      <View style={styles.heading}>
         <Text accessibilityRole="header" style={styles.title}>
-          Localização privada
+          Localização aproximada
         </Text>
         <Text style={styles.muted}>
-          O endereço e as coordenadas exatas ficam restritos. O backend deriva
-          uma localização pública aproximada separada.
-        </Text>
-        <Text style={styles.warning}>
-          Alterar a localização de um anúncio já aprovado é uma mudança crítica
-          e pode enviá-lo novamente para análise.
+          Mantemos o endereço exato em sigilo. Para quem explora o Morada,
+          mostramos apenas uma área aproximada.
         </Text>
       </View>
 
+      <View style={styles.privacyCard}>
+        <View style={styles.privacyIcon}>
+          <Text style={styles.privacyIconText}>⌂</Text>
+        </View>
+        <View style={styles.privacyCopy}>
+          <Text style={styles.privacyTitle}>Sua privacidade importa</Text>
+          <Text style={styles.privacyText}>
+            O endereço completo só pode ser usado nos fluxos privados previstos
+            pelo produto. A busca pública continua aproximada.
+          </Text>
+        </View>
+      </View>
+
       <View style={styles.card}>
-        <Field label="Cidade" value={city} onChangeText={setCity} />
+        <View style={styles.field}>
+          <Text style={styles.label}>Cidade</Text>
+          <TextInput
+            accessibilityLabel="Cidade"
+            autoCapitalize="words"
+            onBlur={() => setCityFocused(false)}
+            onChangeText={setCity}
+            onFocus={() => setCityFocused(true)}
+            placeholder="Ex.: Dublin"
+            placeholderTextColor={colors.textSubtle}
+            style={styles.input}
+            value={city}
+          />
+          {cityFocused && citySuggestions.length > 0 ? (
+            <View style={styles.suggestionList}>
+              {citySuggestions.map((suggestion) => (
+                <Pressable
+                  accessibilityRole="button"
+                  key={suggestion}
+                  onPress={() => {
+                    setCity(suggestion);
+                    setCityFocused(false);
+                  }}
+                  style={styles.suggestionItem}
+                >
+                  <Text style={styles.suggestionText}>{suggestion}</Text>
+                </Pressable>
+              ))}
+            </View>
+          ) : null}
+        </View>
         <Field label="Área / bairro" value={area} onChangeText={setArea} />
         <Field label="County" value={county} onChangeText={setCounty} />
         <Field
@@ -175,7 +240,7 @@ export default function ListingLocationScreen() {
           onChangeText={setPostalDistrict}
         />
         <Field
-          label="Endereço"
+          label="Endereço exato"
           value={addressLine1}
           onChangeText={setAddressLine1}
         />
@@ -190,20 +255,27 @@ export default function ListingLocationScreen() {
           value={eircode}
           onChangeText={setEircode}
         />
-        <Field
-          label="Latitude exata"
-          keyboardType="numbers-and-punctuation"
-          value={latitude}
-          onChangeText={setLatitude}
-        />
-        <Field
-          label="Longitude exata"
-          keyboardType="numbers-and-punctuation"
-          value={longitude}
-          onChangeText={setLongitude}
-        />
+
+        <Text style={styles.coordinatesTitle}>Coordenadas privadas</Text>
+        <View style={styles.coordinateRow}>
+          <Field
+            label="Latitude"
+            keyboardType="numbers-and-punctuation"
+            value={latitude}
+            onChangeText={setLatitude}
+          />
+          <Field
+            label="Longitude"
+            keyboardType="numbers-and-punctuation"
+            value={longitude}
+            onChangeText={setLongitude}
+          />
+        </View>
+
         {approximateText ? (
-          <Text style={styles.helper}>{approximateText}</Text>
+          <View style={styles.approximateBox}>
+            <Text style={styles.approximateText}>✓ {approximateText}</Text>
+          </View>
         ) : null}
         {error ? (
           <Text accessibilityLiveRegion="polite" style={styles.error}>
@@ -217,7 +289,7 @@ export default function ListingLocationScreen() {
         ) : null}
         <AppButton
           disabled={saving}
-          label={saving ? "Salvando..." : "Salvar localização"}
+          label={saving ? "Salvando..." : "Concluir localização"}
           onPress={() => void save()}
         />
       </View>
@@ -234,7 +306,7 @@ function Field({
       <Text style={styles.label}>{label}</Text>
       <TextInput
         accessibilityLabel={label}
-        placeholderTextColor={colors.textMuted}
+        placeholderTextColor={colors.textSubtle}
         style={styles.input}
         {...props}
       />
@@ -243,38 +315,165 @@ function Field({
 }
 
 const styles = StyleSheet.create({
-  content: { gap: spacing.md, padding: spacing.lg, paddingBottom: spacing.xxl },
+  content: {
+    gap: spacing.md,
+    padding: spacing.lg,
+    paddingBottom: spacing.xxl,
+    backgroundColor: colors.background,
+  },
   center: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     gap: spacing.md,
     padding: spacing.xl,
+    backgroundColor: colors.background,
+  },
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  stepLabel: {
+    color: colors.textMuted,
+    fontFamily: fontFamily.bold,
+    fontSize: 12,
+  },
+  progressTrack: {
+    height: 5,
+    overflow: "hidden",
+    borderRadius: radius.pill,
+    backgroundColor: colors.primarySoft,
+  },
+  progressFill: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: colors.primary,
+  },
+  heading: {
+    gap: spacing.xs,
+  },
+  title: {
+    color: colors.text,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 26,
+    letterSpacing: -0.5,
+  },
+  muted: {
+    color: colors.textMuted,
+    fontFamily: fontFamily.regular,
+    lineHeight: 21,
+  },
+  privacyCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    borderRadius: radius.lg,
+    backgroundColor: colors.successSoft,
+    padding: spacing.md,
+  },
+  privacyIcon: {
+    width: 46,
+    height: 46,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 23,
+    backgroundColor: colors.surface,
+  },
+  privacyIconText: {
+    color: colors.primary,
+    fontSize: 25,
+    fontWeight: "900",
+  },
+  privacyCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  privacyTitle: {
+    color: colors.primaryPressed,
+    fontFamily: fontFamily.bold,
+    fontSize: 14,
+  },
+  privacyText: {
+    color: colors.primaryPressed,
+    fontFamily: fontFamily.regular,
+    fontSize: 12,
+    lineHeight: 18,
   },
   card: {
-    backgroundColor: colors.surface,
+    gap: spacing.md,
+    borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.xl,
-    borderWidth: 1,
-    gap: spacing.md,
+    backgroundColor: colors.surface,
     padding: spacing.lg,
   },
-  title: { color: colors.text, fontSize: 25, fontWeight: "900" },
-  muted: { color: colors.textMuted, lineHeight: 21 },
-  helper: { color: colors.textMuted, fontSize: 13, lineHeight: 19 },
-  warning: { color: colors.warning, lineHeight: 20 },
-  field: { gap: spacing.xs },
-  label: { color: colors.text, fontWeight: "700" },
+  field: {
+    flex: 1,
+    gap: spacing.xs,
+  },
+  label: {
+    color: colors.text,
+    fontFamily: fontFamily.bold,
+    fontSize: 13,
+  },
   input: {
-    backgroundColor: colors.background,
+    minHeight: 50,
+    borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.md,
-    borderWidth: 1,
+    backgroundColor: colors.background,
     color: colors.text,
-    fontSize: 16,
-    minHeight: 48,
     paddingHorizontal: spacing.md,
+    fontFamily: fontFamily.medium,
+    fontSize: 15,
   },
-  error: { color: colors.danger, lineHeight: 20 },
-  success: { color: colors.success, fontWeight: "700" },
+  suggestionList: {
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
+  },
+  suggestionItem: {
+    minHeight: 44,
+    justifyContent: "center",
+    paddingHorizontal: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  suggestionText: {
+    color: colors.text,
+    fontFamily: fontFamily.semibold,
+  },
+  coordinatesTitle: {
+    color: colors.text,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 15,
+    marginTop: spacing.xs,
+  },
+  coordinateRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  approximateBox: {
+    borderRadius: radius.md,
+    backgroundColor: colors.successSoft,
+    padding: spacing.md,
+  },
+  approximateText: {
+    color: colors.primary,
+    fontFamily: fontFamily.semibold,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  error: {
+    color: colors.danger,
+    fontFamily: fontFamily.medium,
+    lineHeight: 20,
+  },
+  success: {
+    color: colors.success,
+    fontFamily: fontFamily.bold,
+  },
 });

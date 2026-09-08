@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { router } from "expo-router";
 import {
-  ActivityIndicator,
   FlatList,
   Pressable,
   RefreshControl,
@@ -19,6 +18,7 @@ import {
 } from "@/api/client";
 import type { InAppNotification } from "@/api/types";
 import { AppButton } from "@/components/ui/AppButton";
+import { ProductState } from "@/components/ui/ProductState";
 import { useSession } from "@/session/SessionContext";
 import { colors, radius, spacing } from "@/theme/tokens";
 
@@ -121,10 +121,11 @@ export default function NotificationsScreen() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator color={colors.primary} size="large" />
-        <Text style={styles.muted}>Carregando notificações...</Text>
-      </View>
+      <ProductState
+        description="Estamos buscando mensagens, visitas e atualizações relevantes."
+        kind="loading"
+        title="Carregando notificações"
+      />
     );
   }
 
@@ -147,20 +148,22 @@ export default function NotificationsScreen() {
         />
       </View>
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? (
+        <Text accessibilityLiveRegion="polite" style={styles.error}>
+          {error}
+        </Text>
+      ) : null}
 
       <FlatList
         contentContainerStyle={styles.list}
         data={items}
         keyExtractor={(item) => item.id}
         ListEmptyComponent={
-          <View style={styles.center}>
-            <Text style={styles.emptyTitle}>Tudo tranquilo por aqui</Text>
-            <Text style={styles.muted}>
-              Novas mensagens, visitas e atualizações relevantes aparecerão
-              nesta área.
-            </Text>
-          </View>
+          <ProductState
+            description="Novas mensagens, visitas e atualizações relevantes aparecerão nesta área."
+            kind="empty"
+            title="Tudo tranquilo por aqui"
+          />
         }
         refreshControl={
           <RefreshControl
@@ -226,6 +229,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   list: {
+    flexGrow: 1,
     gap: spacing.md,
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xxl,
@@ -271,24 +275,6 @@ const styles = StyleSheet.create({
     color: colors.warning,
     fontSize: 12,
     fontWeight: "700",
-  },
-  center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.md,
-    padding: spacing.xl,
-  },
-  emptyTitle: {
-    color: colors.text,
-    fontSize: 21,
-    fontWeight: "800",
-  },
-  muted: {
-    maxWidth: 320,
-    color: colors.textMuted,
-    textAlign: "center",
-    lineHeight: 21,
   },
   mutedLeft: {
     color: colors.textMuted,

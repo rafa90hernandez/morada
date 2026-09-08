@@ -7,7 +7,13 @@
     "userInterfaceStyle": "automatic",
     "scheme": "morada",
     "newArchEnabled": true,
+    "icon": "./assets/icon.png",
     "plugins": ["expo-router"],
+    "splash": {
+      "image": "./assets/adaptive-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F8F7EF"
+    },
     "experiments": {
       "typedRoutes": true
     },
@@ -18,11 +24,13 @@
     "android": {
       "package": "ie.morada.mobile",
       "adaptiveIcon": {
-        "backgroundColor": "#F7F8F5"
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#004D3F"
       }
     },
     "web": {
-      "bundler": "metro"
+      "bundler": "metro",
+      "backgroundColor": "#F8F7EF"
     }
   }
 }

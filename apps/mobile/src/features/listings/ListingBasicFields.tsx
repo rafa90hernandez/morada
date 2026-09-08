@@ -34,109 +34,132 @@ const bathrooms = [
   { value: "SHARED", label: "Banheiro compartilhado" },
 ] as const;
 
+type BasicSection = "intro" | "location" | "space" | "all";
+
 type Props = {
   draft: ListingDraft;
+  section?: BasicSection;
   set: <K extends keyof ListingDraft>(key: K, value: ListingDraft[K]) => void;
 };
 
-export function ListingBasicFields({ draft, set }: Props) {
+export function ListingBasicFields({ draft, section = "all", set }: Props) {
+  const showIntro = section === "all" || section === "intro";
+  const showLocation = section === "all" || section === "location";
+  const showSpace = section === "all" || section === "space";
+
   return (
     <>
-      <SectionTitle>Informações principais</SectionTitle>
-      <Field
-        label="Título"
-        value={draft.title}
-        onChangeText={(value) => set("title", value)}
-      />
-      <Field
-        label="Descrição"
-        multiline
-        value={draft.description}
-        onChangeText={(value) => set("description", value)}
-      />
-      <SuggestionField
-        label="Cidade"
-        value={draft.city}
-        onChangeText={(value) => set("city", value)}
-        suggestions={irelandCitySuggestions}
-      />
-      <Field
-        label="Área / bairro"
-        value={draft.area}
-        onChangeText={(value) => set("area", value)}
-      />
-      <ChoiceGroup
-        clearable={false}
-        label="Tipo de imóvel"
-        onChange={(value) => value && set("propertyType", value)}
-        options={[...propertyTypes]}
-        value={draft.propertyType}
-      />
-      <ChoiceGroup
-        label="O imóvel é"
-        onChange={(value) => set("propertyOccupancyType", value)}
-        options={[...occupancy]}
-        value={draft.propertyOccupancyType}
-      />
-      <ChoiceGroup
-        label="Espaço anunciado"
-        onChange={(value) => set("advertisedSpaceType", value)}
-        options={[...space]}
-        value={draft.advertisedSpaceType}
-      />
-      <NumericStepper
-        label="Número de quartos"
-        min={0}
-        max={50}
-        value={draft.bedroomCount}
-        onChangeText={(value) => set("bedroomCount", value)}
-      />
-      <NumericStepper
-        label="Número de banheiros"
-        min={0}
-        max={50}
-        value={draft.bathroomCount}
-        onChangeText={(value) => set("bathroomCount", value)}
-      />
-      <ChoiceGroup
-        label="Tipo de quarto"
-        onChange={(value) => set("roomType", value)}
-        options={roomTypes}
-        value={draft.roomType}
-      />
-      <ChoiceGroup
-        label="Tipo de cama"
-        onChange={(value) => set("bedType", value)}
-        options={bedTypes}
-        value={draft.bedType}
-      />
-      <NumericStepper
-        label="Capacidade máxima"
-        min={1}
-        max={100}
-        value={draft.maxOccupants}
-        onChangeText={(value) => set("maxOccupants", value)}
-      />
-      <NumericStepper
-        label="Pessoas compartilhando o espaço"
-        min={0}
-        max={100}
-        value={draft.peopleSharingSpace}
-        onChangeText={(value) => set("peopleSharingSpace", value)}
-      />
-      <ChoiceGroup
-        label="Banheiro"
-        onChange={(value) => set("bathroomType", value)}
-        options={[...bathrooms]}
-        value={draft.bathroomType}
-      />
-      <NumericStepper
-        label="Pessoas compartilhando o banheiro"
-        min={0}
-        max={100}
-        value={draft.peopleSharingBathroom}
-        onChangeText={(value) => set("peopleSharingBathroom", value)}
-      />
+      {showIntro ? (
+        <>
+          <SectionTitle>Apresente sua moradia</SectionTitle>
+          <Field
+            label="Título"
+            value={draft.title}
+            onChangeText={(value) => set("title", value)}
+          />
+          <Field
+            label="Descrição"
+            multiline
+            value={draft.description}
+            onChangeText={(value) => set("description", value)}
+          />
+          <ChoiceGroup
+            clearable={false}
+            label="Tipo de imóvel"
+            onChange={(value) => value && set("propertyType", value)}
+            options={[...propertyTypes]}
+            value={draft.propertyType}
+          />
+        </>
+      ) : null}
+
+      {showLocation ? (
+        <>
+          <SectionTitle>Onde fica?</SectionTitle>
+          <SuggestionField
+            label="Cidade"
+            value={draft.city}
+            onChangeText={(value) => set("city", value)}
+            suggestions={irelandCitySuggestions}
+          />
+          <Field
+            label="Área / bairro"
+            value={draft.area}
+            onChangeText={(value) => set("area", value)}
+          />
+        </>
+      ) : null}
+
+      {showSpace ? (
+        <>
+          <SectionTitle>Quarto e espaço</SectionTitle>
+          <ChoiceGroup
+            label="O imóvel é"
+            onChange={(value) => set("propertyOccupancyType", value)}
+            options={[...occupancy]}
+            value={draft.propertyOccupancyType}
+          />
+          <ChoiceGroup
+            label="Espaço anunciado"
+            onChange={(value) => set("advertisedSpaceType", value)}
+            options={[...space]}
+            value={draft.advertisedSpaceType}
+          />
+          <NumericStepper
+            label="Número de quartos"
+            min={0}
+            max={50}
+            value={draft.bedroomCount}
+            onChangeText={(value) => set("bedroomCount", value)}
+          />
+          <NumericStepper
+            label="Número de banheiros"
+            min={0}
+            max={50}
+            value={draft.bathroomCount}
+            onChangeText={(value) => set("bathroomCount", value)}
+          />
+          <ChoiceGroup
+            label="Tipo de quarto"
+            onChange={(value) => set("roomType", value)}
+            options={roomTypes}
+            value={draft.roomType}
+          />
+          <ChoiceGroup
+            label="Tipo de cama"
+            onChange={(value) => set("bedType", value)}
+            options={bedTypes}
+            value={draft.bedType}
+          />
+          <NumericStepper
+            label="Capacidade máxima"
+            min={1}
+            max={100}
+            value={draft.maxOccupants}
+            onChangeText={(value) => set("maxOccupants", value)}
+          />
+          <NumericStepper
+            label="Pessoas compartilhando o espaço"
+            min={0}
+            max={100}
+            value={draft.peopleSharingSpace}
+            onChangeText={(value) => set("peopleSharingSpace", value)}
+          />
+          <ChoiceGroup
+            label="Banheiro"
+            onChange={(value) => set("bathroomType", value)}
+            options={[...bathrooms]}
+            value={draft.bathroomType}
+          />
+          <NumericStepper
+            label="Pessoas compartilhando o banheiro"
+            min={0}
+            max={100}
+            value={draft.peopleSharingBathroom}
+            onChangeText={(value) => set("peopleSharingBathroom", value)}
+          />
+        </>
+      ) : null}
     </>
   );
 }

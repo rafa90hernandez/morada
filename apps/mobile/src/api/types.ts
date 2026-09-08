@@ -66,6 +66,81 @@ export type ListingSearchResponse = {
 
 export type ListingDetail = ListingCard & {
   description: string;
+  space: {
+    roomType: string | null;
+    bedType: string | null;
+    maxOccupants: number | null;
+    peopleSharingSpace: number | null;
+    peopleSharingBathroom: number | null;
+  };
+  household: {
+    currentResidentCount: number | null;
+    genderComposition: string | null;
+    landlordLivesHere: boolean | null;
+    childrenFamiliesAllowed: boolean | null;
+    studentsAllowed: boolean | null;
+  };
+  pricingDetail: {
+    depositAmountCents: number | null;
+    estimatedMonthlyBillsCents: number | null;
+    firstRentAdvanceCents: number | null;
+    extraCostsNote: string | null;
+  };
+  requirements: {
+    formalContract: boolean | null;
+    landlordApprovalRequired: boolean | null;
+    proofOfIncomeRequired: boolean | null;
+    proofOfEmploymentRequired: boolean | null;
+    priorReferenceRequired: boolean | null;
+    otherRequirementsNote: string | null;
+  };
+  availabilityDetail: {
+    availableUntil: string | null;
+  };
+  property: {
+    floorNumber: number | null;
+    isGroundFloor: boolean | null;
+    hasLift: boolean | null;
+    heatingType: string | null;
+  };
+  accessibility: {
+    stepFreeAccess: boolean | null;
+    accessibleEntrance: boolean | null;
+    adaptedBathroom: boolean | null;
+    wheelchairSpace: boolean | null;
+    accessibleParking: boolean | null;
+    otherNote: string | null;
+  };
+  connectivity: {
+    internetAvailable: boolean | null;
+    wifiAvailable: boolean | null;
+    internetIncludedInBills: boolean | null;
+    internetSpeedMbps: number | null;
+    internetProvider: string | null;
+  };
+  laundry: {
+    washingMachine: boolean | null;
+    dryer: boolean | null;
+    sharedBuilding: boolean | null;
+    extraCost: boolean | null;
+  };
+  amenities: {
+    kitchen: string[];
+    outdoor: string[];
+  };
+  parking: {
+    car: boolean | null;
+    motorbike: boolean | null;
+    bicycle: boolean | null;
+    paid: boolean | null;
+    secure: boolean | null;
+  };
+  rules: {
+    partiesAllowed: boolean | null;
+    visitorsAllowed: boolean | null;
+    quietHoursNote: string | null;
+    houseRules: string | null;
+  };
   photos: Array<{ id: string; url: string; position: number }>;
   advertiser: {
     displayName: string;

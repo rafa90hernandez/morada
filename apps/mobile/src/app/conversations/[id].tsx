@@ -30,8 +30,8 @@ import type {
   MessageAttachment,
   Visit,
 } from "@/api/types";
-import { AppButton } from "@/components/ui/AppButton";
 import { blockUser, listOwnBlocks, unblockUser } from "@/api/safety";
+import { AppButton } from "@/components/ui/AppButton";
 import {
   chronologicalMessages,
   otherParticipant,
@@ -40,7 +40,7 @@ import {
 } from "@/features/communication/communication-utils";
 import { MessageAttachmentComposer } from "@/features/communication/MessageAttachmentComposer";
 import { useSession } from "@/session/SessionContext";
-import { colors, radius, spacing } from "@/theme/tokens";
+import { colors, fontFamily, radius, spacing } from "@/theme/tokens";
 
 function statusOf(error: unknown) {
   return typeof error === "object" && error !== null && "status" in error
@@ -115,6 +115,7 @@ export default function ConversationDetailScreen() {
           ? conversationResult.participantB.id
           : conversationResult.participantA.id;
       setOwnBlock(ownBlocks.some((block) => block.blockedId === otherUserId));
+
       const orderedMessages = chronologicalMessages(messageResult.items);
       setMessages(orderedMessages);
       setVisits(
@@ -374,52 +375,77 @@ export default function ConversationDetailScreen() {
     );
   }
 
+  const counterpartName =
+    counterpart?.profile?.displayName || "Usuário do Morada";
+  const counterpartInitial = counterpartName.slice(0, 1).toUpperCase();
+
   return (
-    <ScrollView contentContainerStyle={styles.content}>
-      <View style={styles.headerCard}>
-        <Text accessibilityRole="header" style={styles.title}>
-          {counterpart?.profile?.displayName || "Conversa do Morada"}
-        </Text>
-        <Text style={styles.muted}>{conversation.listing.title}</Text>
-        <Text style={styles.disclaimer}>
-          O Morada não mostra presença online nem confirma entrega/leitura em
-          tempo real.
-        </Text>
+    <ScrollView
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+    >
+      <View style={styles.topBar}>
+        <Pressable
+          accessibilityLabel="Voltar"
+          accessibilityRole="button"
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
+          <Text style={styles.backSymbol}>‹</Text>
+        </Pressable>
+        <View style={styles.headerIdentity}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{counterpartInitial}</Text>
+          </View>
+          <View style={styles.headerCopy}>
+            <Text accessibilityRole="header" style={styles.title}>
+              {counterpartName}
+            </Text>
+            <Text style={styles.headerStatus}>Conversa no Morada</Text>
+          </View>
+        </View>
+        <Pressable
+          accessibilityLabel="Denunciar conversa"
+          accessibilityRole="button"
+          disabled={!counterpart}
+          onPress={reportConversation}
+          style={styles.moreButton}
+        >
+          <Text style={styles.moreSymbol}>•••</Text>
+        </Pressable>
       </View>
 
-      <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Segurança e privacidade</Text>
-        <Text style={styles.mutedLeft}>
-          Denúncias são sinais para análise, não prova automática. Bloqueios
-          impedem novo contato e acesso futuro ao endereço exato de visitas, mas
-          o histórico desta conversa permanece visível.
-        </Text>
-        <AppButton
-          disabled={workingSafety || !counterpart}
-          label={
-            workingSafety
-              ? "Atualizando..."
-              : ownBlock
-                ? "Desbloquear usuário"
-                : "Bloquear usuário"
-          }
-          onPress={() => void toggleBlock()}
-          variant="secondary"
-        />
-        <AppButton
-          disabled={!counterpart}
-          label="Denunciar conversa"
-          onPress={reportConversation}
-          variant="secondary"
-        />
-      </View>
+      <Pressable
+        accessibilityRole="button"
+        onPress={() =>
+          router.push({
+            pathname: "/listing/[id]",
+            params: { id: conversation.listing.id },
+          })
+        }
+        style={({ pressed }) => [
+          styles.listingContext,
+          pressed && styles.pressed,
+        ]}
+      >
+        <View style={styles.listingIcon}>
+          <Text style={styles.listingIconText}>⌂</Text>
+        </View>
+        <View style={styles.listingCopy}>
+          <Text style={styles.listingEyebrow}>ANÚNCIO DA CONVERSA</Text>
+          <Text numberOfLines={2} style={styles.listingTitle}>
+            {conversation.listing.title}
+          </Text>
+        </View>
+        <Text style={styles.chevron}>›</Text>
+      </Pressable>
 
       {contactUnavailable ? (
         <View style={styles.warningCard}>
           <Text style={styles.warningTitle}>Contato indisponível</Text>
           <Text style={styles.mutedLeft}>
             O histórico permanece visível, mas novas mensagens e propostas não
-            devem ser enviadas enquanto o backend negar o contato.
+            podem ser enviadas agora.
           </Text>
         </View>
       ) : null}
@@ -428,10 +454,15 @@ export default function ConversationDetailScreen() {
         <Text style={styles.warningText}>{overlapNotice}</Text>
       ) : null}
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Mensagens</Text>
+      <View style={styles.messagesSection}>
         {messages.length === 0 ? (
-          <Text style={styles.mutedLeft}>Nenhuma mensagem ainda.</Text>
+          <View style={styles.emptyMessages}>
+            <Text style={styles.emptyTitle}>Comece a conversa</Text>
+            <Text style={styles.muted}>
+              Tire dúvidas sobre a moradia e combine os próximos passos com o
+              anunciante.
+            </Text>
+          </View>
         ) : (
           messages.map((message) => {
             const mine = message.senderId === session.user.id;
@@ -451,8 +482,7 @@ export default function ConversationDetailScreen() {
                       messageAttachments.map((attachment) => (
                         <Text key={attachment.id} style={styles.attachmentMeta}>
                           {attachment.type === "PDF" ? "PDF" : "Imagem"} ·{" "}
-                          {Math.max(1, Math.round(attachment.sizeBytes / 1024))}{" "}
-                          KB
+                          {Math.max(1, Math.round(attachment.sizeBytes / 1024))} KB
                         </Text>
                       ))
                     ) : (
@@ -460,12 +490,9 @@ export default function ConversationDetailScreen() {
                         Metadados indisponíveis.
                       </Text>
                     )}
-                    <Text style={styles.attachmentNote}>
-                      Nenhuma URL pública do arquivo é exposta nesta tela.
-                    </Text>
                   </View>
                 ) : null}
-                <Text style={styles.messageTime}>
+                <Text style={[styles.messageTime, mine && styles.mineTime]}>
                   {new Date(message.createdAt).toLocaleString("pt-BR")}
                 </Text>
                 {!mine ? (
@@ -480,22 +507,38 @@ export default function ConversationDetailScreen() {
             );
           })
         )}
+      </View>
 
-        <TextInput
-          accessibilityLabel="Nova mensagem"
-          editable={!contactUnavailable && !sending}
-          multiline
-          onChangeText={setMessageBody}
-          placeholder="Escreva uma mensagem..."
-          placeholderTextColor={colors.textMuted}
-          style={styles.messageInput}
-          value={messageBody}
-        />
-        <AppButton
-          disabled={contactUnavailable || sending}
-          label={sending ? "Enviando..." : "Enviar mensagem"}
-          onPress={() => void send()}
-        />
+      <View style={styles.composerCard}>
+        <View style={styles.composerRow}>
+          <TextInput
+            accessibilityLabel="Nova mensagem"
+            editable={!contactUnavailable && !sending}
+            multiline
+            onChangeText={setMessageBody}
+            placeholder="Digite uma mensagem..."
+            placeholderTextColor={colors.textMuted}
+            style={styles.messageInput}
+            value={messageBody}
+          />
+          <Pressable
+            accessibilityLabel={sending ? "Enviando mensagem" : "Enviar mensagem"}
+            accessibilityRole="button"
+            disabled={contactUnavailable || sending}
+            onPress={() => void send()}
+            style={({ pressed }) => [
+              styles.sendButton,
+              (contactUnavailable || sending) && styles.sendButtonDisabled,
+              pressed && styles.pressed,
+            ]}
+          >
+            {sending ? (
+              <ActivityIndicator color={colors.surface} size="small" />
+            ) : (
+              <Text style={styles.sendSymbol}>➤</Text>
+            )}
+          </Pressable>
+        </View>
         {accessToken && params.id ? (
           <MessageAttachmentComposer
             accessToken={accessToken}
@@ -506,30 +549,39 @@ export default function ConversationDetailScreen() {
         ) : null}
       </View>
 
-      <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Propor uma visita</Text>
-        <Text style={styles.mutedLeft}>
-          Use o formato AAAA-MM-DD HH:mm. O horário será enviado ao backend com
-          o fuso do aparelho.
-        </Text>
-        <TextInput
-          accessibilityLabel="Início da visita"
-          editable={!contactUnavailable}
-          onChangeText={setVisitStart}
-          placeholder="2026-08-15 14:00"
-          placeholderTextColor={colors.textMuted}
-          style={styles.input}
-          value={visitStart}
-        />
-        <TextInput
-          accessibilityLabel="Fim da visita"
-          editable={!contactUnavailable}
-          onChangeText={setVisitEnd}
-          placeholder="2026-08-15 14:30"
-          placeholderTextColor={colors.textMuted}
-          style={styles.input}
-          value={visitEnd}
-        />
+      <View style={styles.visitComposer}>
+        <View style={styles.visitHeading}>
+          <View style={styles.visitIcon}>
+            <Text style={styles.visitIconText}>▦</Text>
+          </View>
+          <View style={styles.visitHeadingCopy}>
+            <Text style={styles.sectionTitle}>Agendar visita</Text>
+            <Text style={styles.mutedLeft}>
+              Combine um horário para conhecer a moradia presencialmente.
+            </Text>
+          </View>
+        </View>
+        <Text style={styles.helper}>Formato: AAAA-MM-DD HH:mm</Text>
+        <View style={styles.visitInputs}>
+          <TextInput
+            accessibilityLabel="Início da visita"
+            editable={!contactUnavailable}
+            onChangeText={setVisitStart}
+            placeholder="2026-09-15 14:00"
+            placeholderTextColor={colors.textMuted}
+            style={styles.input}
+            value={visitStart}
+          />
+          <TextInput
+            accessibilityLabel="Fim da visita"
+            editable={!contactUnavailable}
+            onChangeText={setVisitEnd}
+            placeholder="2026-09-15 14:30"
+            placeholderTextColor={colors.textMuted}
+            style={styles.input}
+            value={visitEnd}
+          />
+        </View>
         <AppButton
           disabled={contactUnavailable}
           label="Propor horário"
@@ -538,20 +590,16 @@ export default function ConversationDetailScreen() {
         />
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Visitas</Text>
-        {visits.length === 0 ? (
-          <Text style={styles.mutedLeft}>Nenhuma visita combinada ainda.</Text>
-        ) : (
-          visits.map((visit) => {
+      {visits.length > 0 ? (
+        <View style={styles.visitsSection}>
+          <Text style={styles.sectionTitle}>Visitas</Text>
+          {visits.map((visit) => {
             const actions = visitActions(visit, session.user.id);
             const location = locations[visit.id];
             return (
               <View key={visit.id} style={styles.visitCard}>
                 <View style={styles.visitHeader}>
-                  <Text style={styles.visitStatus}>
-                    {visitLabel(visit.status)}
-                  </Text>
+                  <Text style={styles.visitStatus}>{visitLabel(visit.status)}</Text>
                   <Text style={styles.visitTime}>
                     {formatDate(visit.startsAt)} → {formatDate(visit.endsAt)}
                   </Text>
@@ -590,18 +638,11 @@ export default function ConversationDetailScreen() {
 
                 {location ? (
                   <View style={styles.locationCard}>
-                    <Text style={styles.locationTitle}>
-                      Endereço autorizado
-                    </Text>
+                    <Text style={styles.locationTitle}>Endereço autorizado</Text>
                     <Text style={styles.locationText}>
                       {location.addressLine1}
-                      {location.addressLine2
-                        ? `, ${location.addressLine2}`
-                        : ""}
+                      {location.addressLine2 ? `, ${location.addressLine2}` : ""}
                       {location.eircode ? ` · ${location.eircode}` : ""}
-                    </Text>
-                    <Text style={styles.attachmentNote}>
-                      Este endereço veio do endpoint privado da visita aceita.
                     </Text>
                   </View>
                 ) : null}
@@ -620,8 +661,41 @@ export default function ConversationDetailScreen() {
                 ) : null}
               </View>
             );
-          })
-        )}
+          })}
+        </View>
+      ) : null}
+
+      <View style={styles.safetyCard}>
+        <Text style={styles.sectionTitle}>Segurança e privacidade</Text>
+        <Text style={styles.mutedLeft}>
+          O Morada não mostra presença online nem confirma leitura. Bloqueios
+          impedem novo contato e o acesso futuro ao endereço exato de visitas,
+          mas o histórico permanece disponível.
+        </Text>
+        <View style={styles.safetyActions}>
+          <View style={styles.safetyButton}>
+            <AppButton
+              disabled={workingSafety || !counterpart}
+              label={
+                workingSafety
+                  ? "Atualizando..."
+                  : ownBlock
+                    ? "Desbloquear usuário"
+                    : "Bloquear usuário"
+              }
+              onPress={() => void toggleBlock()}
+              variant="secondary"
+            />
+          </View>
+          <View style={styles.safetyButton}>
+            <AppButton
+              disabled={!counterpart}
+              label="Denunciar conversa"
+              onPress={reportConversation}
+              variant="secondary"
+            />
+          </View>
+        </View>
       </View>
     </ScrollView>
   );
@@ -647,9 +721,9 @@ function ActionChip({
 
 const styles = StyleSheet.create({
   content: {
-    gap: spacing.lg,
-    padding: spacing.lg,
+    gap: spacing.md,
     paddingBottom: spacing.xxl,
+    backgroundColor: colors.background,
   },
   center: {
     flex: 1,
@@ -659,102 +733,196 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     backgroundColor: colors.background,
   },
-  headerCard: {
-    gap: spacing.xs,
+  topBar: {
+    minHeight: 68,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  backButton: {
+    width: 42,
+    height: 42,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.pill,
+  },
+  backSymbol: {
+    marginTop: -3,
+    color: colors.text,
+    fontFamily: fontFamily.medium,
+    fontSize: 32,
+    lineHeight: 34,
+  },
+  headerIdentity: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  avatar: {
+    width: 42,
+    height: 42,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.pill,
+    backgroundColor: colors.primarySoft,
+  },
+  avatarText: {
+    color: colors.primary,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 17,
+  },
+  headerCopy: {
+    flex: 1,
+    gap: 1,
   },
   title: {
     color: colors.text,
-    fontSize: 25,
-    fontWeight: "900",
+    fontFamily: fontFamily.extraBold,
+    fontSize: 17,
   },
-  disclaimer: {
+  headerStatus: {
     color: colors.textMuted,
-    fontSize: 12,
-    lineHeight: 18,
+    fontFamily: fontFamily.regular,
+    fontSize: 11,
   },
-  warningCard: {
-    gap: spacing.xs,
-    borderRadius: radius.lg,
-    backgroundColor: "#FFF4E5",
-    padding: spacing.md,
+  moreButton: {
+    minWidth: 42,
+    minHeight: 42,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  warningTitle: {
-    color: colors.warning,
-    fontWeight: "800",
+  moreSymbol: {
+    color: colors.text,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 16,
+    letterSpacing: 1,
   },
-  warningText: {
-    color: colors.warning,
-    fontWeight: "700",
-    lineHeight: 20,
-  },
-  error: {
-    color: colors.danger,
-    lineHeight: 20,
-  },
-  section: {
-    gap: spacing.md,
-  },
-  sectionCard: {
-    gap: spacing.md,
+  listingContext: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    marginHorizontal: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.lg,
     backgroundColor: colors.surface,
     padding: spacing.md,
   },
-  sectionTitle: {
+  listingIcon: {
+    width: 48,
+    height: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.md,
+    backgroundColor: colors.primarySoft,
+  },
+  listingIconText: {
+    color: colors.primary,
+    fontSize: 24,
+  },
+  listingCopy: {
+    flex: 1,
+    gap: 3,
+  },
+  listingEyebrow: {
+    color: colors.primary,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 9,
+    letterSpacing: 0.8,
+  },
+  listingTitle: {
     color: colors.text,
-    fontSize: 20,
-    fontWeight: "800",
+    fontFamily: fontFamily.bold,
+    fontSize: 13,
+    lineHeight: 18,
   },
-  muted: {
-    color: colors.textMuted,
-    textAlign: "center",
+  chevron: {
+    color: colors.primary,
+    fontSize: 28,
+  },
+  warningCard: {
+    gap: spacing.xs,
+    marginHorizontal: spacing.md,
+    borderRadius: radius.lg,
+    backgroundColor: colors.warningSoft,
+    padding: spacing.md,
+  },
+  warningTitle: {
+    color: colors.warning,
+    fontFamily: fontFamily.extraBold,
+  },
+  warningText: {
+    marginHorizontal: spacing.md,
+    color: colors.warning,
+    fontFamily: fontFamily.bold,
     lineHeight: 20,
   },
-  mutedLeft: {
-    color: colors.textMuted,
+  error: {
+    marginHorizontal: spacing.md,
+    color: colors.danger,
+    fontFamily: fontFamily.semibold,
     lineHeight: 20,
+  },
+  messagesSection: {
+    gap: spacing.sm,
+    minHeight: 180,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  emptyMessages: {
+    alignItems: "center",
+    gap: spacing.xs,
+    paddingVertical: spacing.xxl,
+    paddingHorizontal: spacing.xl,
+  },
+  emptyTitle: {
+    color: colors.text,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 17,
   },
   message: {
-    maxWidth: "88%",
-    gap: spacing.xs,
-    borderRadius: radius.lg,
-    padding: spacing.md,
+    maxWidth: "82%",
+    gap: 5,
+    borderRadius: 18,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 10,
   },
   mine: {
     alignSelf: "flex-end",
+    borderBottomRightRadius: 6,
     backgroundColor: colors.primarySoft,
   },
   theirs: {
     alignSelf: "flex-start",
+    borderBottomLeftRadius: 6,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
   },
   messageText: {
     color: colors.text,
+    fontFamily: fontFamily.regular,
     fontSize: 15,
     lineHeight: 21,
   },
   messageTime: {
     color: colors.textMuted,
-    fontSize: 11,
+    fontFamily: fontFamily.medium,
+    fontSize: 10,
+  },
+  mineTime: {
+    textAlign: "right",
   },
   reportLink: {
     color: colors.danger,
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  messageInput: {
-    minHeight: 80,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    backgroundColor: colors.surface,
-    color: colors.text,
-    padding: spacing.md,
-    textAlignVertical: "top",
+    fontFamily: fontFamily.bold,
+    fontSize: 11,
   },
   attachmentCard: {
     gap: 2,
@@ -764,25 +932,108 @@ const styles = StyleSheet.create({
   },
   attachmentTitle: {
     color: colors.text,
-    fontWeight: "800",
+    fontFamily: fontFamily.extraBold,
   },
   attachmentMeta: {
     color: colors.textMuted,
+    fontFamily: fontFamily.regular,
     fontSize: 12,
   },
-  attachmentNote: {
+  composerCard: {
+    gap: spacing.sm,
+    marginHorizontal: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingTop: spacing.md,
+  },
+  composerRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: spacing.sm,
+  },
+  messageInput: {
+    flex: 1,
+    minHeight: 48,
+    maxHeight: 120,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.xl,
+    backgroundColor: colors.surface,
+    color: colors.text,
+    fontFamily: fontFamily.regular,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 12,
+    textAlignVertical: "top",
+  },
+  sendButton: {
+    width: 48,
+    height: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.pill,
+    backgroundColor: colors.primary,
+  },
+  sendButtonDisabled: {
+    opacity: 0.45,
+  },
+  sendSymbol: {
+    marginLeft: 2,
+    color: colors.surface,
+    fontSize: 19,
+  },
+  visitComposer: {
+    gap: spacing.md,
+    marginHorizontal: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.primarySoft,
+    borderRadius: radius.xl,
+    backgroundColor: colors.surface,
+    padding: spacing.md,
+  },
+  visitHeading: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  visitIcon: {
+    width: 42,
+    height: 42,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.md,
+    backgroundColor: colors.primarySoft,
+  },
+  visitIconText: {
+    color: colors.primary,
+    fontSize: 20,
+  },
+  visitHeadingCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  helper: {
     color: colors.textMuted,
+    fontFamily: fontFamily.regular,
     fontSize: 11,
-    lineHeight: 16,
+  },
+  visitInputs: {
+    flexDirection: "row",
+    gap: spacing.sm,
   },
   input: {
+    flex: 1,
     minHeight: 48,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.md,
     backgroundColor: colors.background,
     color: colors.text,
+    fontFamily: fontFamily.regular,
     paddingHorizontal: spacing.md,
+  },
+  visitsSection: {
+    gap: spacing.md,
+    marginHorizontal: spacing.md,
   },
   visitCard: {
     gap: spacing.md,
@@ -797,11 +1048,11 @@ const styles = StyleSheet.create({
   },
   visitStatus: {
     color: colors.primary,
-    fontWeight: "800",
+    fontFamily: fontFamily.extraBold,
   },
   visitTime: {
     color: colors.text,
-    fontWeight: "700",
+    fontFamily: fontFamily.semibold,
   },
   inlineActions: {
     flexDirection: "row",
@@ -818,10 +1069,7 @@ const styles = StyleSheet.create({
   },
   actionChipText: {
     color: colors.text,
-    fontWeight: "700",
-  },
-  pressed: {
-    opacity: 0.75,
+    fontFamily: fontFamily.bold,
   },
   locationCard: {
     gap: spacing.xs,
@@ -831,11 +1079,44 @@ const styles = StyleSheet.create({
   },
   locationTitle: {
     color: colors.primary,
-    fontWeight: "800",
+    fontFamily: fontFamily.extraBold,
   },
   locationText: {
     color: colors.text,
-    fontWeight: "700",
+    fontFamily: fontFamily.semibold,
     lineHeight: 21,
+  },
+  safetyCard: {
+    gap: spacing.md,
+    marginHorizontal: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingTop: spacing.lg,
+  },
+  safetyActions: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  safetyButton: {
+    flex: 1,
+  },
+  sectionTitle: {
+    color: colors.text,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 18,
+  },
+  muted: {
+    color: colors.textMuted,
+    fontFamily: fontFamily.regular,
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  mutedLeft: {
+    color: colors.textMuted,
+    fontFamily: fontFamily.regular,
+    lineHeight: 20,
+  },
+  pressed: {
+    opacity: 0.75,
   },
 });

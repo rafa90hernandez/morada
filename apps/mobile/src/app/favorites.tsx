@@ -1,19 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { router } from "expo-router";
-import {
-  ActivityIndicator,
-  FlatList,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { FlatList, StyleSheet, Text, View } from "react-native";
 
 import { listFavorites, removeFavorite } from "@/api/client";
 import type { FavoriteListItem } from "@/api/types";
 import { ListingCard } from "@/components/ListingCard";
 import { AppButton } from "@/components/ui/AppButton";
+import { ProductState } from "@/components/ui/ProductState";
 import { useSession } from "@/session/SessionContext";
-import { colors, spacing } from "@/theme/tokens";
+import { colors, fontFamily, spacing } from "@/theme/tokens";
 
 export default function FavoritesScreen() {
   const { session } = useSession();
@@ -64,20 +59,23 @@ export default function FavoritesScreen() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator color={colors.primary} size="large" />
-        <Text style={styles.muted}>Carregando favoritos...</Text>
-      </View>
+      <ProductState
+        description="Estamos reunindo os anúncios que você salvou."
+        kind="loading"
+        title="Carregando favoritos"
+      />
     );
   }
 
   if (error && items.length === 0) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.title}>Não foi possível abrir seus favoritos</Text>
-        <Text style={styles.muted}>{error}</Text>
-        <AppButton label="Tentar novamente" onPress={() => void load()} />
-      </View>
+      <ProductState
+        actionLabel="Tentar novamente"
+        description={error}
+        kind="error"
+        onAction={() => void load()}
+        title="Não foi possível abrir seus favoritos"
+      />
     );
   }
 
@@ -87,23 +85,28 @@ export default function FavoritesScreen() {
       data={items}
       keyExtractor={(item) => item.favoriteId}
       ListEmptyComponent={
-        <View style={styles.center}>
-          <Text style={styles.title}>Nenhum favorito ainda</Text>
-          <Text style={styles.muted}>
-            Salve anúncios interessantes para encontrá-los novamente aqui.
-          </Text>
-          <AppButton
-            label="Explorar moradias"
-            onPress={() => router.push("/")}
-          />
-        </View>
+        <ProductState
+          actionLabel="Explorar moradias"
+          description="Toque no coração dos anúncios que você quer guardar para depois."
+          kind="empty"
+          onAction={() => router.push("/")}
+          title="Nenhum favorito ainda"
+        />
       }
       ListHeaderComponent={
-        error ? (
-          <Text accessibilityLiveRegion="polite" style={styles.error}>
-            {error}
+        <View style={styles.header}>
+          <Text accessibilityRole="header" style={styles.title}>
+            Meus favoritos
           </Text>
-        ) : null
+          <Text style={styles.subtitle}>
+            {items.length} anúncio{items.length === 1 ? " salvo" : "s salvos"}
+          </Text>
+          {error ? (
+            <Text accessibilityLiveRegion="polite" style={styles.error}>
+              {error}
+            </Text>
+          ) : null}
+        </View>
       }
       renderItem={({ item }) => (
         <View style={styles.item}>
@@ -116,16 +119,15 @@ export default function FavoritesScreen() {
               })
             }
           />
-          <AppButton
-            disabled={removingId === item.listing.id}
-            label={
-              removingId === item.listing.id
-                ? "Removendo..."
-                : "Remover dos favoritos"
-            }
-            onPress={() => void remove(item.listing.id)}
-            variant="secondary"
-          />
+          <View style={styles.removeRow}>
+            <Text style={styles.savedHint}>♥ Salvo nos seus favoritos</Text>
+            <AppButton
+              disabled={removingId === item.listing.id}
+              label={removingId === item.listing.id ? "Removendo..." : "Remover"}
+              onPress={() => void remove(item.listing.id)}
+              variant="secondary"
+            />
+          </View>
         </View>
       )}
     />
@@ -135,34 +137,44 @@ export default function FavoritesScreen() {
 const styles = StyleSheet.create({
   content: {
     flexGrow: 1,
-    gap: spacing.md,
+    gap: spacing.lg,
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
+    backgroundColor: colors.background,
+  },
+  header: {
+    gap: spacing.xs,
+    paddingBottom: spacing.xs,
+  },
+  title: {
+    color: colors.text,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 28,
+    letterSpacing: -0.6,
+  },
+  subtitle: {
+    color: colors.textMuted,
+    fontFamily: fontFamily.medium,
+    fontSize: 14,
   },
   item: {
     gap: spacing.sm,
   },
-  center: {
-    flex: 1,
+  removeRow: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.md,
-    padding: spacing.xl,
+    justifyContent: "space-between",
+    gap: spacing.sm,
   },
-  title: {
-    color: colors.text,
-    fontSize: 20,
-    fontWeight: "800",
-    textAlign: "center",
-  },
-  muted: {
-    maxWidth: 320,
-    color: colors.textMuted,
-    textAlign: "center",
-    lineHeight: 22,
+  savedHint: {
+    flex: 1,
+    color: colors.primary,
+    fontFamily: fontFamily.semibold,
+    fontSize: 12,
   },
   error: {
     color: colors.danger,
+    fontFamily: fontFamily.medium,
     lineHeight: 20,
   },
 });

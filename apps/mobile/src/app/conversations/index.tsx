@@ -1,20 +1,21 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { router } from "expo-router";
 import {
-  ActivityIndicator,
   FlatList,
   Pressable,
   RefreshControl,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 
 import { listConversations } from "@/api/client";
 import type { Conversation } from "@/api/types";
-import { AppButton } from "@/components/ui/AppButton";
+import { AppBadge } from "@/components/ui/AppBadge";
+import { ProductState } from "@/components/ui/ProductState";
 import { useSession } from "@/session/SessionContext";
-import { colors, radius, spacing } from "@/theme/tokens";
+import { colors, fontFamily, radius, spacing } from "@/theme/tokens";
 
 function displayName(conversation: Conversation, currentUserId: string) {
   const other =
@@ -24,12 +25,22 @@ function displayName(conversation: Conversation, currentUserId: string) {
   return other.profile?.displayName || "Usuário do Morada";
 }
 
+function initials(value: string) {
+  return value
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("") || "M";
+}
+
 export default function ConversationsScreen() {
   const { session } = useSession();
   const [items, setItems] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
 
   const accessToken = session?.accessToken;
 
@@ -65,18 +76,34 @@ export default function ConversationsScreen() {
     return () => clearInterval(timer);
   }, [load, session]);
 
-  const subtitle = useMemo(() => {
-    if (!session) return "";
-    return `${items.length} conversa${items.length === 1 ? "" : "s"}`;
-  }, [items.length, session]);
+  const subtitle = useMemo(
+    () => `${items.length} conversa${items.length === 1 ? "" : "s"}`,
+    [items.length],
+  );
+
+  const visibleItems = useMemo(() => {
+    const normalized = query.trim().toLocaleLowerCase("pt-BR");
+    if (!normalized || !session) return items;
+
+    return items.filter((item) => {
+      const person = displayName(item, session.user.id).toLocaleLowerCase("pt-BR");
+      return (
+        person.includes(normalized) ||
+        item.listing.title.toLocaleLowerCase("pt-BR").includes(normalized)
+      );
+    });
+  }, [items, query, session]);
 
   if (!session) return null;
 
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color={colors.primary} size="large" />
-        <Text style={styles.muted}>Carregando suas conversas...</Text>
+        <ProductState
+          description="Estamos buscando suas conversas mais recentes."
+          kind="loading"
+          title="Carregando conversas"
+        />
       </View>
     );
   }
@@ -84,36 +111,54 @@ export default function ConversationsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.topBar}>
-        <View>
+        <View style={styles.heading}>
           <Text accessibilityRole="header" style={styles.title}>
-            Suas conversas
+            Conversas
           </Text>
           <Text style={styles.muted}>{subtitle}</Text>
         </View>
-        <AppButton
-          label="Notificações"
+        <Pressable
+          accessibilityLabel="Abrir notificações"
           onPress={() => router.push("/notifications")}
-          variant="secondary"
+          style={styles.notificationButton}
+        >
+          <Text style={styles.notificationIcon}>♢</Text>
+        </Pressable>
+      </View>
+
+      <View style={styles.searchWrap}>
+        <Text style={styles.searchIcon}>⌕</Text>
+        <TextInput
+          accessibilityLabel="Buscar conversas"
+          onChangeText={setQuery}
+          placeholder="Buscar conversas..."
+          placeholderTextColor={colors.textSubtle}
+          style={styles.searchInput}
+          value={query}
         />
       </View>
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? (
+        <Text accessibilityLiveRegion="polite" style={styles.errorText}>
+          {error}
+        </Text>
+      ) : null}
 
       <FlatList
         contentContainerStyle={styles.list}
-        data={items}
+        data={visibleItems}
         keyExtractor={(item) => item.id}
         ListEmptyComponent={
-          <View style={styles.center}>
-            <Text style={styles.emptyTitle}>Nenhuma conversa ainda</Text>
-            <Text style={styles.muted}>
-              Abra um anúncio elegível e toque em “Falar com anunciante”.
-            </Text>
-            <AppButton
-              label="Explorar moradias"
-              onPress={() => router.push("/")}
-            />
-          </View>
+          <ProductState
+            actionLabel="Explorar moradias"
+            description={
+              query
+                ? "Nenhuma conversa corresponde à sua busca."
+                : "Quando você falar com um anunciante, a conversa aparecerá aqui."
+            }
+            onAction={() => router.push("/")}
+            title={query ? "Nenhum resultado" : "Nenhuma conversa ainda"}
+          />
         }
         refreshControl={
           <RefreshControl
@@ -122,35 +167,56 @@ export default function ConversationsScreen() {
             tintColor={colors.primary}
           />
         }
-        renderItem={({ item }) => (
-          <Pressable
-            accessibilityRole="button"
-            onPress={() =>
-              router.push({
-                pathname: "/conversations/[id]",
-                params: { id: item.id },
-              })
-            }
-            style={({ pressed }) => [styles.card, pressed && styles.pressed]}
-          >
-            <View style={styles.cardHeader}>
-              <Text style={styles.person}>
-                {displayName(item, session.user.id)}
-              </Text>
-              {item.status !== "ACTIVE" ? (
-                <Text style={styles.blocked}>Contato indisponível</Text>
-              ) : null}
-            </View>
-            <Text numberOfLines={1} style={styles.listing}>
-              {item.listing.title}
-            </Text>
-            <Text style={styles.time}>
-              {item.lastMessageAt
-                ? `Atualizada ${new Date(item.lastMessageAt).toLocaleString("pt-BR")}`
-                : "Conversa iniciada"}
-            </Text>
-          </Pressable>
-        )}
+        renderItem={({ item }) => {
+          const person = displayName(item, session.user.id);
+          return (
+            <Pressable
+              accessibilityRole="button"
+              onPress={() =>
+                router.push({
+                  pathname: "/conversations/[id]",
+                  params: { id: item.id },
+                })
+              }
+              style={({ pressed }) => [
+                styles.conversationRow,
+                pressed && styles.pressed,
+              ]}
+            >
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>{initials(person)}</Text>
+              </View>
+              <View style={styles.conversationCopy}>
+                <View style={styles.nameRow}>
+                  <Text numberOfLines={1} style={styles.person}>
+                    {person}
+                  </Text>
+                  <Text style={styles.time}>
+                    {item.lastMessageAt
+                      ? new Date(item.lastMessageAt).toLocaleDateString("pt-BR", {
+                          day: "2-digit",
+                          month: "2-digit",
+                        })
+                      : "Agora"}
+                  </Text>
+                </View>
+                <Text numberOfLines={1} style={styles.listing}>
+                  {item.listing.title}
+                </Text>
+                <View style={styles.statusRow}>
+                  <AppBadge
+                    label={
+                      item.status === "ACTIVE"
+                        ? "Conversa ativa"
+                        : "Contato indisponível"
+                    }
+                    tone={item.status === "ACTIVE" ? "primary" : "danger"}
+                  />
+                </View>
+              </View>
+            </Pressable>
+          );
+        }}
       />
     </View>
   );
@@ -166,72 +232,130 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     gap: spacing.md,
-    padding: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
+  },
+  heading: {
+    flex: 1,
+    gap: 2,
   },
   title: {
     color: colors.text,
-    fontSize: 26,
-    fontWeight: "900",
+    fontFamily: fontFamily.extraBold,
+    fontSize: 28,
+    letterSpacing: -0.6,
   },
   muted: {
     color: colors.textMuted,
-    lineHeight: 20,
-    textAlign: "center",
+    fontFamily: fontFamily.medium,
+    fontSize: 13,
   },
-  error: {
+  notificationButton: {
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 22,
+    backgroundColor: colors.surface,
+  },
+  notificationIcon: {
+    color: colors.primary,
+    fontSize: 24,
+    fontWeight: "800",
+  },
+  searchWrap: {
+    minHeight: 48,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
     marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing.md,
+  },
+  searchIcon: {
+    color: colors.textMuted,
+    fontSize: 22,
+  },
+  searchInput: {
+    flex: 1,
+    color: colors.text,
+    fontFamily: fontFamily.medium,
+    fontSize: 15,
+  },
+  errorText: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
     color: colors.danger,
+    fontFamily: fontFamily.medium,
   },
   list: {
-    gap: spacing.md,
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xxl,
   },
-  card: {
-    gap: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.lg,
-    backgroundColor: colors.surface,
-    padding: spacing.md,
-  },
-  pressed: {
-    opacity: 0.78,
-  },
-  cardHeader: {
+  conversationRow: {
+    minHeight: 84,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    gap: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+    paddingVertical: spacing.md,
+  },
+  pressed: {
+    opacity: 0.72,
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 24,
+    backgroundColor: colors.primarySoft,
+  },
+  avatarText: {
+    color: colors.primary,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 15,
+  },
+  conversationCopy: {
+    flex: 1,
+    gap: 3,
+  },
+  nameRow: {
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.sm,
   },
   person: {
     flex: 1,
     color: colors.text,
-    fontSize: 17,
-    fontWeight: "800",
-  },
-  blocked: {
-    color: colors.danger,
-    fontSize: 12,
-    fontWeight: "700",
+    fontFamily: fontFamily.bold,
+    fontSize: 16,
   },
   listing: {
     color: colors.textMuted,
+    fontFamily: fontFamily.regular,
+    fontSize: 13,
+  },
+  statusRow: {
+    alignItems: "flex-start",
+    marginTop: 2,
   },
   time: {
-    color: colors.textMuted,
-    fontSize: 12,
+    color: colors.textSubtle,
+    fontFamily: fontFamily.medium,
+    fontSize: 11,
   },
   center: {
     flex: 1,
-    alignItems: "center",
     justifyContent: "center",
-    gap: spacing.md,
-    padding: spacing.xl,
-  },
-  emptyTitle: {
-    color: colors.text,
-    fontSize: 21,
-    fontWeight: "800",
+    backgroundColor: colors.background,
   },
 });
