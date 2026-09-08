@@ -38,11 +38,18 @@ const styles = StyleSheet.create({
     borderRadius: radius.xl,
     backgroundColor: colors.surface,
     padding: spacing.lg,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 1,
   },
   muted: {
+    borderColor: colors.primarySoft,
     backgroundColor: colors.surfaceMuted,
   },
   warm: {
+    borderColor: colors.accentSoft,
     backgroundColor: colors.surfaceWarm,
   },
 });
