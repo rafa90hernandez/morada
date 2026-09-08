@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import {
   ActivityIndicator,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -15,7 +16,7 @@ import {
 } from "@/api/owner-listings";
 import { AppButton } from "@/components/ui/AppButton";
 import { useSession } from "@/session/SessionContext";
-import { colors, radius, spacing } from "@/theme/tokens";
+import { colors, fontFamily, radius, spacing } from "@/theme/tokens";
 import { ListingAmenitiesFields } from "./ListingAmenitiesFields";
 import { ListingBasicFields } from "./ListingBasicFields";
 import { ChoiceGroup } from "./ListingFormControls";
@@ -171,14 +172,36 @@ export function ListingEditorScreen() {
   }
 
   return (
-    <ScrollView ref={scrollRef} contentContainerStyle={styles.content}>
+    <ScrollView
+      ref={scrollRef}
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+    >
+      <View style={styles.topBar}>
+        <Pressable
+          accessibilityLabel="Voltar"
+          accessibilityRole="button"
+          onPress={() => router.back()}
+          style={({ pressed }) => [
+            styles.backButton,
+            pressed && styles.backButtonPressed,
+          ]}
+        >
+          <Text style={styles.backSymbol}>‹</Text>
+        </Pressable>
+        <Text style={styles.topTitle}>{editing ? "Editar anúncio" : "Criar anúncio"}</Text>
+        <View style={styles.topSpacer} />
+      </View>
+
       <View style={styles.progressCard}>
-        <Text style={styles.eyebrow}>
-          Etapa {step + 1} de {steps.length}
-        </Text>
-        <Text accessibilityRole="header" style={styles.title}>
-          {steps[step].title}
-        </Text>
+        <View style={styles.progressHeading}>
+          <Text style={styles.eyebrow}>
+            Etapa {step + 1} de {steps.length}
+          </Text>
+          <Text style={styles.progressPercent}>
+            {Math.round(((step + 1) / steps.length) * 100)}%
+          </Text>
+        </View>
         <View style={styles.progressTrack}>
           <View
             style={[
@@ -187,10 +210,13 @@ export function ListingEditorScreen() {
             ]}
           />
         </View>
+        <Text accessibilityRole="header" style={styles.title}>
+          {steps[step].title}
+        </Text>
         <Text style={styles.muted}>
           {editing
-            ? "Você pode avançar e voltar sem salvar a cada etapa."
-            : "Preencha aos poucos. Você poderá revisar tudo antes de criar o anúncio."}
+            ? "Atualize somente o que precisar. As informações continuam protegidas pelas regras de segurança do Morada."
+            : "Preencha aos poucos. Você poderá revisar tudo antes de enviar o anúncio para análise."}
         </Text>
       </View>
 
@@ -198,7 +224,11 @@ export function ListingEditorScreen() {
 
       {step === steps.length - 1 ? (
         <View style={styles.card}>
-          <Text style={styles.summaryTitle}>Resumo</Text>
+          <Text style={styles.summaryTitle}>Revise seu anúncio</Text>
+          <Text style={styles.reviewCopy}>
+            Confira os dados principais antes de continuar. Depois você poderá
+            adicionar as fotos e completar as etapas de confiança do anúncio.
+          </Text>
           <SummaryRow label="Título" value={draft.title || "Não informado"} />
           <SummaryRow
             label="Localização"
@@ -229,20 +259,26 @@ export function ListingEditorScreen() {
             não faz essa cobrança.
           </Text>
           <View style={styles.photoCallout}>
-            <Text style={styles.photoTitle}>Fotos vêm logo em seguida</Text>
-            <Text style={styles.muted}>
-              Ao salvar, você irá para o gerenciamento do anúncio para
-              adicionar, conferir e escolher visualmente as fotos antes da
-              publicação.
-            </Text>
+            <View style={styles.photoIcon}>
+              <Text style={styles.photoIconText}>▣</Text>
+            </View>
+            <View style={styles.photoCopy}>
+              <Text style={styles.photoTitle}>Fotos vêm logo em seguida</Text>
+              <Text style={styles.muted}>
+                Ao salvar, você irá para o gerenciamento do anúncio para
+                adicionar e conferir as fotos antes da publicação.
+              </Text>
+            </View>
           </View>
         </View>
       ) : null}
 
       {error ? (
-        <Text accessibilityLiveRegion="polite" style={styles.error}>
-          {error}
-        </Text>
+        <View style={styles.errorBox}>
+          <Text accessibilityLiveRegion="polite" style={styles.error}>
+            {error}
+          </Text>
+        </View>
       ) : null}
 
       <View style={styles.actions}>
@@ -275,13 +311,18 @@ export function ListingEditorScreen() {
         </View>
       </View>
 
-      <Text style={styles.stepHint}>
-        {steps
-          .map((item, index) =>
-            index === step ? `● ${item.short}` : item.short,
-          )
-          .join("  ·  ")}
-      </Text>
+      <View style={styles.stepDots}>
+        {steps.map((item, index) => (
+          <View
+            key={item.short}
+            style={[
+              styles.stepDot,
+              index <= step && styles.stepDotActive,
+              index === step && styles.stepDotCurrent,
+            ]}
+          />
+        ))}
+      </View>
     </ScrollView>
   );
 }
@@ -337,10 +378,13 @@ function renderStep(
     default:
       return (
         <View style={styles.reviewIntro}>
+          <View style={styles.reviewBadge}>
+            <Text style={styles.reviewBadgeText}>✓</Text>
+          </View>
           <Text style={styles.summaryTitle}>Tudo pronto para revisar</Text>
           <Text style={styles.muted}>
-            Confira os principais dados abaixo. Se precisar ajustar algo, use
-            Voltar. Depois de salvar, o próximo passo é completar as fotos.
+            Use Voltar para ajustar qualquer informação. Depois de salvar, o
+            próximo passo é completar as fotos.
           </Text>
         </View>
       );
@@ -361,6 +405,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
+    backgroundColor: colors.background,
   },
   center: {
     flex: 1,
@@ -368,19 +413,67 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: spacing.md,
     padding: spacing.xl,
+    backgroundColor: colors.background,
+  },
+  topBar: {
+    minHeight: 48,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  backButton: {
+    width: 42,
+    height: 42,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surface,
+  },
+  backButtonPressed: {
+    backgroundColor: colors.surfaceMuted,
+  },
+  backSymbol: {
+    marginTop: -3,
+    color: colors.text,
+    fontFamily: fontFamily.medium,
+    fontSize: 32,
+    lineHeight: 34,
+  },
+  topTitle: {
+    color: colors.text,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 18,
+  },
+  topSpacer: {
+    width: 42,
   },
   progressCard: {
     gap: spacing.sm,
-    paddingBottom: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    paddingBottom: spacing.lg,
+  },
+  progressHeading: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   eyebrow: {
     color: colors.primary,
-    fontSize: 13,
-    fontWeight: "800",
+    fontFamily: fontFamily.extraBold,
+    fontSize: 12,
     textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  progressPercent: {
+    color: colors.textMuted,
+    fontFamily: fontFamily.bold,
+    fontSize: 12,
   },
   progressTrack: {
-    height: 6,
+    height: 5,
     overflow: "hidden",
     borderRadius: radius.pill,
     backgroundColor: colors.primarySoft,
@@ -391,43 +484,142 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   card: {
-    backgroundColor: colors.surface,
+    gap: spacing.md,
+    borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.xl,
-    borderWidth: 1,
-    gap: spacing.md,
+    backgroundColor: colors.surface,
     padding: spacing.lg,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 1,
   },
-  title: { color: colors.text, fontSize: 27, fontWeight: "900" },
-  summaryTitle: { color: colors.text, fontSize: 19, fontWeight: "800" },
-  muted: { color: colors.textMuted, lineHeight: 21 },
-  note: { color: colors.textMuted, fontSize: 13, lineHeight: 18 },
-  error: { color: colors.danger, lineHeight: 20 },
+  title: {
+    color: colors.text,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 26,
+    lineHeight: 32,
+    letterSpacing: -0.7,
+  },
+  summaryTitle: {
+    color: colors.text,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 20,
+  },
+  muted: {
+    color: colors.textMuted,
+    fontFamily: fontFamily.regular,
+    lineHeight: 21,
+  },
+  reviewCopy: {
+    color: colors.textMuted,
+    fontFamily: fontFamily.regular,
+    lineHeight: 21,
+  },
+  note: {
+    color: colors.textMuted,
+    fontFamily: fontFamily.regular,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  errorBox: {
+    borderRadius: radius.md,
+    backgroundColor: colors.dangerSoft,
+    padding: spacing.md,
+  },
+  error: {
+    color: colors.danger,
+    fontFamily: fontFamily.semibold,
+    lineHeight: 20,
+  },
   actions: {
     flexDirection: "row",
     gap: spacing.sm,
   },
-  actionButton: { flex: 1 },
-  stepHint: {
-    color: colors.textMuted,
-    fontSize: 11,
-    lineHeight: 18,
-    textAlign: "center",
+  actionButton: {
+    flex: 1,
   },
-  reviewIntro: { gap: spacing.sm },
+  stepDots: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingTop: spacing.xs,
+  },
+  stepDot: {
+    width: 7,
+    height: 7,
+    borderRadius: radius.pill,
+    backgroundColor: colors.borderStrong,
+  },
+  stepDotActive: {
+    backgroundColor: colors.primarySoft,
+  },
+  stepDotCurrent: {
+    width: 22,
+    backgroundColor: colors.primary,
+  },
+  reviewIntro: {
+    alignItems: "center",
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
+  },
+  reviewBadge: {
+    width: 48,
+    height: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.pill,
+    backgroundColor: colors.primarySoft,
+  },
+  reviewBadgeText: {
+    color: colors.primary,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 24,
+  },
   summaryRow: {
     gap: spacing.xs,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border,
     paddingBottom: spacing.sm,
   },
-  summaryLabel: { color: colors.textMuted, fontSize: 13 },
-  summaryValue: { color: colors.text, fontSize: 16, fontWeight: "700" },
+  summaryLabel: {
+    color: colors.textMuted,
+    fontFamily: fontFamily.medium,
+    fontSize: 13,
+  },
+  summaryValue: {
+    color: colors.text,
+    fontFamily: fontFamily.bold,
+    fontSize: 16,
+  },
   photoCallout: {
-    gap: spacing.xs,
+    flexDirection: "row",
+    gap: spacing.md,
     borderRadius: radius.lg,
     backgroundColor: colors.primarySoft,
     padding: spacing.md,
   },
-  photoTitle: { color: colors.primary, fontWeight: "800" },
+  photoIcon: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
+  },
+  photoIconText: {
+    color: colors.primary,
+    fontSize: 20,
+  },
+  photoCopy: {
+    flex: 1,
+    gap: spacing.xs,
+  },
+  photoTitle: {
+    color: colors.primary,
+    fontFamily: fontFamily.extraBold,
+  },
 });
