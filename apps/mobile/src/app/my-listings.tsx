@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { router } from "expo-router";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
@@ -8,12 +8,12 @@ import { AppButton } from "@/components/ui/AppButton";
 import { AppCard } from "@/components/ui/AppCard";
 import { ProductState } from "@/components/ui/ProductState";
 import { useSession } from "@/session/SessionContext";
-import { colors, spacing } from "@/theme/tokens";
+import { colors, fontFamily, radius, spacing } from "@/theme/tokens";
 
 const statusLabels: Record<OwnerListing["status"], string> = {
   DRAFT: "Rascunho",
   PENDING_REVIEW: "Em análise",
-  ACTIVE: "Publicado",
+  ACTIVE: "Ativo",
   PAUSED: "Pausado",
   CLOSED: "Encerrado",
   REJECTED: "Correção necessária",
@@ -61,23 +61,55 @@ export default function MyListingsScreen() {
     void load();
   }, [load]);
 
+  const counts = useMemo(
+    () => ({
+      all: items.length,
+      review: items.filter((item) => item.status === "PENDING_REVIEW").length,
+      active: items.filter((item) => item.status === "ACTIVE").length,
+      attention: items.filter(
+        (item) => item.status === "REJECTED" || item.status === "DRAFT",
+      ).length,
+    }),
+    [items],
+  );
+
   return (
     <ScrollView contentContainerStyle={styles.content}>
       <View style={styles.header}>
         <View style={styles.headerCopy}>
-          <Text style={styles.eyebrow}>ANUNCIE COM SEGURANÇA</Text>
           <Text accessibilityRole="header" style={styles.title}>
             Meus anúncios
           </Text>
           <Text style={styles.muted}>
-            Crie, acompanhe e gerencie suas moradias em um só lugar.
+            Acompanhe o status das suas moradias e mantenha tudo atualizado.
           </Text>
         </View>
         <AppButton
-          label="Novo anúncio"
+          label="+ Novo anúncio"
           onPress={() => router.push("/listing-editor")}
         />
       </View>
+
+      {!loading ? (
+        <View style={styles.statsRow}>
+          <View style={[styles.stat, styles.statSelected]}>
+            <Text style={styles.statValue}>{counts.all}</Text>
+            <Text style={styles.statLabel}>Todos</Text>
+          </View>
+          <View style={styles.stat}>
+            <Text style={styles.statValue}>{counts.review}</Text>
+            <Text style={styles.statLabel}>Em análise</Text>
+          </View>
+          <View style={styles.stat}>
+            <Text style={styles.statValue}>{counts.active}</Text>
+            <Text style={styles.statLabel}>Ativos</Text>
+          </View>
+          <View style={styles.stat}>
+            <Text style={styles.statValue}>{counts.attention}</Text>
+            <Text style={styles.statLabel}>Ajustes</Text>
+          </View>
+        </View>
+      ) : null}
 
       {loading ? (
         <ProductState
@@ -107,21 +139,29 @@ export default function MyListingsScreen() {
       ) : null}
 
       {items.map((item) => (
-        <AppCard key={item.id}>
+        <AppCard key={item.id} style={styles.listingCard}>
           <View style={styles.row}>
-            <Text style={styles.cardTitle}>{item.title}</Text>
+            <View style={styles.homeIcon}>
+              <Text style={styles.homeIconText}>⌂</Text>
+            </View>
+            <View style={styles.cardCopy}>
+              <Text numberOfLines={2} style={styles.cardTitle}>
+                {item.title}
+              </Text>
+              <Text numberOfLines={1} style={styles.location}>
+                {[item.location.area, item.location.city]
+                  .filter(Boolean)
+                  .join(" · ") || "Localização não informada"}
+              </Text>
+            </View>
             <AppBadge
               label={statusLabels[item.status]}
               tone={statusTone(item.status)}
             />
           </View>
-          <Text style={styles.muted}>
-            {[item.location.area, item.location.city]
-              .filter(Boolean)
-              .join(" · ") || "Localização não informada"}
-          </Text>
+
           <View style={styles.metaRow}>
-            <Text style={styles.meta}>
+            <Text style={styles.price}>
               {item.pricing.monthlyPriceCents === null
                 ? "Preço não informado"
                 : `€${(item.pricing.monthlyPriceCents / 100).toFixed(0)}/mês`}
@@ -130,14 +170,14 @@ export default function MyListingsScreen() {
               {`${item.photos.length} foto${item.photos.length === 1 ? "" : "s"}`}
             </Text>
           </View>
+
           {item.moderation.rejectionReason ? (
-            <AppCard tone="warm" style={styles.moderationCard}>
-              <Text style={styles.moderationTitle}>Ajuste necessário</Text>
-              <Text style={styles.error}>
-                {item.moderation.rejectionReason}
-              </Text>
-            </AppCard>
+            <View style={styles.attentionBox}>
+              <Text style={styles.attentionTitle}>Ajuste necessário</Text>
+              <Text style={styles.error}>{item.moderation.rejectionReason}</Text>
+            </View>
           ) : null}
+
           <AppButton
             label="Gerenciar anúncio"
             onPress={() =>
@@ -156,9 +196,10 @@ export default function MyListingsScreen() {
 
 const styles = StyleSheet.create({
   content: {
-    gap: spacing.md,
+    gap: spacing.lg,
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
+    backgroundColor: colors.background,
   },
   header: {
     gap: spacing.md,
@@ -166,27 +207,83 @@ const styles = StyleSheet.create({
   headerCopy: {
     gap: spacing.xs,
   },
-  eyebrow: {
-    color: colors.primary,
-    fontSize: 12,
-    fontWeight: "900",
-    letterSpacing: 1.3,
-  },
   title: {
     color: colors.text,
+    fontFamily: fontFamily.extraBold,
     fontSize: 28,
-    fontWeight: "900",
     letterSpacing: -0.6,
-  },
-  cardTitle: {
-    flex: 1,
-    color: colors.text,
-    fontSize: 18,
-    fontWeight: "800",
   },
   muted: {
     color: colors.textMuted,
+    fontFamily: fontFamily.regular,
     lineHeight: 21,
+  },
+  statsRow: {
+    flexDirection: "row",
+    gap: spacing.xs,
+  },
+  stat: {
+    flex: 1,
+    alignItems: "center",
+    gap: 2,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing.sm,
+  },
+  statSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primarySoft,
+  },
+  statValue: {
+    color: colors.primary,
+    fontFamily: fontFamily.extraBold,
+    fontSize: 16,
+  },
+  statLabel: {
+    color: colors.textMuted,
+    fontFamily: fontFamily.semibold,
+    fontSize: 10,
+    textAlign: "center",
+  },
+  listingCard: {
+    gap: spacing.md,
+    padding: spacing.md,
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  homeIcon: {
+    width: 48,
+    height: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.md,
+    backgroundColor: colors.primarySoft,
+  },
+  homeIconText: {
+    color: colors.primary,
+    fontSize: 26,
+    fontWeight: "900",
+  },
+  cardCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  cardTitle: {
+    color: colors.text,
+    fontFamily: fontFamily.bold,
+    fontSize: 16,
+    lineHeight: 21,
+  },
+  location: {
+    color: colors.textMuted,
+    fontFamily: fontFamily.medium,
+    fontSize: 12,
   },
   metaRow: {
     flexDirection: "row",
@@ -194,29 +291,28 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: spacing.sm,
   },
-  meta: {
+  price: {
     color: colors.text,
-    fontWeight: "800",
+    fontFamily: fontFamily.extraBold,
   },
   metaMuted: {
     color: colors.textMuted,
-    fontWeight: "700",
+    fontFamily: fontFamily.semibold,
+    fontSize: 12,
   },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  moderationCard: {
+  attentionBox: {
     gap: spacing.xs,
+    borderRadius: radius.md,
+    backgroundColor: colors.surfaceWarm,
     padding: spacing.md,
   },
-  moderationTitle: {
-    color: colors.text,
-    fontWeight: "800",
+  attentionTitle: {
+    color: colors.warning,
+    fontFamily: fontFamily.bold,
   },
   error: {
     color: colors.danger,
+    fontFamily: fontFamily.medium,
     lineHeight: 20,
   },
 });
